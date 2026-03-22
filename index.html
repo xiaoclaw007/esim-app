@@ -239,14 +239,14 @@
             background: var(--bg-gray);
             border-radius: 14px;
             padding: 5px;
-            max-width: 520px;
+            max-width: 620px;
             margin-left: auto;
             margin-right: auto;
         }
 
         .browse-tab {
             flex: 1;
-            padding: 12px 20px;
+            padding: 14px 28px;
             border: none;
             background: transparent;
             border-radius: 10px;
@@ -256,6 +256,16 @@
             cursor: pointer;
             transition: all 0.25s ease;
             position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .browse-tab .tab-icon {
+            font-size: 15px;
+            line-height: 1;
         }
 
         .browse-tab:hover { color: var(--text); }
@@ -476,131 +486,12 @@
         }
         .continent-panel.active { display: block; }
 
-        /* Regional Cards */
-        .region-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-        }
-
-        .region-card {
-            border-radius: 16px;
-            padding: 28px;
-            color: white;
-            text-decoration: none;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            min-height: 180px;
-        }
-
-        .region-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 16px 40px rgba(0,0,0,0.15);
-        }
-
-        .region-card.asia-pac { background: linear-gradient(135deg, #4F46E5, #7C3AED); }
-        .region-card.europe { background: linear-gradient(135deg, #06B6D4, #3B82F6); }
-        .region-card.americas { background: linear-gradient(135deg, #10B981, #06B6D4); }
-        .region-card.mea { background: linear-gradient(135deg, #F59E0B, #EF4444); }
-
-        .region-card-icon { font-size: 36px; }
-
-        .region-card h3 { font-size: 22px; font-weight: 700; }
-
-        .region-card-meta {
-            font-size: 14px;
-            opacity: 0.9;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .region-card-countries {
-            font-size: 13px;
-            opacity: 0.8;
-            margin-top: auto;
-        }
-
-        .region-card-price {
-            position: absolute;
-            top: 24px;
-            right: 24px;
-            background: rgba(255,255,255,0.2);
-            backdrop-filter: blur(8px);
-            padding: 6px 14px;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 15px;
-        }
-
-        /* Global Cards */
-        .global-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 24px;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .global-card {
-            background: white;
-            border: 2px solid var(--border);
-            border-radius: 20px;
-            padding: 40px 32px;
-            text-align: center;
-            text-decoration: none;
-            color: var(--text);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .global-card::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary), var(--accent));
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .global-card:hover {
-            border-color: var(--primary);
-            box-shadow: 0 12px 32px rgba(79, 70, 229, 0.12);
-            transform: translateY(-4px);
-        }
-
-        .global-card:hover::after { opacity: 1; }
-
-        .global-card-icon { font-size: 56px; margin-bottom: 16px; }
-
-        .global-card h3 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
-
-        .global-card-desc { color: var(--text-light); font-size: 15px; margin-bottom: 20px; line-height: 1.5; }
-
-        .global-card-price {
-            font-size: 28px;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 8px;
-        }
-
-        .global-card-sub { font-size: 13px; color: var(--text-light); }
-
-        .global-card .dest-badge {
-            top: 16px;
-            right: 16px;
+        /* Regional & Global — use same card style as dest-card but with extra details */
+        .dest-card-detail {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 2px;
+            line-height: 1.4;
         }
 
         /* ===== HOW IT WORKS ===== */
@@ -860,8 +751,6 @@
             .hero h1 { font-size: 32px; }
             .hero p { font-size: 16px; }
             .dest-grid, .features-grid { grid-template-columns: repeat(2, 1fr); }
-            .region-grid { grid-template-columns: 1fr; }
-            .global-grid { grid-template-columns: 1fr; }
             .steps { grid-template-columns: 1fr; gap: 32px; }
             .footer-inner { grid-template-columns: 1fr 1fr; }
             .device-check { flex-direction: column; text-align: center; }
@@ -939,10 +828,10 @@
 
     <!-- Primary Tabs -->
     <div class="browse-tabs">
-        <button class="browse-tab active" onclick="switchTab('popular')">🔥 Popular</button>
-        <button class="browse-tab" onclick="switchTab('local')">📍 Local</button>
-        <button class="browse-tab" onclick="switchTab('regional')">🗺️ Regional</button>
-        <button class="browse-tab" onclick="switchTab('global')">🌐 Global</button>
+        <button class="browse-tab active" onclick="switchTab('popular')"><span class="tab-icon">🔥</span> Popular</button>
+        <button class="browse-tab" onclick="switchTab('local')"><span class="tab-icon">📍</span> Local</button>
+        <button class="browse-tab" onclick="switchTab('regional')"><span class="tab-icon">🗺️</span> Regional</button>
+        <button class="browse-tab" onclick="switchTab('global')"><span class="tab-icon">🌐</span> Global</button>
     </div>
 
     <!-- Inline Search -->
@@ -1148,50 +1037,39 @@
 
         <!-- REGIONAL -->
         <div class="browse-panel" id="panel-regional">
-            <div class="region-grid">
-                <a href="plans.html" class="region-card asia-pac">
-                    <span class="region-card-icon">🌏</span>
-                    <h3>Asia Pacific</h3>
-                    <span class="region-card-price">From $8</span>
-                    <div class="region-card-meta">
-                        <span>15+ countries</span>
-                        <span>·</span>
-                        <span>1GB – 20GB</span>
+            <div class="dest-grid">
+                <a href="plans.html" class="dest-card">
+                    <span class="dest-flag">🌏</span>
+                    <div class="dest-info">
+                        <h3>Asia Pacific</h3>
+                        <p class="dest-price">From $8.00</p>
+                        <p class="dest-card-detail">15+ countries · 1–20 GB</p>
                     </div>
-                    <div class="region-card-countries">Japan, South Korea, Thailand, Singapore, Vietnam, Taiwan & more</div>
                 </a>
-                <a href="plans.html" class="region-card europe">
-                    <span class="region-card-icon">🌍</span>
-                    <h3>Europe</h3>
-                    <span class="region-card-price">From $10</span>
-                    <div class="region-card-meta">
-                        <span>30+ countries</span>
-                        <span>·</span>
-                        <span>1GB – 20GB</span>
+                <a href="plans.html" class="dest-card">
+                    <span class="dest-badge best-value">Best Value</span>
+                    <span class="dest-flag">🌍</span>
+                    <div class="dest-info">
+                        <h3>Europe</h3>
+                        <p class="dest-price">From $10.00</p>
+                        <p class="dest-card-detail">30+ countries · 1–20 GB</p>
                     </div>
-                    <div class="region-card-countries">UK, France, Germany, Italy, Spain, Netherlands, Switzerland & more</div>
                 </a>
-                <a href="plans.html" class="region-card americas">
-                    <span class="region-card-icon">🌎</span>
-                    <h3>Americas</h3>
-                    <span class="region-card-price">From $9</span>
-                    <div class="region-card-meta">
-                        <span>10+ countries</span>
-                        <span>·</span>
-                        <span>1GB – 10GB</span>
+                <a href="plans.html" class="dest-card">
+                    <span class="dest-flag">🌎</span>
+                    <div class="dest-info">
+                        <h3>Americas</h3>
+                        <p class="dest-price">From $9.00</p>
+                        <p class="dest-card-detail">10+ countries · 1–10 GB</p>
                     </div>
-                    <div class="region-card-countries">USA, Canada, Mexico, Brazil, Argentina, Colombia & more</div>
                 </a>
-                <a href="plans.html" class="region-card mea">
-                    <span class="region-card-icon">🌍</span>
-                    <h3>Middle East & Africa</h3>
-                    <span class="region-card-price">From $10</span>
-                    <div class="region-card-meta">
-                        <span>15+ countries</span>
-                        <span>·</span>
-                        <span>1GB – 10GB</span>
+                <a href="plans.html" class="dest-card">
+                    <span class="dest-flag">🌍</span>
+                    <div class="dest-info">
+                        <h3>Middle East & Africa</h3>
+                        <p class="dest-price">From $10.00</p>
+                        <p class="dest-card-detail">15+ countries · 1–10 GB</p>
                     </div>
-                    <div class="region-card-countries">UAE, Turkey, South Africa, Egypt, Saudi Arabia, Morocco & more</div>
                 </a>
             </div>
             <div class="panel-footer">
@@ -1201,25 +1079,27 @@
 
         <!-- GLOBAL -->
         <div class="browse-panel" id="panel-global">
-            <div class="global-grid">
-                <a href="plans.html" class="global-card">
+            <div class="dest-grid">
+                <a href="plans.html" class="dest-card">
                     <span class="dest-badge best-value">Most Popular</span>
-                    <div class="global-card-icon">🌐</div>
-                    <h3>Global Essential</h3>
-                    <div class="global-card-desc">Perfect for multi-country trips. Works seamlessly across 100+ countries with a single plan.</div>
-                    <div class="global-card-price">From $15</div>
-                    <div class="global-card-sub">1GB – 10GB · 7–30 days</div>
+                    <span class="dest-flag">🌐</span>
+                    <div class="dest-info">
+                        <h3>Global Essential</h3>
+                        <p class="dest-price">From $15.00</p>
+                        <p class="dest-card-detail">100+ countries · 1–10 GB · 7–30 days</p>
+                    </div>
                 </a>
-                <a href="plans.html" class="global-card">
+                <a href="plans.html" class="dest-card">
                     <span class="dest-badge trending">Premium</span>
-                    <div class="global-card-icon">🛫</div>
-                    <h3>Global Unlimited</h3>
-                    <div class="global-card-desc">Unlimited data in 80+ countries. Stream, video call, and work from anywhere without limits.</div>
-                    <div class="global-card-price">From $35</div>
-                    <div class="global-card-sub">Unlimited data · 15–30 days</div>
+                    <span class="dest-flag">🛫</span>
+                    <div class="dest-info">
+                        <h3>Global Unlimited</h3>
+                        <p class="dest-price">From $35.00</p>
+                        <p class="dest-card-detail">80+ countries · Unlimited · 15–30 days</p>
+                    </div>
                 </a>
             </div>
-            <div class="panel-footer" style="margin-top: 36px;">
+            <div class="panel-footer">
                 <a href="destinations.html" class="section-link">Explore all global plans →</a>
             </div>
         </div>
