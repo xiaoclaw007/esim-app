@@ -176,7 +176,7 @@
             opacity: 0.7;
         }
 
-        /* ===== POPULAR DESTINATIONS ===== */
+        /* ===== SHARED SECTION ===== */
         .section {
             max-width: 1200px;
             margin: 0 auto;
@@ -204,78 +204,404 @@
         }
         .section-link:hover { text-decoration: underline; }
 
-        .destinations-grid {
+        .bg-gray { background: var(--bg-gray); }
+
+        /* ===== TABBED DESTINATION BROWSER ===== */
+        .browse-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 80px 24px;
+        }
+
+        .browse-header {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+
+        .browse-header h2 {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+
+        .browse-header p {
+            color: var(--text-light);
+            font-size: 16px;
+        }
+
+        /* Primary Tabs */
+        .browse-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+            margin-bottom: 32px;
+            background: var(--bg-gray);
+            border-radius: 14px;
+            padding: 5px;
+            max-width: 520px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .browse-tab {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .browse-tab:hover { color: var(--text); }
+
+        .browse-tab.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.15);
+        }
+
+        /* Inline search within tab section */
+        .browse-search {
+            max-width: 420px;
+            margin: 0 auto 32px;
+            position: relative;
+        }
+
+        .browse-search-input {
+            width: 100%;
+            padding: 12px 16px 12px 42px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+            background: white;
+            color: var(--text);
+        }
+
+        .browse-search-input:focus { border-color: var(--primary); }
+        .browse-search-input::placeholder { color: #94A3B8; }
+
+        .browse-search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px;
+            color: #94A3B8;
+            pointer-events: none;
+        }
+
+        .browse-search-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 0 0 10px 10px;
+            max-height: 240px;
+            overflow-y: auto;
+            display: none;
+            z-index: 10;
+            box-shadow: var(--shadow-lg);
+        }
+        .browse-search-dropdown.open { display: block; }
+        .browse-search-dropdown a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            text-decoration: none;
+            color: var(--text);
+            font-size: 14px;
+            transition: background 0.15s;
+        }
+        .browse-search-dropdown a:hover { background: var(--bg-gray); }
+        .browse-search-dropdown .bsd-flag { font-size: 20px; }
+        .browse-search-dropdown .bsd-name { font-weight: 600; }
+        .browse-search-dropdown .bsd-price { margin-left: auto; font-size: 13px; color: var(--text-light); }
+
+        /* Tab Panels */
+        .browse-panels { position: relative; min-height: 200px; }
+
+        .browse-panel {
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.35s ease, transform 0.35s ease;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            pointer-events: none;
+            visibility: hidden;
+        }
+
+        .browse-panel.active {
+            opacity: 1;
+            transform: translateY(0);
+            position: relative;
+            pointer-events: auto;
+            visibility: visible;
+        }
+
+        /* Destination Cards (Popular & Local) */
+        .dest-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
+            gap: 14px;
         }
 
         .dest-card {
             background: white;
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 20px;
+            padding: 18px 20px;
             display: flex;
             align-items: center;
             gap: 14px;
-            transition: all 0.2s;
+            transition: all 0.25s ease;
             cursor: pointer;
             text-decoration: none;
             color: var(--text);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dest-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, var(--primary), var(--accent));
+            opacity: 0;
+            transition: opacity 0.25s ease;
         }
 
         .dest-card:hover {
+            border-color: transparent;
+            box-shadow: 0 8px 24px rgba(79, 70, 229, 0.12);
+            transform: translateY(-3px);
+        }
+
+        .dest-card:hover::before { opacity: 1; }
+
+        .dest-flag { font-size: 36px; line-height: 1; }
+
+        .dest-info { flex: 1; }
+        .dest-info h3 { font-size: 15px; font-weight: 600; }
+
+        .dest-price {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-top: 2px;
+            transition: color 0.25s ease;
+        }
+
+        .dest-card:hover .dest-price { color: var(--primary); }
+
+        /* Badge */
+        .dest-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .dest-badge.trending {
+            background: linear-gradient(135deg, #F59E0B, #EF4444);
+            color: white;
+        }
+
+        .dest-badge.best-value {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+        }
+
+        .panel-footer {
+            text-align: center;
+            margin-top: 28px;
+        }
+
+        /* Continent Sub-tabs (pills) */
+        .continent-pills {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .continent-pill {
+            padding: 8px 18px;
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            background: white;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .continent-pill:hover { border-color: var(--primary); color: var(--primary); }
+
+        .continent-pill.active {
+            background: var(--primary);
+            color: white;
             border-color: var(--primary);
-            box-shadow: var(--shadow-lg);
-            transform: translateY(-2px);
         }
 
-        .dest-flag {
-            font-size: 36px;
-            line-height: 1;
+        .continent-pill .pill-count {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-left: 2px;
         }
 
-        .dest-info h3 { font-size: 16px; font-weight: 600; }
-        .dest-info p { font-size: 13px; color: var(--text-light); margin-top: 2px; }
+        .continent-panel {
+            display: none;
+        }
+        .continent-panel.active { display: block; }
 
-        /* ===== REGIONAL PLANS ===== */
-        .bg-gray { background: var(--bg-gray); }
-
-        .regions-grid {
+        /* Regional Cards */
+        .region-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
         }
 
         .region-card {
-            background: white;
-            border-radius: var(--radius);
-            overflow: hidden;
-            box-shadow: var(--shadow);
-            transition: all 0.2s;
-            cursor: pointer;
+            border-radius: 16px;
+            padding: 28px;
+            color: white;
             text-decoration: none;
-            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            min-height: 180px;
         }
 
-        .region-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+        .region-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 40px rgba(0,0,0,0.15);
+        }
 
-        .region-banner {
-            height: 100px;
+        .region-card.asia-pac { background: linear-gradient(135deg, #4F46E5, #7C3AED); }
+        .region-card.europe { background: linear-gradient(135deg, #06B6D4, #3B82F6); }
+        .region-card.americas { background: linear-gradient(135deg, #10B981, #06B6D4); }
+        .region-card.mea { background: linear-gradient(135deg, #F59E0B, #EF4444); }
+
+        .region-card-icon { font-size: 36px; }
+
+        .region-card h3 { font-size: 22px; font-weight: 700; }
+
+        .region-card-meta {
+            font-size: 14px;
+            opacity: 0.9;
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 40px;
+            gap: 12px;
         }
 
-        .region-banner.asia { background: linear-gradient(135deg, #FEF3C7, #FDE68A); }
-        .region-banner.europe { background: linear-gradient(135deg, #DBEAFE, #93C5FD); }
-        .region-banner.americas { background: linear-gradient(135deg, #D1FAE5, #6EE7B7); }
-        .region-banner.global { background: linear-gradient(135deg, #E0E7FF, #A5B4FC); }
+        .region-card-countries {
+            font-size: 13px;
+            opacity: 0.8;
+            margin-top: auto;
+        }
 
-        .region-info { padding: 16px; }
-        .region-info h3 { font-size: 17px; font-weight: 600; }
-        .region-info p { font-size: 13px; color: var(--text-light); margin-top: 4px; }
+        .region-card-price {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(8px);
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        /* Global Cards */
+        .global-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .global-card {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            padding: 40px 32px;
+            text-align: center;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .global-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .global-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 12px 32px rgba(79, 70, 229, 0.12);
+            transform: translateY(-4px);
+        }
+
+        .global-card:hover::after { opacity: 1; }
+
+        .global-card-icon { font-size: 56px; margin-bottom: 16px; }
+
+        .global-card h3 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+
+        .global-card-desc { color: var(--text-light); font-size: 15px; margin-bottom: 20px; line-height: 1.5; }
+
+        .global-card-price {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .global-card-sub { font-size: 13px; color: var(--text-light); }
+
+        .global-card .dest-badge {
+            top: 16px;
+            right: 16px;
+        }
 
         /* ===== HOW IT WORKS ===== */
         .steps {
@@ -533,7 +859,9 @@
         @media (max-width: 768px) {
             .hero h1 { font-size: 32px; }
             .hero p { font-size: 16px; }
-            .destinations-grid, .regions-grid, .features-grid { grid-template-columns: repeat(2, 1fr); }
+            .dest-grid, .features-grid { grid-template-columns: repeat(2, 1fr); }
+            .region-grid { grid-template-columns: 1fr; }
+            .global-grid { grid-template-columns: 1fr; }
             .steps { grid-template-columns: 1fr; gap: 32px; }
             .footer-inner { grid-template-columns: 1fr 1fr; }
             .device-check { flex-direction: column; text-align: center; }
@@ -541,10 +869,15 @@
             .nav-buttons .btn-outline { display: none; }
             .hamburger { display: flex; }
             .trust-stats { gap: 32px; }
+            .browse-tabs { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .browse-tab { white-space: nowrap; flex: 0 0 auto; padding: 10px 16px; font-size: 14px; }
+            .continent-pills { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; justify-content: flex-start; padding-bottom: 4px; }
+            .continent-pill { flex: 0 0 auto; }
+            .browse-header h2 { font-size: 26px; }
         }
 
         @media (max-width: 480px) {
-            .destinations-grid, .regions-grid { grid-template-columns: 1fr; }
+            .dest-grid { grid-template-columns: 1fr; }
             .features-grid { grid-template-columns: 1fr 1fr; }
             .trust-stats { flex-direction: column; gap: 24px; }
         }
@@ -597,111 +930,302 @@
     </div>
 </section>
 
-<!-- POPULAR DESTINATIONS -->
-<section class="section">
-    <div class="section-header">
-        <h2 class="section-title">Popular Destinations</h2>
-        <a href="destinations.html" class="section-link">View all destinations →</a>
+<!-- DESTINATION BROWSER -->
+<section class="browse-section" id="destinations">
+    <div class="browse-header">
+        <h2>Browse eSIM Plans</h2>
+        <p>Find the perfect data plan for your next trip</p>
     </div>
-    <div class="destinations-grid">
-        <a href="plans.html" class="dest-card">
-            <span class="dest-flag">🇯🇵</span>
-            <div class="dest-info">
-                <h3>Japan</h3>
-                <p>From $4.50</p>
+
+    <!-- Primary Tabs -->
+    <div class="browse-tabs">
+        <button class="browse-tab active" onclick="switchTab('popular')">🔥 Popular</button>
+        <button class="browse-tab" onclick="switchTab('local')">📍 Local</button>
+        <button class="browse-tab" onclick="switchTab('regional')">🗺️ Regional</button>
+        <button class="browse-tab" onclick="switchTab('global')">🌐 Global</button>
+    </div>
+
+    <!-- Inline Search -->
+    <div class="browse-search">
+        <span class="browse-search-icon">🔍</span>
+        <input type="text" class="browse-search-input" id="browse-search-input" placeholder="Search countries or regions..." oninput="browseSearch()" onfocus="browseSearch()" onblur="setTimeout(()=>document.getElementById('browse-search-dd').classList.remove('open'),200)">
+        <div class="browse-search-dropdown" id="browse-search-dd"></div>
+    </div>
+
+    <!-- Tab Panels -->
+    <div class="browse-panels">
+
+        <!-- POPULAR -->
+        <div class="browse-panel active" id="panel-popular">
+            <div class="dest-grid">
+                <a href="plans.html" class="dest-card">
+                    <span class="dest-badge trending">🔥 Trending</span>
+                    <span class="dest-flag">🇯🇵</span>
+                    <div class="dest-info">
+                        <h3>Japan</h3>
+                        <p class="dest-price">From $4.50</p>
+                    </div>
+                </a>
+                <a href="plans.html" class="dest-card">
+                    <span class="dest-badge best-value">Best Value</span>
+                    <span class="dest-flag">🇹🇭</span>
+                    <div class="dest-info">
+                        <h3>Thailand</h3>
+                        <p class="dest-price">From $3.00</p>
+                    </div>
+                </a>
+                <a href="plans.html" class="dest-card">
+                    <span class="dest-flag">🇺🇸</span>
+                    <div class="dest-info">
+                        <h3>United States</h3>
+                        <p class="dest-price">From $5.00</p>
+                    </div>
+                </a>
+                <a href="plans.html" class="dest-card">
+                    <span class="dest-flag">🇬🇧</span>
+                    <div class="dest-info">
+                        <h3>United Kingdom</h3>
+                        <p class="dest-price">From $4.00</p>
+                    </div>
+                </a>
+                <a href="plans.html" class="dest-card">
+                    <span class="dest-badge trending">🔥 Trending</span>
+                    <span class="dest-flag">🇰🇷</span>
+                    <div class="dest-info">
+                        <h3>South Korea</h3>
+                        <p class="dest-price">From $4.50</p>
+                    </div>
+                </a>
+                <a href="plans.html" class="dest-card">
+                    <span class="dest-flag">🇫🇷</span>
+                    <div class="dest-info">
+                        <h3>France</h3>
+                        <p class="dest-price">From $4.00</p>
+                    </div>
+                </a>
+                <a href="plans.html" class="dest-card">
+                    <span class="dest-flag">🇮🇹</span>
+                    <div class="dest-info">
+                        <h3>Italy</h3>
+                        <p class="dest-price">From $4.00</p>
+                    </div>
+                </a>
+                <a href="plans.html" class="dest-card">
+                    <span class="dest-flag">🇪🇸</span>
+                    <div class="dest-info">
+                        <h3>Spain</h3>
+                        <p class="dest-price">From $4.00</p>
+                    </div>
+                </a>
+                <a href="plans.html" class="dest-card">
+                    <span class="dest-flag">🇩🇪</span>
+                    <div class="dest-info">
+                        <h3>Germany</h3>
+                        <p class="dest-price">From $4.00</p>
+                    </div>
+                </a>
+                <a href="plans.html" class="dest-card">
+                    <span class="dest-badge best-value">Best Value</span>
+                    <span class="dest-flag">🇻🇳</span>
+                    <div class="dest-info">
+                        <h3>Vietnam</h3>
+                        <p class="dest-price">From $3.00</p>
+                    </div>
+                </a>
+                <a href="plans.html" class="dest-card">
+                    <span class="dest-flag">🇸🇬</span>
+                    <div class="dest-info">
+                        <h3>Singapore</h3>
+                        <p class="dest-price">From $4.00</p>
+                    </div>
+                </a>
+                <a href="plans.html" class="dest-card">
+                    <span class="dest-flag">🇦🇺</span>
+                    <div class="dest-info">
+                        <h3>Australia</h3>
+                        <p class="dest-price">From $5.00</p>
+                    </div>
+                </a>
             </div>
-        </a>
-        <a href="#" class="dest-card">
-            <span class="dest-flag">🇹🇭</span>
-            <div class="dest-info">
-                <h3>Thailand</h3>
-                <p>From $3.00</p>
+            <div class="panel-footer">
+                <a href="destinations.html" class="section-link">View all 150+ destinations →</a>
             </div>
-        </a>
-        <a href="#" class="dest-card">
-            <span class="dest-flag">🇺🇸</span>
-            <div class="dest-info">
-                <h3>United States</h3>
-                <p>From $5.00</p>
+        </div>
+
+        <!-- LOCAL -->
+        <div class="browse-panel" id="panel-local">
+            <div class="continent-pills">
+                <button class="continent-pill active" onclick="switchContinent('asia')">Asia <span class="pill-count">(15)</span></button>
+                <button class="continent-pill" onclick="switchContinent('europe')">Europe <span class="pill-count">(30)</span></button>
+                <button class="continent-pill" onclick="switchContinent('americas')">Americas <span class="pill-count">(12)</span></button>
+                <button class="continent-pill" onclick="switchContinent('middle-east')">Middle East <span class="pill-count">(8)</span></button>
+                <button class="continent-pill" onclick="switchContinent('africa')">Africa <span class="pill-count">(10)</span></button>
+                <button class="continent-pill" onclick="switchContinent('oceania')">Oceania <span class="pill-count">(5)</span></button>
             </div>
-        </a>
-        <a href="#" class="dest-card">
-            <span class="dest-flag">🇬🇧</span>
-            <div class="dest-info">
-                <h3>United Kingdom</h3>
-                <p>From $4.00</p>
+
+            <div class="continent-panel active" id="continent-asia">
+                <div class="dest-grid">
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇯🇵</span><div class="dest-info"><h3>Japan</h3><p class="dest-price">From $4.50</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇹🇭</span><div class="dest-info"><h3>Thailand</h3><p class="dest-price">From $3.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇰🇷</span><div class="dest-info"><h3>South Korea</h3><p class="dest-price">From $4.50</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇸🇬</span><div class="dest-info"><h3>Singapore</h3><p class="dest-price">From $4.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇹🇼</span><div class="dest-info"><h3>Taiwan</h3><p class="dest-price">From $3.50</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇻🇳</span><div class="dest-info"><h3>Vietnam</h3><p class="dest-price">From $3.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇲🇾</span><div class="dest-info"><h3>Malaysia</h3><p class="dest-price">From $3.50</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇮🇩</span><div class="dest-info"><h3>Indonesia</h3><p class="dest-price">From $4.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇮🇳</span><div class="dest-info"><h3>India</h3><p class="dest-price">From $3.50</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇨🇳</span><div class="dest-info"><h3>China</h3><p class="dest-price">From $5.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇵🇭</span><div class="dest-info"><h3>Philippines</h3><p class="dest-price">From $3.50</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇭🇰</span><div class="dest-info"><h3>Hong Kong</h3><p class="dest-price">From $3.50</p></div></a>
+                </div>
             </div>
-        </a>
-        <a href="#" class="dest-card">
-            <span class="dest-flag">🇰🇷</span>
-            <div class="dest-info">
-                <h3>South Korea</h3>
-                <p>From $4.50</p>
+
+            <div class="continent-panel" id="continent-europe">
+                <div class="dest-grid">
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇬🇧</span><div class="dest-info"><h3>United Kingdom</h3><p class="dest-price">From $4.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇫🇷</span><div class="dest-info"><h3>France</h3><p class="dest-price">From $4.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇮🇹</span><div class="dest-info"><h3>Italy</h3><p class="dest-price">From $4.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇪🇸</span><div class="dest-info"><h3>Spain</h3><p class="dest-price">From $4.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇩🇪</span><div class="dest-info"><h3>Germany</h3><p class="dest-price">From $4.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇳🇱</span><div class="dest-info"><h3>Netherlands</h3><p class="dest-price">From $4.50</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇨🇭</span><div class="dest-info"><h3>Switzerland</h3><p class="dest-price">From $5.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇵🇹</span><div class="dest-info"><h3>Portugal</h3><p class="dest-price">From $4.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇬🇷</span><div class="dest-info"><h3>Greece</h3><p class="dest-price">From $4.50</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇦🇹</span><div class="dest-info"><h3>Austria</h3><p class="dest-price">From $4.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇸🇪</span><div class="dest-info"><h3>Sweden</h3><p class="dest-price">From $4.50</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇵🇱</span><div class="dest-info"><h3>Poland</h3><p class="dest-price">From $3.50</p></div></a>
+                </div>
             </div>
-        </a>
-        <a href="#" class="dest-card">
-            <span class="dest-flag">🇫🇷</span>
-            <div class="dest-info">
-                <h3>France</h3>
-                <p>From $4.00</p>
+
+            <div class="continent-panel" id="continent-americas">
+                <div class="dest-grid">
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇺🇸</span><div class="dest-info"><h3>United States</h3><p class="dest-price">From $5.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇨🇦</span><div class="dest-info"><h3>Canada</h3><p class="dest-price">From $5.50</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇲🇽</span><div class="dest-info"><h3>Mexico</h3><p class="dest-price">From $4.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇧🇷</span><div class="dest-info"><h3>Brazil</h3><p class="dest-price">From $4.50</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇦🇷</span><div class="dest-info"><h3>Argentina</h3><p class="dest-price">From $5.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇨🇴</span><div class="dest-info"><h3>Colombia</h3><p class="dest-price">From $4.50</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇨🇱</span><div class="dest-info"><h3>Chile</h3><p class="dest-price">From $4.50</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇵🇪</span><div class="dest-info"><h3>Peru</h3><p class="dest-price">From $5.00</p></div></a>
+                </div>
             </div>
-        </a>
-        <a href="#" class="dest-card">
-            <span class="dest-flag">🇮🇹</span>
-            <div class="dest-info">
-                <h3>Italy</h3>
-                <p>From $4.00</p>
+
+            <div class="continent-panel" id="continent-middle-east">
+                <div class="dest-grid">
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇦🇪</span><div class="dest-info"><h3>UAE</h3><p class="dest-price">From $5.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇹🇷</span><div class="dest-info"><h3>Turkey</h3><p class="dest-price">From $4.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇸🇦</span><div class="dest-info"><h3>Saudi Arabia</h3><p class="dest-price">From $5.50</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇶🇦</span><div class="dest-info"><h3>Qatar</h3><p class="dest-price">From $5.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇮🇱</span><div class="dest-info"><h3>Israel</h3><p class="dest-price">From $5.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇯🇴</span><div class="dest-info"><h3>Jordan</h3><p class="dest-price">From $5.50</p></div></a>
+                </div>
             </div>
-        </a>
-        <a href="#" class="dest-card">
-            <span class="dest-flag">🇪🇸</span>
-            <div class="dest-info">
-                <h3>Spain</h3>
-                <p>From $4.00</p>
+
+            <div class="continent-panel" id="continent-africa">
+                <div class="dest-grid">
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇿🇦</span><div class="dest-info"><h3>South Africa</h3><p class="dest-price">From $5.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇪🇬</span><div class="dest-info"><h3>Egypt</h3><p class="dest-price">From $5.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇲🇦</span><div class="dest-info"><h3>Morocco</h3><p class="dest-price">From $4.50</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇰🇪</span><div class="dest-info"><h3>Kenya</h3><p class="dest-price">From $5.50</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇳🇬</span><div class="dest-info"><h3>Nigeria</h3><p class="dest-price">From $6.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇹🇳</span><div class="dest-info"><h3>Tunisia</h3><p class="dest-price">From $5.00</p></div></a>
+                </div>
             </div>
-        </a>
+
+            <div class="continent-panel" id="continent-oceania">
+                <div class="dest-grid">
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇦🇺</span><div class="dest-info"><h3>Australia</h3><p class="dest-price">From $5.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇳🇿</span><div class="dest-info"><h3>New Zealand</h3><p class="dest-price">From $5.50</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇫🇯</span><div class="dest-info"><h3>Fiji</h3><p class="dest-price">From $6.00</p></div></a>
+                    <a href="plans.html" class="dest-card"><span class="dest-flag">🇬🇺</span><div class="dest-info"><h3>Guam</h3><p class="dest-price">From $5.50</p></div></a>
+                </div>
+            </div>
+
+            <div class="panel-footer">
+                <a href="destinations.html" class="section-link">View all destinations →</a>
+            </div>
+        </div>
+
+        <!-- REGIONAL -->
+        <div class="browse-panel" id="panel-regional">
+            <div class="region-grid">
+                <a href="plans.html" class="region-card asia-pac">
+                    <span class="region-card-icon">🌏</span>
+                    <h3>Asia Pacific</h3>
+                    <span class="region-card-price">From $8</span>
+                    <div class="region-card-meta">
+                        <span>15+ countries</span>
+                        <span>·</span>
+                        <span>1GB – 20GB</span>
+                    </div>
+                    <div class="region-card-countries">Japan, South Korea, Thailand, Singapore, Vietnam, Taiwan & more</div>
+                </a>
+                <a href="plans.html" class="region-card europe">
+                    <span class="region-card-icon">🌍</span>
+                    <h3>Europe</h3>
+                    <span class="region-card-price">From $10</span>
+                    <div class="region-card-meta">
+                        <span>30+ countries</span>
+                        <span>·</span>
+                        <span>1GB – 20GB</span>
+                    </div>
+                    <div class="region-card-countries">UK, France, Germany, Italy, Spain, Netherlands, Switzerland & more</div>
+                </a>
+                <a href="plans.html" class="region-card americas">
+                    <span class="region-card-icon">🌎</span>
+                    <h3>Americas</h3>
+                    <span class="region-card-price">From $9</span>
+                    <div class="region-card-meta">
+                        <span>10+ countries</span>
+                        <span>·</span>
+                        <span>1GB – 10GB</span>
+                    </div>
+                    <div class="region-card-countries">USA, Canada, Mexico, Brazil, Argentina, Colombia & more</div>
+                </a>
+                <a href="plans.html" class="region-card mea">
+                    <span class="region-card-icon">🌍</span>
+                    <h3>Middle East & Africa</h3>
+                    <span class="region-card-price">From $10</span>
+                    <div class="region-card-meta">
+                        <span>15+ countries</span>
+                        <span>·</span>
+                        <span>1GB – 10GB</span>
+                    </div>
+                    <div class="region-card-countries">UAE, Turkey, South Africa, Egypt, Saudi Arabia, Morocco & more</div>
+                </a>
+            </div>
+            <div class="panel-footer">
+                <a href="destinations.html" class="section-link">Compare all regional plans →</a>
+            </div>
+        </div>
+
+        <!-- GLOBAL -->
+        <div class="browse-panel" id="panel-global">
+            <div class="global-grid">
+                <a href="plans.html" class="global-card">
+                    <span class="dest-badge best-value">Most Popular</span>
+                    <div class="global-card-icon">🌐</div>
+                    <h3>Global Essential</h3>
+                    <div class="global-card-desc">Perfect for multi-country trips. Works seamlessly across 100+ countries with a single plan.</div>
+                    <div class="global-card-price">From $15</div>
+                    <div class="global-card-sub">1GB – 10GB · 7–30 days</div>
+                </a>
+                <a href="plans.html" class="global-card">
+                    <span class="dest-badge trending">Premium</span>
+                    <div class="global-card-icon">🛫</div>
+                    <h3>Global Unlimited</h3>
+                    <div class="global-card-desc">Unlimited data in 80+ countries. Stream, video call, and work from anywhere without limits.</div>
+                    <div class="global-card-price">From $35</div>
+                    <div class="global-card-sub">Unlimited data · 15–30 days</div>
+                </a>
+            </div>
+            <div class="panel-footer" style="margin-top: 36px;">
+                <a href="destinations.html" class="section-link">Explore all global plans →</a>
+            </div>
+        </div>
+
     </div>
 </section>
-
-<!-- REGIONAL PLANS -->
-<div class="bg-gray">
-    <section class="section">
-        <div class="section-header">
-            <h2 class="section-title">Regional & Global Plans</h2>
-            <a href="#" class="section-link">Compare plans →</a>
-        </div>
-        <div class="regions-grid">
-            <a href="#" class="region-card">
-                <div class="region-banner asia">🌏</div>
-                <div class="region-info">
-                    <h3>Asia Pacific</h3>
-                    <p>15+ countries · From $8</p>
-                </div>
-            </a>
-            <a href="#" class="region-card">
-                <div class="region-banner europe">🌍</div>
-                <div class="region-info">
-                    <h3>Europe</h3>
-                    <p>30+ countries · From $10</p>
-                </div>
-            </a>
-            <a href="#" class="region-card">
-                <div class="region-banner americas">🌎</div>
-                <div class="region-info">
-                    <h3>Americas</h3>
-                    <p>10+ countries · From $9</p>
-                </div>
-            </a>
-            <a href="#" class="region-card">
-                <div class="region-banner global">🌐</div>
-                <div class="region-info">
-                    <h3>Global</h3>
-                    <p>100+ countries · From $15</p>
-                </div>
-            </a>
-        </div>
-    </section>
-</div>
 
 <!-- HOW IT WORKS -->
 <section class="section" id="how-it-works">
@@ -890,8 +1414,21 @@
         {flag:'🇧🇷',name:'Brazil',price:'$4.50'},{flag:'🇲🇽',name:'Mexico',price:'$4.00'},
         {flag:'🇦🇪',name:'UAE',price:'$5.00'},{flag:'🇳🇱',name:'Netherlands',price:'$4.50'},
         {flag:'🇨🇭',name:'Switzerland',price:'$5.00'},{flag:'🇵🇹',name:'Portugal',price:'$4.00'},
+        {flag:'🇬🇷',name:'Greece',price:'$4.50'},{flag:'🇦🇹',name:'Austria',price:'$4.00'},
+        {flag:'🇸🇪',name:'Sweden',price:'$4.50'},{flag:'🇵🇱',name:'Poland',price:'$3.50'},
+        {flag:'🇦🇷',name:'Argentina',price:'$5.00'},{flag:'🇨🇴',name:'Colombia',price:'$4.50'},
+        {flag:'🇨🇱',name:'Chile',price:'$4.50'},{flag:'🇵🇪',name:'Peru',price:'$5.00'},
+        {flag:'🇹🇷',name:'Turkey',price:'$4.00'},{flag:'🇸🇦',name:'Saudi Arabia',price:'$5.50'},
+        {flag:'🇶🇦',name:'Qatar',price:'$5.00'},{flag:'🇮🇱',name:'Israel',price:'$5.00'},
+        {flag:'🇯🇴',name:'Jordan',price:'$5.50'},{flag:'🇿🇦',name:'South Africa',price:'$5.00'},
+        {flag:'🇪🇬',name:'Egypt',price:'$5.00'},{flag:'🇲🇦',name:'Morocco',price:'$4.50'},
+        {flag:'🇰🇪',name:'Kenya',price:'$5.50'},{flag:'🇳🇬',name:'Nigeria',price:'$6.00'},
+        {flag:'🇹🇳',name:'Tunisia',price:'$5.00'},{flag:'🇳🇿',name:'New Zealand',price:'$5.50'},
+        {flag:'🇫🇯',name:'Fiji',price:'$6.00'},{flag:'🇵🇭',name:'Philippines',price:'$3.50'},
+        {flag:'🇭🇰',name:'Hong Kong',price:'$3.50'},
     ];
 
+    // Hero search
     function heroSearch() {
         const q = document.getElementById('hero-search').value.trim().toLowerCase();
         const dd = document.getElementById('hero-dropdown');
@@ -902,6 +1439,54 @@
             `<a href="plans.html"><span class="sd-flag">${c.flag}</span><span class="sd-name">${c.name}</span><span class="sd-price">From ${c.price}</span></a>`
         ).join('');
         dd.classList.add('open');
+    }
+
+    // Browse search (inline in tab section)
+    function browseSearch() {
+        const q = document.getElementById('browse-search-input').value.trim().toLowerCase();
+        const dd = document.getElementById('browse-search-dd');
+        if (!q) { dd.classList.remove('open'); return; }
+        const matches = countries.filter(c => c.name.toLowerCase().includes(q)).slice(0, 6);
+        if (matches.length === 0) { dd.classList.remove('open'); return; }
+        dd.innerHTML = matches.map(c =>
+            `<a href="plans.html"><span class="bsd-flag">${c.flag}</span><span class="bsd-name">${c.name}</span><span class="bsd-price">From ${c.price}</span></a>`
+        ).join('');
+        dd.classList.add('open');
+    }
+
+    // Tab switching with animated transitions
+    function switchTab(tabName) {
+        // Update tab buttons
+        document.querySelectorAll('.browse-tab').forEach(t => t.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+
+        // Animate panels
+        const currentPanel = document.querySelector('.browse-panel.active');
+        const nextPanel = document.getElementById('panel-' + tabName);
+
+        if (currentPanel === nextPanel) return;
+
+        // Fade out current
+        currentPanel.style.opacity = '0';
+        currentPanel.style.transform = 'translateY(-12px)';
+
+        setTimeout(() => {
+            currentPanel.classList.remove('active');
+            currentPanel.style.opacity = '';
+            currentPanel.style.transform = '';
+
+            // Fade in next
+            nextPanel.classList.add('active');
+        }, 200);
+    }
+
+    // Continent sub-tab switching
+    function switchContinent(continent) {
+        document.querySelectorAll('.continent-pill').forEach(p => p.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+
+        document.querySelectorAll('.continent-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('continent-' + continent).classList.add('active');
     }
 </script>
 
