@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout — GlobalSIM</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #4338CA;
+            --primary-light: #EEF2FF;
+            --accent: #06B6D4;
+            --text: #1E293B;
+            --text-light: #64748B;
+            --bg: #FFFFFF;
+            --bg-gray: #F8FAFC;
+            --border: #E2E8F0;
+            --success: #10B981;
+            --error: #EF4444;
+            --radius: 12px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            background: var(--bg-gray);
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        .secure-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        /* ===== PROGRESS BAR ===== */
+        .progress-bar {
+            max-width: 600px;
+            margin: 32px auto 0;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .progress-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        .progress-step.active { color: var(--primary); }
+        .progress-step.done { color: var(--success); }
+
+        .progress-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            border: 2px solid var(--border);
+            color: var(--text-light);
+            background: white;
+        }
+
+        .progress-step.done .progress-circle {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .progress-step.active .progress-circle {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .progress-line {
+            width: 60px;
+            height: 2px;
+            background: var(--border);
+            margin: 0 12px;
+        }
+
+        .progress-line.done { background: var(--success); }
+
+        /* ===== MAIN LAYOUT ===== */
+        .checkout-container {
+            max-width: 1080px;
+            margin: 32px auto;
+            padding: 0 24px 80px;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 32px;
+            align-items: start;
+        }
+
+        /* ===== FORM SECTION ===== */
+        .checkout-form {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .form-section {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            padding: 28px;
+        }
+
+        .form-section h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-section h2 .section-number {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group:last-child { margin-bottom: 0; }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
+            color: var(--text);
+            background: white;
+            transition: all 0.2s;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: #CBD5E1;
+        }
+
+        /* ===== STRIPE ELEMENTS CONTAINER ===== */
+        .stripe-element-container {
+            padding: 12px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            background: white;
+            transition: all 0.2s;
+            min-height: 44px;
+        }
+
+        .stripe-element-container.StripeElement--focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .stripe-element-container.StripeElement--invalid {
+            border-color: var(--error);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+
+        /* ===== PAYMENT METHOD TABS ===== */
+        .payment-methods {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .payment-method {
+            flex: 1;
+            padding: 14px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .payment-method:hover { border-color: var(--primary); }
+
+        .payment-method.selected {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .payment-method-icon { font-size: 24px; margin-bottom: 4px; }
+        .payment-method-label { font-size: 12px; font-weight: 600; color: var(--text-light); }
+        .payment-method.selected .payment-method-label { color: var(--primary); }
+
+        /* ===== ERROR MESSAGE ===== */
+        .error-message {
+            color: var(--error);
+            font-size: 13px;
+            font-weight: 500;
+            margin-top: 12px;
+            display: none;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .error-message.show { display: flex; }
+
+        /* ===== ORDER SUMMARY SIDEBAR ===== */
+        .order-summary {
+            position: sticky;
+            top: 96px;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .summary-header {
+            padding: 24px 24px 0;
+        }
+
+        .summary-header h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .summary-plan {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            background: var(--bg-gray);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .summary-plan-flag { font-size: 40px; line-height: 1; }
+        .summary-plan-info { flex: 1; }
+        .summary-plan-name { font-weight: 700; font-size: 15px; }
+        .summary-plan-details { font-size: 13px; color: var(--text-light); margin-top: 2px; }
+
+        .summary-plan-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-top: 6px;
+        }
+
+        .summary-details { padding: 0 24px; }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            font-size: 14px;
+        }
+
+        .summary-row .label { color: var(--text-light); }
+        .summary-row .value { font-weight: 600; }
+
+        .summary-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0;
+        }
+
+        .summary-total {
+            display: flex;
+            justify-content: space-between;
+            padding: 16px 24px;
+            font-size: 18px;
+            font-weight: 800;
+            border-top: 2px solid var(--border);
+        }
+
+        .summary-total .amount { color: var(--primary); }
+
+        /* ===== PROMO CODE ===== */
+        .promo-section { padding: 16px 24px 20px; }
+
+        .promo-toggle {
+            font-size: 13px;
+            color: var(--primary);
+            cursor: pointer;
+            font-weight: 600;
+            border: none;
+            background: none;
+            padding: 0;
+        }
+
+        .promo-toggle:hover { text-decoration: underline; }
+
+        .promo-input-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .promo-input-group input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .promo-input-group input:focus { border-color: var(--primary); }
+
+        .btn-apply {
+            padding: 10px 16px;
+            background: var(--bg-gray);
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            color: var(--text);
+            transition: all 0.2s;
+        }
+
+        .btn-apply:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* ===== PAY BUTTON ===== */
+        .pay-button-section { padding: 0 24px 24px; }
+
+        .btn-pay {
+            width: 100%;
+            padding: 16px 24px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-pay:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-pay:active { transform: translateY(0); }
+
+        .btn-pay:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-pay .lock-icon { font-size: 14px; }
+
+        /* ===== SPINNER ===== */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2.5px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .btn-pay.processing .spinner { display: block; }
+        .btn-pay.processing .btn-text { display: none; }
+
+        /* ===== TRUST SIGNALS ===== */
+        .trust-signals {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 20px 24px 0;
+        }
+
+        .trust-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .trust-item .icon { font-size: 14px; }
+
+        /* ===== STRIPE POWERED ===== */
+        .stripe-powered {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .stripe-logo {
+            font-weight: 800;
+            color: #635BFF;
+            font-size: 14px;
+            letter-spacing: -0.5px;
+        }
+
+        /* ===== SECURITY FOOTER ===== */
+        .security-footer {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 0 24px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 32px;
+        }
+
+        .security-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-light);
+        }
+
+        /* ===== SUCCESS OVERLAY ===== */
+        .success-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .success-overlay.show { display: flex; }
+
+        .success-modal {
+            background: white;
+            border-radius: 20px;
+            padding: 48px;
+            text-align: center;
+            max-width: 440px;
+            width: 90%;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .success-icon {
+            width: 72px;
+            height: 72px;
+            background: #ECFDF5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin: 0 auto 20px;
+        }
+
+        .success-modal h2 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+        .success-modal p { color: var(--text-light); font-size: 15px; margin-bottom: 24px; line-height: 1.6; }
+
+        .success-actions { display: flex; flex-direction: column; gap: 10px; }
+
+        .btn-success {
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: block;
+        }
+
+        .btn-success.primary { background: var(--primary); color: white; }
+        .btn-success.primary:hover { background: var(--primary-dark); }
+        .btn-success.secondary { background: var(--bg-gray); color: var(--text); }
+        .btn-success.secondary:hover { background: #E2E8F0; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .checkout-container { grid-template-columns: 1fr; }
+            .order-summary { position: static; order: -1; }
+            .payment-methods { flex-direction: column; }
+            .security-footer { flex-direction: column; gap: 12px; }
+            .progress-step span:not(.progress-circle) { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+    <div class="header-inner">
+        <a href="index.html" class="logo">
+            <div class="logo-icon">📶</div>
+            GlobalSIM
+        </a>
+        <div class="secure-badge">🔒 Secure Checkout</div>
+    </div>
+</header>
+
+<!-- PROGRESS -->
+<div class="progress-bar">
+    <div class="progress-step done">
+        <div class="progress-circle">✓</div>
+        <span>Select Plan</span>
+    </div>
+    <div class="progress-line done"></div>
+    <div class="progress-step active">
+        <div class="progress-circle">2</div>
+        <span>Payment</span>
+    </div>
+    <div class="progress-line"></div>
+    <div class="progress-step">
+        <div class="progress-circle">3</div>
+        <span>Confirmation</span>
+    </div>
+</div>
+
+<!-- CHECKOUT CONTENT -->
+<div class="checkout-container">
+    <!-- LEFT: FORM -->
+    <div class="checkout-form">
+
+        <!-- Contact Info -->
+        <div class="form-section">
+            <h2>
+                <span class="section-number">1</span>
+                Contact Information
+            </h2>
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" placeholder="you@example.com" id="email" required>
+            </div>
+            <p style="font-size: 12px; color: var(--text-light); margin-top: -8px;">Your eSIM QR code will be sent to this email.</p>
+        </div>
+
+        <!-- Payment -->
+        <div class="form-section">
+            <h2>
+                <span class="section-number">2</span>
+                Payment Method
+            </h2>
+
+            <!-- Payment Method Tabs -->
+            <div class="payment-methods">
+                <div class="payment-method selected" onclick="selectPayment(this, 'card')">
+                    <div class="payment-method-icon">💳</div>
+                    <div class="payment-method-label">Credit Card</div>
+                </div>
+                <div class="payment-method" onclick="selectPayment(this, 'apple')">
+                    <div class="payment-method-icon">🍎</div>
+                    <div class="payment-method-label">Apple Pay</div>
+                </div>
+                <div class="payment-method" onclick="selectPayment(this, 'google')">
+                    <div class="payment-method-icon">G</div>
+                    <div class="payment-method-label">Google Pay</div>
+                </div>
+            </div>
+
+            <!-- Stripe Card Element -->
+            <div id="card-form">
+                <div class="form-group">
+                    <label>Card Details</label>
+                    <div id="card-element" class="stripe-element-container">
+                        <!-- Stripe Elements will mount here -->
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Cardholder Name</label>
+                    <input type="text" placeholder="Name on card" id="cardholder-name">
+                </div>
+            </div>
+
+            <!-- Apple/Google Pay placeholder -->
+            <div id="wallet-form" style="display:none;">
+                <div style="text-align:center; padding: 40px 20px; background: var(--bg-gray); border-radius: 12px; color: var(--text-light);">
+                    <div style="font-size: 48px; margin-bottom: 12px;" id="wallet-icon">🍎</div>
+                    <p style="font-size: 15px; font-weight: 600;" id="wallet-label">Apple Pay</p>
+                    <p style="font-size: 13px; margin-top: 4px;">Click "Pay Now" to open the payment sheet.</p>
+                </div>
+            </div>
+
+            <!-- Error display -->
+            <div class="error-message" id="card-errors">
+                <span>⚠️</span>
+                <span id="card-error-text"></span>
+            </div>
+        </div>
+
+        <!-- Terms -->
+        <div style="display: flex; align-items: flex-start; gap: 10px; padding: 4px 0;">
+            <input type="checkbox" id="terms" style="margin-top: 4px; width: 18px; height: 18px; accent-color: var(--primary);">
+            <label for="terms" style="font-size: 13px; color: var(--text-light); line-height: 1.5; cursor: pointer;">
+                I agree to the <a href="#" style="color: var(--primary);">Terms of Service</a> and 
+                <a href="#" style="color: var(--primary);">Refund Policy</a>. I understand that the eSIM is non-refundable once activated.
+            </label>
+        </div>
+    </div>
+
+    <!-- RIGHT: ORDER SUMMARY -->
+    <div class="order-summary">
+        <div class="summary-card">
+            <div class="summary-header">
+                <h3>Order Summary</h3>
+                <div class="summary-plan">
+                    <span class="summary-plan-flag">🇯🇵</span>
+                    <div class="summary-plan-info">
+                        <div class="summary-plan-name">Japan eSIM — 5 GB</div>
+                        <div class="summary-plan-details">30 days · NTT Docomo · 5G/LTE</div>
+                        <span class="summary-plan-badge">Most Popular</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="summary-details">
+                <div class="summary-row">
+                    <span class="label">Plan price</span>
+                    <span class="value">$13.00</span>
+                </div>
+                <div class="summary-row">
+                    <span class="label">Service fee</span>
+                    <span class="value">$0.99</span>
+                </div>
+                <div class="summary-row">
+                    <span class="label">Tax</span>
+                    <span class="value">$0.00</span>
+                </div>
+                <div class="summary-divider"></div>
+            </div>
+
+            <!-- Promo Code -->
+            <div class="promo-section">
+                <button class="promo-toggle" onclick="togglePromo()">+ Add promo code</button>
+                <div class="promo-input-group" id="promo-group" style="display:none;">
+                    <input type="text" placeholder="Enter code">
+                    <button class="btn-apply" onclick="applyPromo()">Apply</button>
+                </div>
+            </div>
+
+            <div class="summary-total">
+                <span>Total</span>
+                <span class="amount">$13.99</span>
+            </div>
+
+            <div class="trust-signals">
+                <div class="trust-item">
+                    <span class="icon">✅</span>
+                    Instant delivery via email
+                </div>
+                <div class="trust-item">
+                    <span class="icon">🔄</span>
+                    Full refund before activation
+                </div>
+                <div class="trust-item">
+                    <span class="icon">💬</span>
+                    24/7 customer support
+                </div>
+            </div>
+
+            <div class="pay-button-section">
+                <button class="btn-pay" id="pay-btn" onclick="processPayment()" disabled>
+                    <span class="lock-icon">🔒</span>
+                    <span class="btn-text">Pay $13.99</span>
+                    <div class="spinner"></div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Powered by Stripe -->
+        <div style="display: flex; justify-content: center; margin-top: 16px;">
+            <div class="stripe-powered">
+                Powered by <span class="stripe-logo">stripe</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SECURITY FOOTER -->
+<div class="security-footer">
+    <div class="security-item">🔒 256-bit SSL encryption</div>
+    <div class="security-item">🛡️ PCI DSS compliant</div>
+    <div class="security-item">💳 We never store your card</div>
+</div>
+
+<!-- FOOTER -->
+<footer style="background: #0F172A; color: #94A3B8; padding: 32px 24px; text-align: center; font-size: 13px;">
+    <p>© 2026 GlobalSIM. All rights reserved. | <a href="#" style="color: #94A3B8;">Privacy</a> · <a href="#" style="color: #94A3B8;">Terms</a> · <a href="#" style="color: #94A3B8;">Support</a></p>
+</footer>
+
+<!-- SUCCESS MODAL -->
+<div class="success-overlay" id="success-overlay">
+    <div class="success-modal">
+        <div class="success-icon">✅</div>
+        <h2>Payment Successful!</h2>
+        <p>Your Japan 5GB eSIM is ready. We've sent the QR code and installation instructions to your email.</p>
+        <div style="background: var(--bg-gray); border-radius: 10px; padding: 16px; margin-bottom: 24px;">
+            <div style="font-size: 13px; color: var(--text-light);">Payment ID</div>
+            <div style="font-size: 14px; font-weight: 700; font-family: monospace; word-break: break-all;" id="payment-id"></div>
+        </div>
+        <div class="success-actions">
+            <a href="#" class="btn-success primary">📱 View Installation Guide</a>
+            <a href="plans.html" class="btn-success secondary">← Browse More Plans</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ===== STRIPE INITIALIZATION =====
+    let stripe, elements, cardElement;
+
+    // Plan config (in production, this would come from URL params / backend)
+    const PLAN = {
+        name: 'Japan eSIM — 5 GB',
+        amount: 1399, // $13.99 in cents
+    };
+
+    // Fetch publishable key from server and init Stripe
+    async function initStripe() {
+        try {
+            const response = await fetch('/api/config', {
+                headers: { 'bypass-tunnel-reminder': 'true' }
+            });
+            const { publishableKey } = await response.json();
+
+            stripe = Stripe(publishableKey);
+            elements = stripe.elements();
+
+            // Create Card Element with custom styling
+            cardElement = elements.create('card', {
+                style: {
+                    base: {
+                        fontSize: '15px',
+                        color: '#1E293B',
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                        '::placeholder': { color: '#CBD5E1' },
+                    },
+                    invalid: {
+                        color: '#EF4444',
+                        iconColor: '#EF4444',
+                    },
+                },
+                hidePostalCode: false,
+            });
+
+            // Mount to DOM
+            cardElement.mount('#card-element');
+
+            // Listen for real-time validation errors
+            cardElement.on('change', (event) => {
+                const errorEl = document.getElementById('card-errors');
+                const errorText = document.getElementById('card-error-text');
+                if (event.error) {
+                    errorText.textContent = event.error.message;
+                    errorEl.classList.add('show');
+                } else {
+                    errorEl.classList.remove('show');
+                }
+            });
+
+            // Enable pay button
+            document.getElementById('pay-btn').disabled = false;
+
+        } catch (err) {
+            console.error('Failed to initialize Stripe:', err);
+            showError('Failed to load payment form. Please refresh the page.');
+        }
+    }
+
+    // ===== PAYMENT PROCESSING =====
+    async function processPayment() {
+        const email = document.getElementById('email').value.trim();
+        const name = document.getElementById('cardholder-name').value.trim();
+        const terms = document.getElementById('terms').checked;
+
+        // Validation
+        if (!email) return showError('Please enter your email address.');
+        if (!email.includes('@')) return showError('Please enter a valid email address.');
+        if (!terms) return showError('Please agree to the Terms of Service.');
+
+        const btn = document.getElementById('pay-btn');
+        btn.classList.add('processing');
+        btn.disabled = true;
+        hideError();
+
+        try {
+            // 1. Create PaymentIntent on the server
+            const response = await fetch('/api/create-payment-intent', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'bypass-tunnel-reminder': 'true' },
+                body: JSON.stringify({
+                    amount: PLAN.amount,
+                    email: email,
+                    planName: PLAN.name,
+                }),
+            });
+
+            const { clientSecret, error: serverError } = await response.json();
+
+            if (serverError) {
+                throw new Error(serverError);
+            }
+
+            // 2. Confirm payment with Stripe
+            const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+                payment_method: {
+                    card: cardElement,
+                    billing_details: {
+                        name: name || undefined,
+                        email: email,
+                    },
+                },
+            });
+
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            // 3. Payment succeeded!
+            if (paymentIntent.status === 'succeeded') {
+                document.getElementById('payment-id').textContent = paymentIntent.id;
+                document.getElementById('success-overlay').classList.add('show');
+            }
+
+        } catch (err) {
+            showError(err.message);
+        } finally {
+            btn.classList.remove('processing');
+            btn.disabled = false;
+        }
+    }
+
+    // ===== UI HELPERS =====
+    function showError(message) {
+        const errorEl = document.getElementById('card-errors');
+        const errorText = document.getElementById('card-error-text');
+        errorText.textContent = message;
+        errorEl.classList.add('show');
+    }
+
+    function hideError() {
+        document.getElementById('card-errors').classList.remove('show');
+    }
+
+    function selectPayment(el, method) {
+        document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
+        el.classList.add('selected');
+
+        const cardForm = document.getElementById('card-form');
+        const walletForm = document.getElementById('wallet-form');
+
+        if (method === 'card') {
+            cardForm.style.display = 'block';
+            walletForm.style.display = 'none';
+        } else {
+            cardForm.style.display = 'none';
+            walletForm.style.display = 'block';
+            document.getElementById('wallet-icon').textContent = method === 'apple' ? '🍎' : '🔷';
+            document.getElementById('wallet-label').textContent = method === 'apple' ? 'Apple Pay' : 'Google Pay';
+        }
+    }
+
+    function togglePromo() {
+        const group = document.getElementById('promo-group');
+        group.style.display = group.style.display === 'none' ? 'flex' : 'none';
+    }
+
+    function applyPromo() {
+        const input = document.querySelector('#promo-group input');
+        if (input.value.trim()) {
+            const btn = document.querySelector('.btn-apply');
+            btn.textContent = '✓ Applied';
+            btn.style.color = 'var(--success)';
+            btn.style.borderColor = 'var(--success)';
+        }
+    }
+
+    // Close modal on overlay click
+    document.getElementById('success-overlay').addEventListener('click', function(e) {
+        if (e.target === this) this.classList.remove('show');
+    });
+
+    // ===== INIT =====
+    initStripe();
+</script>
+
+</body>
+</html>

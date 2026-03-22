@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlobalSIM — Stay Connected Anywhere</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #4338CA;
+            --primary-light: #EEF2FF;
+            --accent: #06B6D4;
+            --text: #1E293B;
+            --text-light: #64748B;
+            --bg: #FFFFFF;
+            --bg-gray: #F8FAFC;
+            --border: #E2E8F0;
+            --success: #10B981;
+            --radius: 12px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            background: var(--bg);
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        nav { display: flex; align-items: center; gap: 32px; }
+        nav a { text-decoration: none; color: var(--text-light); font-weight: 500; font-size: 15px; transition: color 0.2s; }
+        nav a:hover { color: var(--primary); }
+
+        .nav-buttons { display: flex; gap: 12px; align-items: center; }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: var(--shadow-lg); }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* ===== HERO ===== */
+        .hero {
+            background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #06B6D4 100%);
+            padding: 80px 24px 100px;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.5;
+        }
+
+        .hero-content { position: relative; z-index: 1; max-width: 700px; margin: 0 auto; }
+
+        .hero h1 {
+            font-size: 48px;
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
+        }
+
+        .hero p {
+            font-size: 20px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+            line-height: 1.5;
+        }
+
+        /* Search Bar */
+        .search-container {
+            max-width: 560px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 18px 24px 18px 52px;
+            font-size: 17px;
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            outline: none;
+            background: white;
+            color: var(--text);
+        }
+
+        .search-bar::placeholder { color: #94A3B8; }
+
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+            color: #94A3B8;
+        }
+
+        .search-hint {
+            margin-top: 16px;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        /* ===== POPULAR DESTINATIONS ===== */
+        .section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 80px 24px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .section-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+        }
+        .section-link:hover { text-decoration: underline; }
+
+        .destinations-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .dest-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .dest-card:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .dest-flag {
+            font-size: 36px;
+            line-height: 1;
+        }
+
+        .dest-info h3 { font-size: 16px; font-weight: 600; }
+        .dest-info p { font-size: 13px; color: var(--text-light); margin-top: 2px; }
+
+        /* ===== REGIONAL PLANS ===== */
+        .bg-gray { background: var(--bg-gray); }
+
+        .regions-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .region-card {
+            background: white;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: all 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .region-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+
+        .region-banner {
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+
+        .region-banner.asia { background: linear-gradient(135deg, #FEF3C7, #FDE68A); }
+        .region-banner.europe { background: linear-gradient(135deg, #DBEAFE, #93C5FD); }
+        .region-banner.americas { background: linear-gradient(135deg, #D1FAE5, #6EE7B7); }
+        .region-banner.global { background: linear-gradient(135deg, #E0E7FF, #A5B4FC); }
+
+        .region-info { padding: 16px; }
+        .region-info h3 { font-size: 17px; font-weight: 600; }
+        .region-info p { font-size: 13px; color: var(--text-light); margin-top: 4px; }
+
+        /* ===== HOW IT WORKS ===== */
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            text-align: center;
+        }
+
+        .step-icon {
+            width: 72px;
+            height: 72px;
+            background: var(--primary-light);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin: 0 auto 20px;
+        }
+
+        .step-num {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 28px;
+            margin-bottom: 12px;
+        }
+
+        .step h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+        .step p { font-size: 15px; color: var(--text-light); max-width: 280px; margin: 0 auto; }
+
+        /* ===== WHY CHOOSE US ===== */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+        }
+
+        .feature {
+            text-align: center;
+            padding: 32px 20px;
+            border-radius: var(--radius);
+            background: white;
+            border: 1px solid var(--border);
+        }
+
+        .feature-icon {
+            font-size: 36px;
+            margin-bottom: 16px;
+        }
+
+        .feature h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+        .feature p { font-size: 14px; color: var(--text-light); }
+
+        /* ===== TRUST BAR ===== */
+        .trust-bar {
+            text-align: center;
+            padding: 60px 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .trust-stats {
+            display: flex;
+            justify-content: center;
+            gap: 64px;
+            margin-top: 24px;
+        }
+
+        .trust-stat h3 { font-size: 32px; font-weight: 800; color: var(--primary); }
+        .trust-stat p { font-size: 14px; color: var(--text-light); margin-top: 4px; }
+
+        /* ===== DEVICE CHECK ===== */
+        .device-check {
+            background: linear-gradient(135deg, var(--primary-light), #F0F9FF);
+            border-radius: 16px;
+            padding: 48px;
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .device-check-content { flex: 1; }
+        .device-check-content h2 { font-size: 24px; font-weight: 700; margin-bottom: 12px; }
+        .device-check-content p { color: var(--text-light); margin-bottom: 24px; }
+
+        .device-check-visual {
+            font-size: 80px;
+            opacity: 0.8;
+        }
+
+        /* ===== FAQ ===== */
+        .faq-list { max-width: 720px; margin: 0 auto; }
+
+        .faq-item {
+            border-bottom: 1px solid var(--border);
+            padding: 20px 0;
+        }
+
+        .faq-q {
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .faq-q::after { content: '+'; font-size: 22px; color: var(--text-light); }
+
+        .faq-a {
+            padding-top: 12px;
+            color: var(--text-light);
+            font-size: 15px;
+            display: none;
+        }
+
+        .faq-item.open .faq-a { display: block; }
+        .faq-item.open .faq-q::after { content: '−'; }
+
+        /* ===== CTA ===== */
+        .cta {
+            background: linear-gradient(135deg, #4F46E5, #7C3AED);
+            color: white;
+            text-align: center;
+            padding: 80px 24px;
+        }
+
+        .cta h2 { font-size: 36px; font-weight: 800; margin-bottom: 16px; }
+        .cta p { font-size: 18px; opacity: 0.9; margin-bottom: 32px; }
+
+        .btn-white {
+            background: white;
+            color: var(--primary);
+            padding: 14px 32px;
+            font-size: 16px;
+            border-radius: 12px;
+        }
+        .btn-white:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+
+        /* ===== FOOTER ===== */
+        footer {
+            background: #0F172A;
+            color: #94A3B8;
+            padding: 64px 24px 32px;
+        }
+
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 48px;
+        }
+
+        .footer-brand p { margin-top: 12px; font-size: 14px; line-height: 1.6; }
+
+        footer h4 { color: white; font-size: 14px; font-weight: 600; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+        footer ul { list-style: none; }
+        footer li { margin-bottom: 10px; }
+        footer a { color: #94A3B8; text-decoration: none; font-size: 14px; }
+        footer a:hover { color: white; }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 40px auto 0;
+            padding-top: 24px;
+            border-top: 1px solid #1E293B;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 32px; }
+            .hero p { font-size: 16px; }
+            .destinations-grid, .regions-grid, .features-grid { grid-template-columns: repeat(2, 1fr); }
+            .steps { grid-template-columns: 1fr; gap: 32px; }
+            .footer-inner { grid-template-columns: 1fr 1fr; }
+            .device-check { flex-direction: column; text-align: center; }
+            nav { display: none; }
+            .trust-stats { gap: 32px; }
+        }
+
+        @media (max-width: 480px) {
+            .destinations-grid, .regions-grid { grid-template-columns: 1fr; }
+            .features-grid { grid-template-columns: 1fr 1fr; }
+            .trust-stats { flex-direction: column; gap: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+    <div class="header-inner">
+        <a href="index.html" class="logo">
+            <div class="logo-icon">📶</div>
+            GlobalSIM
+        </a>
+        <nav>
+            <a href="plans.html">Destinations</a>
+            <a href="#how-it-works">How It Works</a>
+            <a href="#faq">FAQ</a>
+            <a href="#">Support</a>
+        </nav>
+        <div class="nav-buttons">
+            <a href="#" class="btn btn-outline">Log In</a>
+            <a href="#" class="btn btn-primary">Get Started</a>
+        </div>
+    </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-content">
+        <h1>Stay connected anywhere in the world</h1>
+        <p>Buy an eSIM and get instant mobile data in 150+ countries. No SIM swapping, no roaming fees.</p>
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-bar" placeholder="Where are you traveling? (e.g., Japan, Europe)">
+        </div>
+        <p class="search-hint">Popular: Japan • Thailand • USA • Europe • South Korea</p>
+    </div>
+</section>
+
+<!-- POPULAR DESTINATIONS -->
+<section class="section">
+    <div class="section-header">
+        <h2 class="section-title">Popular Destinations</h2>
+        <a href="plans.html" class="section-link">View all destinations →</a>
+    </div>
+    <div class="destinations-grid">
+        <a href="plans.html" class="dest-card">
+            <span class="dest-flag">🇯🇵</span>
+            <div class="dest-info">
+                <h3>Japan</h3>
+                <p>From $4.50</p>
+            </div>
+        </a>
+        <a href="#" class="dest-card">
+            <span class="dest-flag">🇹🇭</span>
+            <div class="dest-info">
+                <h3>Thailand</h3>
+                <p>From $3.00</p>
+            </div>
+        </a>
+        <a href="#" class="dest-card">
+            <span class="dest-flag">🇺🇸</span>
+            <div class="dest-info">
+                <h3>United States</h3>
+                <p>From $5.00</p>
+            </div>
+        </a>
+        <a href="#" class="dest-card">
+            <span class="dest-flag">🇬🇧</span>
+            <div class="dest-info">
+                <h3>United Kingdom</h3>
+                <p>From $4.00</p>
+            </div>
+        </a>
+        <a href="#" class="dest-card">
+            <span class="dest-flag">🇰🇷</span>
+            <div class="dest-info">
+                <h3>South Korea</h3>
+                <p>From $4.50</p>
+            </div>
+        </a>
+        <a href="#" class="dest-card">
+            <span class="dest-flag">🇫🇷</span>
+            <div class="dest-info">
+                <h3>France</h3>
+                <p>From $4.00</p>
+            </div>
+        </a>
+        <a href="#" class="dest-card">
+            <span class="dest-flag">🇮🇹</span>
+            <div class="dest-info">
+                <h3>Italy</h3>
+                <p>From $4.00</p>
+            </div>
+        </a>
+        <a href="#" class="dest-card">
+            <span class="dest-flag">🇪🇸</span>
+            <div class="dest-info">
+                <h3>Spain</h3>
+                <p>From $4.00</p>
+            </div>
+        </a>
+    </div>
+</section>
+
+<!-- REGIONAL PLANS -->
+<div class="bg-gray">
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">Regional & Global Plans</h2>
+            <a href="#" class="section-link">Compare plans →</a>
+        </div>
+        <div class="regions-grid">
+            <a href="#" class="region-card">
+                <div class="region-banner asia">🌏</div>
+                <div class="region-info">
+                    <h3>Asia Pacific</h3>
+                    <p>15+ countries · From $8</p>
+                </div>
+            </a>
+            <a href="#" class="region-card">
+                <div class="region-banner europe">🌍</div>
+                <div class="region-info">
+                    <h3>Europe</h3>
+                    <p>30+ countries · From $10</p>
+                </div>
+            </a>
+            <a href="#" class="region-card">
+                <div class="region-banner americas">🌎</div>
+                <div class="region-info">
+                    <h3>Americas</h3>
+                    <p>10+ countries · From $9</p>
+                </div>
+            </a>
+            <a href="#" class="region-card">
+                <div class="region-banner global">🌐</div>
+                <div class="region-info">
+                    <h3>Global</h3>
+                    <p>100+ countries · From $15</p>
+                </div>
+            </a>
+        </div>
+    </section>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how-it-works">
+    <h2 class="section-title" style="text-align: center; margin-bottom: 48px;">Get connected in 3 easy steps</h2>
+    <div class="steps">
+        <div class="step">
+            <div class="step-icon">🌍</div>
+            <div class="step-num">1</div>
+            <h3>Choose Your Destination</h3>
+            <p>Browse 150+ countries and pick the data plan that fits your trip.</p>
+        </div>
+        <div class="step">
+            <div class="step-icon">💳</div>
+            <div class="step-num">2</div>
+            <h3>Purchase Instantly</h3>
+            <p>Checkout securely. Your eSIM QR code is delivered to your email in seconds.</p>
+        </div>
+        <div class="step">
+            <div class="step-icon">📱</div>
+            <div class="step-num">3</div>
+            <h3>Scan & Connect</h3>
+            <p>Scan the QR code with your phone's camera. You're online — that's it!</p>
+        </div>
+    </div>
+</section>
+
+<!-- WHY CHOOSE US -->
+<div class="bg-gray">
+    <section class="section">
+        <h2 class="section-title" style="text-align: center; margin-bottom: 48px;">Why travelers choose GlobalSIM</h2>
+        <div class="features-grid">
+            <div class="feature">
+                <div class="feature-icon">⚡</div>
+                <h3>Instant Delivery</h3>
+                <p>Get your eSIM QR code via email within seconds of purchase.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">💰</div>
+                <h3>Save Up to 90%</h3>
+                <p>Compared to international roaming charges from your carrier.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🌐</div>
+                <h3>150+ Countries</h3>
+                <p>From Tokyo to Toronto, we've got you covered worldwide.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🛟</div>
+                <h3>24/7 Support</h3>
+                <p>Real humans ready to help, any time, any timezone.</p>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- DEVICE COMPATIBILITY -->
+<section class="section">
+    <div class="device-check">
+        <div class="device-check-content">
+            <h2>Is your device eSIM compatible?</h2>
+            <p>Most phones from 2020 onwards support eSIM, including iPhone XR and newer, Samsung Galaxy S20+, Google Pixel 3a, and more.</p>
+            <a href="#" class="btn btn-primary">Check My Device →</a>
+        </div>
+        <div class="device-check-visual">📱</div>
+    </div>
+</section>
+
+<!-- TRUST BAR -->
+<div class="trust-bar">
+    <h2 class="section-title">Trusted by travelers worldwide</h2>
+    <div class="trust-stats">
+        <div class="trust-stat">
+            <h3>150+</h3>
+            <p>Countries covered</p>
+        </div>
+        <div class="trust-stat">
+            <h3>500K+</h3>
+            <p>eSIMs sold</p>
+        </div>
+        <div class="trust-stat">
+            <h3>4.8 ⭐</h3>
+            <p>Average rating</p>
+        </div>
+        <div class="trust-stat">
+            <h3>24/7</h3>
+            <p>Customer support</p>
+        </div>
+    </div>
+</div>
+
+<!-- FAQ -->
+<div class="bg-gray">
+    <section class="section" id="faq">
+        <h2 class="section-title" style="text-align: center; margin-bottom: 48px;">Frequently Asked Questions</h2>
+        <div class="faq-list">
+            <div class="faq-item open">
+                <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What is an eSIM?</div>
+                <div class="faq-a">An eSIM (embedded SIM) is a digital SIM built into your phone. Instead of inserting a physical SIM card, you simply scan a QR code to activate a mobile data plan. It's faster, easier, and you keep your regular SIM active for calls and texts.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How do I install an eSIM?</div>
+                <div class="faq-a">After purchase, you'll receive a QR code via email and in your dashboard. Go to your phone's Settings → Cellular/Mobile → Add eSIM → Scan QR Code. The whole process takes less than 2 minutes.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Can I use my regular phone number while using an eSIM?</div>
+                <div class="faq-a">Yes! Your physical SIM keeps working for calls and texts. The eSIM provides data only (or data + calls depending on the plan). Your phone runs both simultaneously.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What happens if I run out of data?</div>
+                <div class="faq-a">You can easily top up from your dashboard or purchase a new plan. Some plans also offer unlimited data options so you never have to worry about running out.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Can I get a refund?</div>
+                <div class="faq-a">Yes, we offer refunds for unused and uninstalled eSIMs. Once an eSIM has been installed or activated, it cannot be refunded. Contact our support team for assistance.</div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- CTA -->
+<section class="cta">
+    <h2>Ready to ditch roaming fees?</h2>
+    <p>Join thousands of travelers who stay connected for less.</p>
+    <a href="#" class="btn btn-white">Browse eSIM Plans →</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <div class="footer-inner">
+        <div class="footer-brand">
+            <a href="#" class="logo" style="color: white;">
+                <div class="logo-icon">📶</div>
+                GlobalSIM
+            </a>
+            <p>Affordable eSIM data plans for travelers. Stay connected in 150+ countries without the hassle of physical SIM cards or expensive roaming.</p>
+        </div>
+        <div>
+            <h4>Product</h4>
+            <ul>
+                <li><a href="plans.html">All Destinations</a></li>
+                <li><a href="#">Regional Plans</a></li>
+                <li><a href="#">Global Plans</a></li>
+                <li><a href="#">Pricing</a></li>
+            </ul>
+        </div>
+        <div>
+            <h4>Support</h4>
+            <ul>
+                <li><a href="#">Help Center</a></li>
+                <li><a href="#">Contact Us</a></li>
+                <li><a href="#">Device Compatibility</a></li>
+                <li><a href="#">Installation Guide</a></li>
+            </ul>
+        </div>
+        <div>
+            <h4>Company</h4>
+            <ul>
+                <li><a href="#">About Us</a></li>
+                <li><a href="#">Blog</a></li>
+                <li><a href="#">Privacy Policy</a></li>
+                <li><a href="#">Terms of Service</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>© 2026 GlobalSIM. All rights reserved.</p>
+    </div>
+</footer>
+
+</body>
+</html>

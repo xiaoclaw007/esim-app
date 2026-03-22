@@ -1,0 +1,6 @@
+[dotenv@17.3.1] injecting env (3) from .env -- tip: 🤖 agentic secret storage: https://dotenvx.com/as2
+
+🚀 GlobalSIM server running at http://localhost:8090
+   Stripe mode: 🟢 TEST
+   Webhook secret: not set (dev mode)
+
