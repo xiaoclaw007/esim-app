@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout — GlobalSIM</title>
-    <script src="https://js.stripe.com/v3/"></script>
+    <!-- Static prototype - no Stripe needed -->
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -663,12 +663,20 @@
                 </div>
             </div>
 
-            <!-- Stripe Card Element -->
+            <!-- Card Form (static prototype) -->
             <div id="card-form">
                 <div class="form-group">
-                    <label>Card Details</label>
-                    <div id="card-element" class="stripe-element-container">
-                        <!-- Stripe Elements will mount here -->
+                    <label>Card Number</label>
+                    <input type="text" placeholder="4242 4242 4242 4242" id="card-number" maxlength="19">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label>Expiry</label>
+                        <input type="text" placeholder="MM / YY" id="card-expiry" maxlength="7">
+                    </div>
+                    <div class="form-group">
+                        <label>CVC</label>
+                        <input type="text" placeholder="123" id="card-cvc" maxlength="4">
                     </div>
                 </div>
                 <div class="form-group">
@@ -804,78 +812,21 @@
             <div style="font-size: 14px; font-weight: 700; font-family: monospace; word-break: break-all;" id="payment-id"></div>
         </div>
         <div class="success-actions">
-            <a href="#" class="btn-success primary">📱 View Installation Guide</a>
-            <a href="plans.html" class="btn-success secondary">← Browse More Plans</a>
+            <a href="confirmation.html" class="btn-success primary">📱 View Your eSIM</a>
+            <a href="dashboard.html" class="btn-success secondary">Go to My eSIMs</a>
         </div>
     </div>
 </div>
 
 <script>
-    // ===== STRIPE INITIALIZATION =====
-    let stripe, elements, cardElement;
+    // ===== STATIC PROTOTYPE - NO SERVER NEEDED =====
+    
+    // Enable pay button immediately
+    document.getElementById('pay-btn').disabled = false;
 
-    // Plan config (in production, this would come from URL params / backend)
-    const PLAN = {
-        name: 'Japan eSIM — 5 GB',
-        amount: 1399, // $13.99 in cents
-    };
-
-    // Fetch publishable key from server and init Stripe
-    async function initStripe() {
-        try {
-            const response = await fetch('/api/config', {
-                headers: { 'bypass-tunnel-reminder': 'true' }
-            });
-            const { publishableKey } = await response.json();
-
-            stripe = Stripe(publishableKey);
-            elements = stripe.elements();
-
-            // Create Card Element with custom styling
-            cardElement = elements.create('card', {
-                style: {
-                    base: {
-                        fontSize: '15px',
-                        color: '#1E293B',
-                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                        '::placeholder': { color: '#CBD5E1' },
-                    },
-                    invalid: {
-                        color: '#EF4444',
-                        iconColor: '#EF4444',
-                    },
-                },
-                hidePostalCode: false,
-            });
-
-            // Mount to DOM
-            cardElement.mount('#card-element');
-
-            // Listen for real-time validation errors
-            cardElement.on('change', (event) => {
-                const errorEl = document.getElementById('card-errors');
-                const errorText = document.getElementById('card-error-text');
-                if (event.error) {
-                    errorText.textContent = event.error.message;
-                    errorEl.classList.add('show');
-                } else {
-                    errorEl.classList.remove('show');
-                }
-            });
-
-            // Enable pay button
-            document.getElementById('pay-btn').disabled = false;
-
-        } catch (err) {
-            console.error('Failed to initialize Stripe:', err);
-            showError('Failed to load payment form. Please refresh the page.');
-        }
-    }
-
-    // ===== PAYMENT PROCESSING =====
-    async function processPayment() {
+    // ===== PAYMENT PROCESSING (simulated) =====
+    function processPayment() {
         const email = document.getElementById('email').value.trim();
-        const name = document.getElementById('cardholder-name').value.trim();
         const terms = document.getElementById('terms').checked;
 
         // Validation
@@ -888,51 +839,20 @@
         btn.disabled = true;
         hideError();
 
-        try {
-            // 1. Create PaymentIntent on the server
-            const response = await fetch('/api/create-payment-intent', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'bypass-tunnel-reminder': 'true' },
-                body: JSON.stringify({
-                    amount: PLAN.amount,
-                    email: email,
-                    planName: PLAN.name,
-                }),
-            });
-
-            const { clientSecret, error: serverError } = await response.json();
-
-            if (serverError) {
-                throw new Error(serverError);
-            }
-
-            // 2. Confirm payment with Stripe
-            const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-                payment_method: {
-                    card: cardElement,
-                    billing_details: {
-                        name: name || undefined,
-                        email: email,
-                    },
-                },
-            });
-
-            if (error) {
-                throw new Error(error.message);
-            }
-
-            // 3. Payment succeeded!
-            if (paymentIntent.status === 'succeeded') {
-                document.getElementById('payment-id').textContent = paymentIntent.id;
-                document.getElementById('success-overlay').classList.add('show');
-            }
-
-        } catch (err) {
-            showError(err.message);
-        } finally {
+        // Simulate payment processing delay
+        setTimeout(() => {
+            // Generate fake payment ID
+            const paymentId = 'pi_' + Math.random().toString(36).substr(2, 24);
+            document.getElementById('payment-id').textContent = paymentId;
+            document.getElementById('success-overlay').classList.add('show');
             btn.classList.remove('processing');
             btn.disabled = false;
-        }
+
+            // Auto-redirect to confirmation after 3 seconds
+            setTimeout(() => {
+                window.location.href = 'confirmation.html';
+            }, 3000);
+        }, 1500);
     }
 
     // ===== UI HELPERS =====
@@ -984,9 +904,6 @@
     document.getElementById('success-overlay').addEventListener('click', function(e) {
         if (e.target === this) this.classList.remove('show');
     });
-
-    // ===== INIT =====
-    initStripe();
 </script>
 
 </body>

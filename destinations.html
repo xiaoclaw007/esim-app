@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Destinations — GlobalSIM</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #4338CA;
+            --primary-light: #EEF2FF;
+            --accent: #06B6D4;
+            --text: #1E293B;
+            --text-light: #64748B;
+            --bg: #FFFFFF;
+            --bg-gray: #F8FAFC;
+            --border: #E2E8F0;
+            --success: #10B981;
+            --radius: 12px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            background: var(--bg-gray);
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        nav { display: flex; align-items: center; gap: 32px; }
+        nav a { text-decoration: none; color: var(--text-light); font-weight: 500; font-size: 15px; transition: color 0.2s; }
+        nav a:hover { color: var(--primary); }
+        nav a.active { color: var(--primary); }
+
+        .nav-buttons { display: flex; gap: 12px; align-items: center; }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: var(--shadow-lg); }
+        .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* ===== HAMBURGER ===== */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 4px;
+            background: none;
+            border: none;
+        }
+        .hamburger span {
+            display: block;
+            width: 24px;
+            height: 2.5px;
+            background: var(--text);
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+        .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+        .hamburger.active span:nth-child(2) { opacity: 0; }
+        .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            top: 64px;
+            left: 0;
+            right: 0;
+            background: white;
+            border-bottom: 1px solid var(--border);
+            padding: 16px 24px;
+            z-index: 99;
+            box-shadow: var(--shadow-lg);
+        }
+        .mobile-nav.open { display: block; }
+        .mobile-nav a {
+            display: block;
+            padding: 12px 0;
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            font-size: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .mobile-nav a:last-child { border-bottom: none; }
+        .mobile-nav a:hover { color: var(--primary); }
+
+        /* ===== PAGE HERO ===== */
+        .page-hero {
+            background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #06B6D4 100%);
+            padding: 48px 24px 56px;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.5;
+        }
+
+        .page-hero h1 {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .page-hero p {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 32px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ===== SEARCH ===== */
+        .search-container {
+            max-width: 560px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 16px 24px 16px 48px;
+            font-size: 16px;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            outline: none;
+            background: white;
+            color: var(--text);
+        }
+
+        .search-bar::placeholder { color: #94A3B8; }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: #94A3B8;
+        }
+
+        .search-results-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            z-index: 10;
+        }
+
+        .search-results-dropdown.open { display: block; }
+
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            text-decoration: none;
+            color: var(--text);
+            transition: background 0.15s;
+        }
+
+        .search-result-item:hover { background: var(--bg-gray); }
+        .search-result-item .flag { font-size: 24px; }
+        .search-result-item .name { font-weight: 600; font-size: 15px; }
+        .search-result-item .price { margin-left: auto; font-size: 13px; color: var(--text-light); }
+
+        /* ===== FILTER TABS ===== */
+        .filter-section {
+            max-width: 1200px;
+            margin: -20px auto 0;
+            padding: 0 24px;
+            position: relative;
+            z-index: 3;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            background: white;
+            padding: 8px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .filter-tab {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--text-light);
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .filter-tab:hover { background: var(--bg-gray); color: var(--text); }
+        .filter-tab.active { background: var(--primary); color: white; }
+
+        /* ===== DESTINATIONS GRID ===== */
+        .content { max-width: 1200px; margin: 0 auto; padding: 40px 24px 80px; }
+
+        .region-section { margin-bottom: 48px; }
+        .region-section:last-child { margin-bottom: 0; }
+
+        .region-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .region-count {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-light);
+            background: var(--bg-gray);
+            padding: 2px 10px;
+            border-radius: 12px;
+        }
+
+        .dest-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+
+        .dest-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .dest-card:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .dest-flag { font-size: 32px; line-height: 1; }
+        .dest-info h3 { font-size: 15px; font-weight: 600; }
+        .dest-info p { font-size: 13px; color: var(--text-light); margin-top: 2px; }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-light);
+            display: none;
+        }
+        .no-results .emoji { font-size: 48px; margin-bottom: 16px; }
+        .no-results h3 { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+
+        /* ===== FOOTER ===== */
+        footer {
+            background: #0F172A;
+            color: #94A3B8;
+            padding: 64px 24px 32px;
+        }
+
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 48px;
+        }
+
+        .footer-brand p { margin-top: 12px; font-size: 14px; line-height: 1.6; }
+        footer h4 { color: white; font-size: 14px; font-weight: 600; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+        footer ul { list-style: none; }
+        footer li { margin-bottom: 10px; }
+        footer a { color: #94A3B8; text-decoration: none; font-size: 14px; }
+        footer a:hover { color: white; }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 40px auto 0;
+            padding-top: 24px;
+            border-top: 1px solid #1E293B;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .page-hero h1 { font-size: 28px; }
+            .dest-grid { grid-template-columns: repeat(2, 1fr); }
+            .footer-inner { grid-template-columns: 1fr 1fr; }
+            nav { display: none; }
+            .nav-buttons .btn-outline { display: none; }
+            .hamburger { display: flex; }
+            .filter-tabs { gap: 4px; padding: 6px; }
+            .filter-tab { padding: 8px 14px; font-size: 13px; }
+        }
+
+        @media (max-width: 480px) {
+            .dest-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+    <div class="header-inner">
+        <a href="index.html" class="logo">
+            <div class="logo-icon">📶</div>
+            GlobalSIM
+        </a>
+        <nav>
+            <a href="destinations.html" class="active">Destinations</a>
+            <a href="index.html#how-it-works">How It Works</a>
+            <a href="index.html#faq">FAQ</a>
+            <a href="#">Support</a>
+        </nav>
+        <div class="nav-buttons">
+            <button class="hamburger" onclick="toggleMobileNav()" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+            <a href="dashboard.html" class="btn btn-outline">My eSIMs</a>
+            <a href="destinations.html" class="btn btn-primary">Get Started</a>
+        </div>
+    </div>
+</header>
+<div class="mobile-nav" id="mobile-nav">
+    <a href="destinations.html">Destinations</a>
+    <a href="index.html#how-it-works">How It Works</a>
+    <a href="index.html#faq">FAQ</a>
+    <a href="dashboard.html">My eSIMs</a>
+    <a href="#">Support</a>
+</div>
+
+<!-- PAGE HERO -->
+<section class="page-hero">
+    <h1>Browse All Destinations</h1>
+    <p>eSIM data plans for 150+ countries and regions worldwide</p>
+    <div class="search-container">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-bar" id="dest-search" placeholder="Search countries..." oninput="filterDestinations()" onfocus="onSearchFocus()" onblur="setTimeout(() => closeDropdown(), 200)">
+        <div class="search-results-dropdown" id="search-dropdown"></div>
+    </div>
+</section>
+
+<!-- FILTER TABS -->
+<div class="filter-section">
+    <div class="filter-tabs">
+        <button class="filter-tab active" onclick="setRegionFilter('all', this)">All</button>
+        <button class="filter-tab" onclick="setRegionFilter('asia', this)">🌏 Asia</button>
+        <button class="filter-tab" onclick="setRegionFilter('europe', this)">🌍 Europe</button>
+        <button class="filter-tab" onclick="setRegionFilter('americas', this)">🌎 Americas</button>
+        <button class="filter-tab" onclick="setRegionFilter('middle-east', this)">🕌 Middle East</button>
+        <button class="filter-tab" onclick="setRegionFilter('africa', this)">🌍 Africa</button>
+        <button class="filter-tab" onclick="setRegionFilter('oceania', this)">🏝️ Oceania</button>
+    </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content" id="destinations-content">
+    <!-- Asia -->
+    <div class="region-section" data-region="asia">
+        <h2 class="region-title">🌏 Asia <span class="region-count">10 countries</span></h2>
+        <div class="dest-grid">
+            <a href="plans.html" class="dest-card" data-country="japan"><span class="dest-flag">🇯🇵</span><div class="dest-info"><h3>Japan</h3><p>From $4.50</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="south korea"><span class="dest-flag">🇰🇷</span><div class="dest-info"><h3>South Korea</h3><p>From $4.50</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="thailand"><span class="dest-flag">🇹🇭</span><div class="dest-info"><h3>Thailand</h3><p>From $3.00</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="singapore"><span class="dest-flag">🇸🇬</span><div class="dest-info"><h3>Singapore</h3><p>From $4.00</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="taiwan"><span class="dest-flag">🇹🇼</span><div class="dest-info"><h3>Taiwan</h3><p>From $3.50</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="vietnam"><span class="dest-flag">🇻🇳</span><div class="dest-info"><h3>Vietnam</h3><p>From $3.00</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="malaysia"><span class="dest-flag">🇲🇾</span><div class="dest-info"><h3>Malaysia</h3><p>From $3.50</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="indonesia"><span class="dest-flag">🇮🇩</span><div class="dest-info"><h3>Indonesia</h3><p>From $4.00</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="india"><span class="dest-flag">🇮🇳</span><div class="dest-info"><h3>India</h3><p>From $3.50</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="china"><span class="dest-flag">🇨🇳</span><div class="dest-info"><h3>China</h3><p>From $5.00</p></div></a>
+        </div>
+    </div>
+
+    <!-- Europe -->
+    <div class="region-section" data-region="europe">
+        <h2 class="region-title">🌍 Europe <span class="region-count">10 countries</span></h2>
+        <div class="dest-grid">
+            <a href="plans.html" class="dest-card" data-country="united kingdom"><span class="dest-flag">🇬🇧</span><div class="dest-info"><h3>United Kingdom</h3><p>From $4.00</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="france"><span class="dest-flag">🇫🇷</span><div class="dest-info"><h3>France</h3><p>From $4.00</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="germany"><span class="dest-flag">🇩🇪</span><div class="dest-info"><h3>Germany</h3><p>From $4.00</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="italy"><span class="dest-flag">🇮🇹</span><div class="dest-info"><h3>Italy</h3><p>From $4.00</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="spain"><span class="dest-flag">🇪🇸</span><div class="dest-info"><h3>Spain</h3><p>From $4.00</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="netherlands"><span class="dest-flag">🇳🇱</span><div class="dest-info"><h3>Netherlands</h3><p>From $4.50</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="switzerland"><span class="dest-flag">🇨🇭</span><div class="dest-info"><h3>Switzerland</h3><p>From $5.00</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="portugal"><span class="dest-flag">🇵🇹</span><div class="dest-info"><h3>Portugal</h3><p>From $4.00</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="greece"><span class="dest-flag">🇬🇷</span><div class="dest-info"><h3>Greece</h3><p>From $4.50</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="turkey"><span class="dest-flag">🇹🇷</span><div class="dest-info"><h3>Turkey</h3><p>From $3.50</p></div></a>
+        </div>
+    </div>
+
+    <!-- Americas -->
+    <div class="region-section" data-region="americas">
+        <h2 class="region-title">🌎 Americas <span class="region-count">6 countries</span></h2>
+        <div class="dest-grid">
+            <a href="plans.html" class="dest-card" data-country="united states"><span class="dest-flag">🇺🇸</span><div class="dest-info"><h3>United States</h3><p>From $5.00</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="canada"><span class="dest-flag">🇨🇦</span><div class="dest-info"><h3>Canada</h3><p>From $5.50</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="mexico"><span class="dest-flag">🇲🇽</span><div class="dest-info"><h3>Mexico</h3><p>From $4.00</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="brazil"><span class="dest-flag">🇧🇷</span><div class="dest-info"><h3>Brazil</h3><p>From $4.50</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="argentina"><span class="dest-flag">🇦🇷</span><div class="dest-info"><h3>Argentina</h3><p>From $4.50</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="colombia"><span class="dest-flag">🇨🇴</span><div class="dest-info"><h3>Colombia</h3><p>From $4.00</p></div></a>
+        </div>
+    </div>
+
+    <!-- Middle East -->
+    <div class="region-section" data-region="middle-east">
+        <h2 class="region-title">🕌 Middle East <span class="region-count">4 countries</span></h2>
+        <div class="dest-grid">
+            <a href="plans.html" class="dest-card" data-country="united arab emirates"><span class="dest-flag">🇦🇪</span><div class="dest-info"><h3>UAE</h3><p>From $5.00</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="saudi arabia"><span class="dest-flag">🇸🇦</span><div class="dest-info"><h3>Saudi Arabia</h3><p>From $5.50</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="israel"><span class="dest-flag">🇮🇱</span><div class="dest-info"><h3>Israel</h3><p>From $5.00</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="qatar"><span class="dest-flag">🇶🇦</span><div class="dest-info"><h3>Qatar</h3><p>From $5.50</p></div></a>
+        </div>
+    </div>
+
+    <!-- Africa -->
+    <div class="region-section" data-region="africa">
+        <h2 class="region-title">🌍 Africa <span class="region-count">4 countries</span></h2>
+        <div class="dest-grid">
+            <a href="plans.html" class="dest-card" data-country="south africa"><span class="dest-flag">🇿🇦</span><div class="dest-info"><h3>South Africa</h3><p>From $4.50</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="egypt"><span class="dest-flag">🇪🇬</span><div class="dest-info"><h3>Egypt</h3><p>From $4.00</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="morocco"><span class="dest-flag">🇲🇦</span><div class="dest-info"><h3>Morocco</h3><p>From $4.50</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="kenya"><span class="dest-flag">🇰🇪</span><div class="dest-info"><h3>Kenya</h3><p>From $5.00</p></div></a>
+        </div>
+    </div>
+
+    <!-- Oceania -->
+    <div class="region-section" data-region="oceania">
+        <h2 class="region-title">🏝️ Oceania <span class="region-count">2 countries</span></h2>
+        <div class="dest-grid">
+            <a href="plans.html" class="dest-card" data-country="australia"><span class="dest-flag">🇦🇺</span><div class="dest-info"><h3>Australia</h3><p>From $5.00</p></div></a>
+            <a href="plans.html" class="dest-card" data-country="new zealand"><span class="dest-flag">🇳🇿</span><div class="dest-info"><h3>New Zealand</h3><p>From $5.50</p></div></a>
+        </div>
+    </div>
+
+    <div class="no-results" id="no-results">
+        <div class="emoji">🔍</div>
+        <h3>No destinations found</h3>
+        <p>Try a different search term or browse by region.</p>
+    </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+    <div class="footer-inner">
+        <div class="footer-brand">
+            <a href="index.html" class="logo" style="color: white;">
+                <div class="logo-icon">📶</div>
+                GlobalSIM
+            </a>
+            <p>Affordable eSIM data plans for travelers. Stay connected in 150+ countries without the hassle of physical SIM cards or expensive roaming.</p>
+        </div>
+        <div>
+            <h4>Product</h4>
+            <ul>
+                <li><a href="destinations.html">All Destinations</a></li>
+                <li><a href="#">Regional Plans</a></li>
+                <li><a href="#">Global Plans</a></li>
+                <li><a href="#">Pricing</a></li>
+            </ul>
+        </div>
+        <div>
+            <h4>Support</h4>
+            <ul>
+                <li><a href="#">Help Center</a></li>
+                <li><a href="#">Contact Us</a></li>
+                <li><a href="#">Device Compatibility</a></li>
+                <li><a href="#">Installation Guide</a></li>
+            </ul>
+        </div>
+        <div>
+            <h4>Company</h4>
+            <ul>
+                <li><a href="#">About Us</a></li>
+                <li><a href="#">Blog</a></li>
+                <li><a href="#">Privacy Policy</a></li>
+                <li><a href="#">Terms of Service</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>© 2026 GlobalSIM. All rights reserved.</p>
+    </div>
+</footer>
+
+<script>
+    // Mobile nav toggle
+    function toggleMobileNav() {
+        document.getElementById('mobile-nav').classList.toggle('open');
+        document.querySelector('.hamburger').classList.toggle('active');
+    }
+
+    // Region filter
+    let currentRegion = 'all';
+
+    function setRegionFilter(region, btn) {
+        currentRegion = region;
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        
+        const sections = document.querySelectorAll('.region-section');
+        let visibleCount = 0;
+        sections.forEach(s => {
+            if (region === 'all' || s.dataset.region === region) {
+                s.style.display = 'block';
+                visibleCount++;
+            } else {
+                s.style.display = 'none';
+            }
+        });
+        
+        // Also apply search filter
+        const query = document.getElementById('dest-search').value.trim().toLowerCase();
+        if (query) filterDestinations();
+    }
+
+    // Search/filter
+    function filterDestinations() {
+        const query = document.getElementById('dest-search').value.trim().toLowerCase();
+        const sections = document.querySelectorAll('.region-section');
+        const dropdown = document.getElementById('search-dropdown');
+        let totalVisible = 0;
+        let dropdownHTML = '';
+        let matchCount = 0;
+
+        sections.forEach(section => {
+            if (currentRegion !== 'all' && section.dataset.region !== currentRegion) {
+                section.style.display = 'none';
+                return;
+            }
+
+            const cards = section.querySelectorAll('.dest-card');
+            let sectionVisible = 0;
+
+            cards.forEach(card => {
+                const country = card.dataset.country;
+                if (!query || country.includes(query)) {
+                    card.style.display = 'flex';
+                    sectionVisible++;
+                    if (query && matchCount < 8) {
+                        const flag = card.querySelector('.dest-flag').textContent;
+                        const name = card.querySelector('h3').textContent;
+                        const price = card.querySelector('p').textContent;
+                        dropdownHTML += `<a href="plans.html" class="search-result-item"><span class="flag">${flag}</span><span class="name">${name}</span><span class="price">${price}</span></a>`;
+                        matchCount++;
+                    }
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            section.style.display = sectionVisible > 0 ? 'block' : 'none';
+            totalVisible += sectionVisible;
+        });
+
+        document.getElementById('no-results').style.display = totalVisible === 0 ? 'block' : 'none';
+
+        if (query && dropdownHTML) {
+            dropdown.innerHTML = dropdownHTML;
+            dropdown.classList.add('open');
+        } else {
+            dropdown.classList.remove('open');
+        }
+    }
+
+    function onSearchFocus() {
+        const query = document.getElementById('dest-search').value.trim();
+        if (query) filterDestinations();
+    }
+
+    function closeDropdown() {
+        document.getElementById('search-dropdown').classList.remove('open');
+    }
+</script>
+
+</body>
+</html>

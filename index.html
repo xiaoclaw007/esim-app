@@ -454,6 +454,82 @@
         }
 
         /* ===== RESPONSIVE ===== */
+        /* ===== HAMBURGER ===== */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 4px;
+            background: none;
+            border: none;
+        }
+        .hamburger span {
+            display: block;
+            width: 24px;
+            height: 2.5px;
+            background: var(--text);
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+        .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+        .hamburger.active span:nth-child(2) { opacity: 0; }
+        .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            top: 64px;
+            left: 0;
+            right: 0;
+            background: white;
+            border-bottom: 1px solid var(--border);
+            padding: 16px 24px;
+            z-index: 99;
+            box-shadow: var(--shadow-lg);
+        }
+        .mobile-nav.open { display: block; }
+        .mobile-nav a {
+            display: block;
+            padding: 12px 0;
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            font-size: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .mobile-nav a:last-child { border-bottom: none; }
+        .mobile-nav a:hover { color: var(--primary); }
+
+        /* Search dropdown */
+        .search-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 0 0 16px 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            z-index: 10;
+        }
+        .search-dropdown.open { display: block; }
+        .search-dropdown a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            text-decoration: none;
+            color: var(--text);
+            transition: background 0.15s;
+        }
+        .search-dropdown a:hover { background: var(--bg-gray); }
+        .search-dropdown .sd-flag { font-size: 24px; }
+        .search-dropdown .sd-name { font-weight: 600; }
+        .search-dropdown .sd-price { margin-left: auto; font-size: 13px; color: var(--text-light); }
+
         @media (max-width: 768px) {
             .hero h1 { font-size: 32px; }
             .hero p { font-size: 16px; }
@@ -462,6 +538,8 @@
             .footer-inner { grid-template-columns: 1fr 1fr; }
             .device-check { flex-direction: column; text-align: center; }
             nav { display: none; }
+            .nav-buttons .btn-outline { display: none; }
+            .hamburger { display: flex; }
             .trust-stats { gap: 32px; }
         }
 
@@ -482,17 +560,28 @@
             GlobalSIM
         </a>
         <nav>
-            <a href="plans.html">Destinations</a>
+            <a href="destinations.html">Destinations</a>
             <a href="#how-it-works">How It Works</a>
             <a href="#faq">FAQ</a>
             <a href="#">Support</a>
         </nav>
         <div class="nav-buttons">
-            <a href="#" class="btn btn-outline">Log In</a>
-            <a href="#" class="btn btn-primary">Get Started</a>
+            <button class="hamburger" onclick="toggleMobileNav()" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+            <a href="dashboard.html" class="btn btn-outline">My eSIMs</a>
+            <a href="destinations.html" class="btn btn-primary">Get Started</a>
         </div>
     </div>
 </header>
+
+<div class="mobile-nav" id="mobile-nav">
+    <a href="destinations.html">Destinations</a>
+    <a href="#how-it-works">How It Works</a>
+    <a href="#faq">FAQ</a>
+    <a href="dashboard.html">My eSIMs</a>
+    <a href="#">Support</a>
+</div>
 
 <!-- HERO -->
 <section class="hero">
@@ -501,7 +590,8 @@
         <p>Buy an eSIM and get instant mobile data in 150+ countries. No SIM swapping, no roaming fees.</p>
         <div class="search-container">
             <span class="search-icon">🔍</span>
-            <input type="text" class="search-bar" placeholder="Where are you traveling? (e.g., Japan, Europe)">
+            <input type="text" class="search-bar" id="hero-search" placeholder="Where are you traveling? (e.g., Japan, Europe)" oninput="heroSearch()" onfocus="heroSearch()" onblur="setTimeout(()=>document.getElementById('hero-dropdown').classList.remove('open'),200)">
+            <div class="search-dropdown" id="hero-dropdown"></div>
         </div>
         <p class="search-hint">Popular: Japan • Thailand • USA • Europe • South Korea</p>
     </div>
@@ -511,7 +601,7 @@
 <section class="section">
     <div class="section-header">
         <h2 class="section-title">Popular Destinations</h2>
-        <a href="plans.html" class="section-link">View all destinations →</a>
+        <a href="destinations.html" class="section-link">View all destinations →</a>
     </div>
     <div class="destinations-grid">
         <a href="plans.html" class="dest-card">
@@ -735,7 +825,7 @@
 <section class="cta">
     <h2>Ready to ditch roaming fees?</h2>
     <p>Join thousands of travelers who stay connected for less.</p>
-    <a href="#" class="btn btn-white">Browse eSIM Plans →</a>
+    <a href="destinations.html" class="btn btn-white">Browse eSIM Plans →</a>
 </section>
 
 <!-- FOOTER -->
@@ -751,7 +841,7 @@
         <div>
             <h4>Product</h4>
             <ul>
-                <li><a href="plans.html">All Destinations</a></li>
+                <li><a href="destinations.html">All Destinations</a></li>
                 <li><a href="#">Regional Plans</a></li>
                 <li><a href="#">Global Plans</a></li>
                 <li><a href="#">Pricing</a></li>
@@ -780,6 +870,40 @@
         <p>© 2026 GlobalSIM. All rights reserved.</p>
     </div>
 </footer>
+
+<script>
+    function toggleMobileNav() {
+        document.getElementById('mobile-nav').classList.toggle('open');
+        document.querySelector('.hamburger').classList.toggle('active');
+    }
+
+    const countries = [
+        {flag:'🇯🇵',name:'Japan',price:'$4.50'},{flag:'🇹🇭',name:'Thailand',price:'$3.00'},
+        {flag:'🇺🇸',name:'United States',price:'$5.00'},{flag:'🇬🇧',name:'United Kingdom',price:'$4.00'},
+        {flag:'🇰🇷',name:'South Korea',price:'$4.50'},{flag:'🇫🇷',name:'France',price:'$4.00'},
+        {flag:'🇮🇹',name:'Italy',price:'$4.00'},{flag:'🇪🇸',name:'Spain',price:'$4.00'},
+        {flag:'🇩🇪',name:'Germany',price:'$4.00'},{flag:'🇸🇬',name:'Singapore',price:'$4.00'},
+        {flag:'🇹🇼',name:'Taiwan',price:'$3.50'},{flag:'🇻🇳',name:'Vietnam',price:'$3.00'},
+        {flag:'🇲🇾',name:'Malaysia',price:'$3.50'},{flag:'🇮🇩',name:'Indonesia',price:'$4.00'},
+        {flag:'🇮🇳',name:'India',price:'$3.50'},{flag:'🇨🇳',name:'China',price:'$5.00'},
+        {flag:'🇦🇺',name:'Australia',price:'$5.00'},{flag:'🇨🇦',name:'Canada',price:'$5.50'},
+        {flag:'🇧🇷',name:'Brazil',price:'$4.50'},{flag:'🇲🇽',name:'Mexico',price:'$4.00'},
+        {flag:'🇦🇪',name:'UAE',price:'$5.00'},{flag:'🇳🇱',name:'Netherlands',price:'$4.50'},
+        {flag:'🇨🇭',name:'Switzerland',price:'$5.00'},{flag:'🇵🇹',name:'Portugal',price:'$4.00'},
+    ];
+
+    function heroSearch() {
+        const q = document.getElementById('hero-search').value.trim().toLowerCase();
+        const dd = document.getElementById('hero-dropdown');
+        if (!q) { dd.classList.remove('open'); return; }
+        const matches = countries.filter(c => c.name.toLowerCase().includes(q)).slice(0, 6);
+        if (matches.length === 0) { dd.classList.remove('open'); return; }
+        dd.innerHTML = matches.map(c =>
+            `<a href="plans.html"><span class="sd-flag">${c.flag}</span><span class="sd-name">${c.name}</span><span class="sd-price">From ${c.price}</span></a>`
+        ).join('');
+        dd.classList.add('open');
+    }
+</script>
 
 </body>
 </html>
