@@ -23,17 +23,16 @@ def seed_plans():
         db.close()
         return
 
-    # Placeholder plan — replace with real JoyTel SKU and pricing
     plans = [
         Plan(
-            id="japan-5gb-30d",
-            joytel_sku="PLACEHOLDER_SKU",  # TODO: Replace with real JoyTel SKU
-            name="Japan 5GB / 30 Days",
-            country="JP",
-            region="asia",
-            data_gb=5,
-            validity_days=30,
-            price_cents=1299,  # $12.99
+            id="us-1gb-1d",
+            joytel_sku="eSIM-US1G-01",
+            name="USA 1GB / 1 Day",
+            country="US",
+            region="north-america",
+            data_gb=1,
+            validity_days=1,
+            price_cents=799,  # $7.99 — wholesale is $5.00, TODO: confirm margin
             currency="usd",
             active=True,
         ),
