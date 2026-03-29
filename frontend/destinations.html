@@ -407,8 +407,10 @@
             <button class="hamburger" onclick="toggleMobileNav()" aria-label="Menu">
                 <span></span><span></span><span></span>
             </button>
-            <a href="dashboard.html" class="btn btn-outline">My eSIMs</a>
-            <a href="destinations.html" class="btn btn-primary">Get Started</a>
+            <a href="login.html" class="btn btn-outline" data-auth="logged-out">Log In</a>
+            <a href="signup.html" class="btn btn-primary" data-auth="logged-out">Sign Up</a>
+            <a href="dashboard.html" class="btn btn-outline" data-auth="logged-in" style="display:none">Dashboard</a>
+            <a href="#" class="btn btn-primary" data-auth="logged-in" style="display:none" onclick="logout()">Log Out</a>
         </div>
     </div>
 </header>
@@ -416,8 +418,10 @@
     <a href="destinations.html">Destinations</a>
     <a href="index.html#how-it-works">How It Works</a>
     <a href="index.html#faq">FAQ</a>
-    <a href="dashboard.html">My eSIMs</a>
-    <a href="#">Support</a>
+    <a href="dashboard.html" data-auth="logged-in" style="display:none">Dashboard</a>
+    <a href="login.html" data-auth="logged-out">Log In</a>
+    <a href="signup.html" data-auth="logged-out">Sign Up</a>
+    <a href="#" data-auth="logged-in" style="display:none" onclick="logout()">Log Out</a>
 </div>
 
 <!-- PAGE HERO -->
@@ -574,7 +578,10 @@
     </div>
 </footer>
 
+<script src="js/auth.js"></script>
 <script>
+    document.addEventListener('DOMContentLoaded', () => initAuth());
+
     // Mobile nav toggle
     function toggleMobileNav() {
         document.getElementById('mobile-nav').classList.toggle('open');

@@ -165,6 +165,10 @@
             <a href="index.html#how-it-works">How It Works</a>
             <a href="index.html#faq">FAQ</a>
         </nav>
+        <div class="nav-buttons" style="display: flex; gap: 12px; align-items: center;">
+            <a href="login.html" class="btn-outline" data-auth="logged-out" style="padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 14px; text-decoration: none; border: 1px solid #E2E8F0; color: #1E293B; transition: all 0.2s;">Log In</a>
+            <a href="dashboard.html" data-auth="logged-in" style="display:none; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 14px; text-decoration: none; border: 1px solid #E2E8F0; color: #1E293B; transition: all 0.2s;">Dashboard</a>
+        </div>
     </div>
 </header>
 
@@ -183,7 +187,10 @@
     <p>&copy; 2026 GlobalSIM. All rights reserved.</p>
 </footer>
 
+<script src="js/auth.js"></script>
 <script>
+    document.addEventListener('DOMContentLoaded', () => initAuth());
+
     // --- Config ---
     // Use relative URLs when served from the same server, absolute for GitHub Pages
     const API_BASE = window.location.hostname === 'localhost' || window.location.protocol === 'http:'

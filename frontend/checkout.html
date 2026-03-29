@@ -818,9 +818,18 @@
     </div>
 </div>
 
+<script src="js/auth.js"></script>
 <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        await initAuth();
+        // Pre-fill email if logged in
+        if (isLoggedIn() && currentUser?.email) {
+            document.getElementById('email').value = currentUser.email;
+        }
+    });
+
     // ===== STATIC PROTOTYPE - NO SERVER NEEDED =====
-    
+
     // Enable pay button immediately
     document.getElementById('pay-btn').disabled = false;
 

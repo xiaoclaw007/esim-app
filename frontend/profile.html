@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile — GlobalSIM</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #4338CA;
+            --primary-light: #EEF2FF;
+            --accent: #06B6D4;
+            --text: #1E293B;
+            --text-light: #64748B;
+            --bg: #FFFFFF;
+            --bg-gray: #F8FAFC;
+            --border: #E2E8F0;
+            --success: #10B981;
+            --error: #EF4444;
+            --radius: 12px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: var(--text); line-height: 1.6; background: var(--bg-gray);
+        }
+
+        header {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+        .header-inner {
+            max-width: 1200px; margin: 0 auto; padding: 0 24px;
+            height: 64px; display: flex; align-items: center; justify-content: space-between;
+        }
+        .logo {
+            font-size: 22px; font-weight: 800; color: var(--primary);
+            text-decoration: none; display: flex; align-items: center; gap: 8px;
+        }
+        .logo-icon {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 8px; display: flex; align-items: center;
+            justify-content: center; color: white; font-size: 18px;
+        }
+        nav { display: flex; align-items: center; gap: 32px; }
+        nav a { text-decoration: none; color: var(--text-light); font-weight: 500; font-size: 15px; transition: color 0.2s; }
+        nav a:hover { color: var(--primary); }
+        .nav-buttons { display: flex; gap: 12px; align-items: center; }
+        .btn {
+            padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px;
+            cursor: pointer; text-decoration: none; transition: all 0.2s; border: none;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: var(--shadow-lg); }
+        .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+        .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px; background: none; border: none; }
+        .hamburger span { display: block; width: 24px; height: 2.5px; background: var(--text); border-radius: 2px; transition: all 0.3s; }
+
+        .page-container {
+            max-width: 800px; margin: 40px auto; padding: 0 24px 80px;
+        }
+
+        .page-header {
+            display: flex; align-items: center; gap: 16px; margin-bottom: 32px;
+        }
+        .page-header h1 { font-size: 28px; font-weight: 800; }
+
+        .tab-nav {
+            display: flex; gap: 4px; background: var(--bg-gray); border-radius: 10px;
+            padding: 4px; margin-bottom: 32px;
+        }
+        .tab-nav a {
+            flex: 1; padding: 10px 20px; text-align: center; border-radius: 8px;
+            font-size: 14px; font-weight: 600; color: var(--text-light);
+            text-decoration: none; transition: all 0.2s;
+        }
+        .tab-nav a:hover { color: var(--text); }
+        .tab-nav a.active { background: white; color: var(--primary); box-shadow: var(--shadow); }
+
+        .profile-card {
+            background: white; border-radius: 16px; border: 1px solid var(--border);
+            padding: 32px; margin-bottom: 24px;
+        }
+
+        .profile-header {
+            display: flex; align-items: center; gap: 24px; margin-bottom: 32px;
+        }
+        .avatar-circle {
+            width: 80px; height: 80px; background: var(--primary-light);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 32px; font-weight: 800; color: var(--primary);
+        }
+        .profile-header-info h2 { font-size: 22px; font-weight: 700; }
+        .profile-header-info p { color: var(--text-light); font-size: 14px; }
+
+        .profile-section { margin-bottom: 24px; }
+        .profile-section:last-child { margin-bottom: 0; }
+        .profile-section h3 {
+            font-size: 16px; font-weight: 700; margin-bottom: 16px;
+            padding-bottom: 12px; border-bottom: 1px solid var(--border);
+        }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+        .form-group input {
+            width: 100%; padding: 12px 14px; border: 1.5px solid var(--border);
+            border-radius: 8px; font-size: 15px; color: var(--text);
+            background: white; transition: all 0.2s; outline: none; font-family: inherit;
+        }
+        .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        .form-group input:disabled { background: var(--bg-gray); color: var(--text-light); cursor: not-allowed; }
+
+        .referral-box {
+            display: flex; align-items: center; gap: 8px;
+        }
+        .referral-code {
+            flex: 1; padding: 12px 14px; border: 1.5px solid var(--border);
+            border-radius: 8px; font-size: 15px; font-weight: 600; font-family: monospace;
+            background: var(--bg-gray); color: var(--text);
+        }
+        .btn-copy {
+            padding: 12px 16px; border: 1.5px solid var(--border); border-radius: 8px;
+            background: white; cursor: pointer; font-weight: 600; font-size: 13px;
+            color: var(--text); transition: all 0.2s; white-space: nowrap;
+        }
+        .btn-copy:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-copy.copied { border-color: var(--success); color: var(--success); }
+
+        .btn-row { display: flex; gap: 12px; margin-top: 20px; }
+
+        .success-msg {
+            background: #ECFDF5; border: 1px solid #A7F3D0; color: #065F46;
+            padding: 12px 16px; border-radius: 8px; font-size: 14px;
+            margin-bottom: 20px; display: none; align-items: center; gap: 8px;
+        }
+        .success-msg.show { display: flex; }
+
+        .error-msg {
+            background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626;
+            padding: 12px 16px; border-radius: 8px; font-size: 14px;
+            margin-bottom: 20px; display: none; align-items: center; gap: 8px;
+        }
+        .error-msg.show { display: flex; }
+
+        .btn-danger {
+            background: white; color: var(--error); border: 1.5px solid #FECACA;
+            padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-danger:hover { background: #FEF2F2; border-color: var(--error); }
+
+        .loading-state {
+            text-align: center; padding: 60px 20px; color: var(--text-light); font-size: 16px;
+        }
+
+        footer {
+            background: #0F172A; color: #94A3B8; padding: 32px 24px;
+            text-align: center; font-size: 13px;
+        }
+        footer a { color: #94A3B8; text-decoration: none; }
+        footer a:hover { color: white; }
+
+        @media (max-width: 768px) {
+            nav { display: none; }
+            .hamburger { display: flex; }
+            .profile-header { flex-direction: column; text-align: center; }
+            .btn-row { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <a href="index.html" class="logo">
+            <div class="logo-icon">📶</div>
+            GlobalSIM
+        </a>
+        <nav>
+            <a href="destinations.html">Destinations</a>
+            <a href="index.html#how-it-works">How It Works</a>
+            <a href="index.html#faq">FAQ</a>
+        </nav>
+        <div class="nav-buttons">
+            <button class="hamburger" onclick="toggleMobileNav()" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+            <a href="dashboard.html" class="btn btn-outline" data-auth="logged-in" style="display:none">Dashboard</a>
+            <a href="#" class="btn btn-primary" data-auth="logged-in" style="display:none" onclick="logout()">Log Out</a>
+        </div>
+    </div>
+</header>
+
+<div class="page-container" id="main-content">
+    <div class="loading-state" id="loading">Loading profile...</div>
+
+    <div id="profile-content" style="display: none;">
+        <div class="page-header">
+            <h1>My Profile</h1>
+        </div>
+
+        <div class="tab-nav">
+            <a href="dashboard.html">My Orders</a>
+            <a href="profile.html" class="active">Profile</a>
+        </div>
+
+        <div class="success-msg" id="success-msg">
+            <span>✅</span>
+            <span id="success-text">Profile updated successfully!</span>
+        </div>
+
+        <div class="error-msg" id="error-msg">
+            <span>⚠️</span>
+            <span id="error-text"></span>
+        </div>
+
+        <div class="profile-card">
+            <div class="profile-header">
+                <div class="avatar-circle" data-auth-initials>?</div>
+                <div class="profile-header-info">
+                    <h2 data-auth-name></h2>
+                    <p data-auth-email></p>
+                </div>
+            </div>
+
+            <div class="profile-section">
+                <h3>Personal Information</h3>
+                <form id="profile-form" onsubmit="handleUpdateProfile(event)">
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input type="text" id="name" placeholder="Your name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" disabled>
+                    </div>
+                    <div class="btn-row">
+                        <button type="submit" class="btn btn-primary" id="save-btn">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="profile-card">
+            <div class="profile-section">
+                <h3>Referral Code</h3>
+                <p style="color: var(--text-light); font-size: 14px; margin-bottom: 12px;">
+                    Share your referral code with friends to earn rewards.
+                </p>
+                <div class="referral-box">
+                    <div class="referral-code" id="referral-code">—</div>
+                    <button class="btn-copy" id="copy-btn" onclick="copyReferral()">📋 Copy</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-card">
+            <div class="profile-section">
+                <h3>Account</h3>
+                <button class="btn-danger" onclick="logout()">Log Out</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <p>© 2026 GlobalSIM. All rights reserved. · <a href="#">Privacy</a> · <a href="#">Terms</a></p>
+</footer>
+
+<script src="js/auth.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        await initAuth();
+        if (!isLoggedIn()) {
+            window.location.href = 'login.html?redirect=profile.html';
+            return;
+        }
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('profile-content').style.display = 'block';
+
+        // Fill form
+        document.getElementById('name').value = currentUser.name || '';
+        document.getElementById('email').value = currentUser.email || '';
+        if (currentUser.referral_code) {
+            document.getElementById('referral-code').textContent = currentUser.referral_code;
+        }
+    });
+
+    async function handleUpdateProfile(e) {
+        e.preventDefault();
+        const name = document.getElementById('name').value.trim();
+        const btn = document.getElementById('save-btn');
+        const successMsg = document.getElementById('success-msg');
+        const errorMsg = document.getElementById('error-msg');
+
+        successMsg.classList.remove('show');
+        errorMsg.classList.remove('show');
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+
+        try {
+            const res = await authFetch('/api/users/me', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+
+            if (res.ok) {
+                currentUser = await res.json();
+                updateAuthUI();
+                successMsg.classList.add('show');
+            } else {
+                const err = await res.json();
+                document.getElementById('error-text').textContent = err.detail || 'Update failed';
+                errorMsg.classList.add('show');
+            }
+        } catch (e) {
+            document.getElementById('error-text').textContent = 'Network error. Please try again.';
+            errorMsg.classList.add('show');
+        }
+
+        btn.disabled = false;
+        btn.textContent = 'Save Changes';
+    }
+
+    function copyReferral() {
+        const code = document.getElementById('referral-code').textContent;
+        if (code === '—') return;
+        navigator.clipboard.writeText(code).then(() => {
+            const btn = document.getElementById('copy-btn');
+            btn.textContent = '✅ Copied!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = '📋 Copy';
+                btn.classList.remove('copied');
+            }, 2000);
+        });
+    }
+
+    function toggleMobileNav() {
+        // No mobile nav on profile page for simplicity
+    }
+</script>
+
+</body>
+</html>

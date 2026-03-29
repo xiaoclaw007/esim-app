@@ -153,13 +153,29 @@
 
     <a href="plans.html" class="btn-home">Browse More Plans</a>
     <a class="refresh-link" onclick="checkStatus()">🔄 Refresh order status</a>
+
+    <!-- Signup prompt for non-logged-in users -->
+    <div id="signup-prompt" style="display: none; margin-top: 24px; background: var(--primary-light); border-radius: var(--radius); padding: 24px; text-align: center;">
+        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Create an account to track your orders</h3>
+        <p style="color: var(--text-light); font-size: 14px; margin-bottom: 16px;">Sign up to view order history, manage eSIMs, and get faster checkout.</p>
+        <a href="signup.html" style="display: inline-block; padding: 12px 28px; background: var(--primary); color: white; border-radius: 8px; font-weight: 600; font-size: 15px; text-decoration: none; transition: background 0.2s;">Create Account →</a>
+    </div>
 </div>
 
 <footer>
     <p>&copy; 2026 GlobalSIM. All rights reserved.</p>
 </footer>
 
+<script src="js/auth.js"></script>
 <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        await initAuth();
+        // Show signup prompt if not logged in
+        if (!isLoggedIn()) {
+            document.getElementById('signup-prompt').style.display = 'block';
+        }
+    });
+
     const API_BASE = window.location.hostname === 'localhost' || window.location.protocol === 'http:'
         ? ''
         : 'http://34.203.146.15';

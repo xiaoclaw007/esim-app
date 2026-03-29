@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My eSIMs — GlobalSIM</title>
+    <title>My Orders — GlobalSIM</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+
         :root {
             --primary: #4F46E5;
             --primary-dark: #4338CA;
@@ -27,421 +27,204 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            color: var(--text);
-            line-height: 1.6;
-            background: var(--bg-gray);
+            color: var(--text); line-height: 1.6; background: var(--bg-gray);
         }
 
         /* ===== HEADER ===== */
         header {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--border);
         }
-
         .header-inner {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
-            height: 64px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            max-width: 1200px; margin: 0 auto; padding: 0 24px;
+            height: 64px; display: flex; align-items: center; justify-content: space-between;
         }
-
         .logo {
-            font-size: 22px;
-            font-weight: 800;
-            color: var(--primary);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            font-size: 22px; font-weight: 800; color: var(--primary);
+            text-decoration: none; display: flex; align-items: center; gap: 8px;
         }
-
         .logo-icon {
-            width: 32px;
-            height: 32px;
+            width: 32px; height: 32px;
             background: linear-gradient(135deg, var(--primary), var(--accent));
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 18px;
+            border-radius: 8px; display: flex; align-items: center;
+            justify-content: center; color: white; font-size: 18px;
         }
-
         nav { display: flex; align-items: center; gap: 32px; }
         nav a { text-decoration: none; color: var(--text-light); font-weight: 500; font-size: 15px; transition: color 0.2s; }
         nav a:hover { color: var(--primary); }
-        nav a.active { color: var(--primary); }
-
         .nav-buttons { display: flex; gap: 12px; align-items: center; }
-
         .btn {
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all 0.2s;
-            border: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+            padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px;
+            cursor: pointer; text-decoration: none; transition: all 0.2s; border: none;
+            display: inline-flex; align-items: center; gap: 6px;
         }
-
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: var(--shadow-lg); }
         .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
         .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
 
-        /* ===== HAMBURGER ===== */
-        .hamburger {
-            display: none;
-            flex-direction: column;
-            gap: 5px;
-            cursor: pointer;
-            padding: 4px;
-            background: none;
-            border: none;
-        }
-        .hamburger span {
-            display: block;
-            width: 24px;
-            height: 2.5px;
-            background: var(--text);
-            border-radius: 2px;
-            transition: all 0.3s;
-        }
+        .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px; background: none; border: none; }
+        .hamburger span { display: block; width: 24px; height: 2.5px; background: var(--text); border-radius: 2px; transition: all 0.3s; }
         .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
         .hamburger.active span:nth-child(2) { opacity: 0; }
         .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
 
         .mobile-nav {
-            display: none;
-            position: fixed;
-            top: 64px;
-            left: 0;
-            right: 0;
-            background: white;
-            border-bottom: 1px solid var(--border);
-            padding: 16px 24px;
-            z-index: 99;
-            box-shadow: var(--shadow-lg);
+            display: none; position: fixed; top: 64px; left: 0; right: 0;
+            background: white; border-bottom: 1px solid var(--border);
+            padding: 16px 24px; z-index: 99; box-shadow: var(--shadow-lg);
         }
         .mobile-nav.open { display: block; }
         .mobile-nav a {
-            display: block;
-            padding: 12px 0;
-            text-decoration: none;
-            color: var(--text);
-            font-weight: 500;
-            font-size: 16px;
-            border-bottom: 1px solid var(--border);
+            display: block; padding: 12px 0; text-decoration: none; color: var(--text);
+            font-weight: 500; font-size: 16px; border-bottom: 1px solid var(--border);
         }
         .mobile-nav a:last-child { border-bottom: none; }
         .mobile-nav a:hover { color: var(--primary); }
 
-        /* ===== DASHBOARD HEADER ===== */
+        /* ===== DASHBOARD ===== */
         .dash-header {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 32px 24px 0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            max-width: 1200px; margin: 0 auto; padding: 32px 24px 0;
+            display: flex; align-items: center; justify-content: space-between;
         }
-
         .dash-header h1 { font-size: 28px; font-weight: 800; }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
+        .user-info { display: flex; align-items: center; gap: 12px; }
         .user-avatar {
-            width: 40px;
-            height: 40px;
-            background: var(--primary-light);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--primary);
+            width: 40px; height: 40px; background: var(--primary-light);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 18px; font-weight: 700; color: var(--primary);
         }
-
         .user-name { font-weight: 600; font-size: 14px; }
         .user-email { font-size: 12px; color: var(--text-light); }
 
-        /* ===== STATS ===== */
         .stats-row {
-            max-width: 1200px;
-            margin: 24px auto;
-            padding: 0 24px;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
+            max-width: 1200px; margin: 24px auto; padding: 0 24px;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
         }
-
         .stat-card {
-            background: white;
-            border-radius: var(--radius);
-            padding: 20px;
-            border: 1px solid var(--border);
+            background: white; border-radius: var(--radius);
+            padding: 20px; border: 1px solid var(--border);
         }
-
         .stat-label { font-size: 13px; color: var(--text-light); font-weight: 500; }
         .stat-value { font-size: 28px; font-weight: 800; margin-top: 4px; }
-        .stat-value.active { color: var(--success); }
+        .stat-value.completed { color: var(--success); }
         .stat-value.total { color: var(--primary); }
 
-        /* ===== ESIM CARDS ===== */
-        .esim-section {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px 80px;
+        .tab-nav-container {
+            max-width: 1200px; margin: 0 auto; padding: 0 24px 16px;
+        }
+        .tab-nav {
+            display: inline-flex; gap: 4px; background: var(--bg-gray);
+            border-radius: 10px; padding: 4px;
+        }
+        .tab-nav a {
+            padding: 10px 20px; text-align: center; border-radius: 8px;
+            font-size: 14px; font-weight: 600; color: var(--text-light);
+            text-decoration: none; transition: all 0.2s;
+        }
+        .tab-nav a:hover { color: var(--text); }
+        .tab-nav a.active { background: white; color: var(--primary); box-shadow: var(--shadow); }
+
+        .orders-section {
+            max-width: 1200px; margin: 0 auto; padding: 0 24px 80px;
+        }
+        .orders-section-header {
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
+        }
+        .orders-section-header h2 { font-size: 20px; font-weight: 700; }
+
+        .order-list { display: flex; flex-direction: column; gap: 16px; }
+
+        .order-card {
+            background: white; border-radius: 16px; border: 1px solid var(--border);
+            padding: 24px; display: grid; grid-template-columns: auto 1fr auto;
+            gap: 20px; align-items: center; transition: all 0.2s;
+            text-decoration: none; color: var(--text); cursor: pointer;
+        }
+        .order-card:hover { box-shadow: var(--shadow); border-color: var(--primary); }
+
+        .order-icon {
+            width: 48px; height: 48px; background: var(--primary-light);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-size: 24px;
         }
 
-        .esim-section-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-
-        .esim-section-header h2 { font-size: 20px; font-weight: 700; }
-
-        .esim-list { display: flex; flex-direction: column; gap: 16px; }
-
-        .esim-card {
-            background: white;
-            border-radius: 16px;
-            border: 1px solid var(--border);
-            padding: 24px;
-            display: grid;
-            grid-template-columns: auto 1fr auto;
-            gap: 20px;
-            align-items: center;
-            transition: all 0.2s;
-        }
-
-        .esim-card:hover { box-shadow: var(--shadow); }
-
-        .esim-card-flag { font-size: 48px; line-height: 1; }
-
-        .esim-card-info { min-width: 0; }
-
-        .esim-card-title {
-            font-size: 18px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
+        .order-info { min-width: 0; }
+        .order-title {
+            font-size: 16px; font-weight: 700; display: flex;
+            align-items: center; gap: 10px; flex-wrap: wrap;
         }
 
         .status-badge {
-            padding: 3px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
+            padding: 3px 10px; border-radius: 6px; font-size: 12px;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
+        }
+        .status-created { background: #F1F5F9; color: #475569; }
+        .status-paid { background: #DBEAFE; color: #1D4ED8; }
+        .status-joytel_pending, .status-snpin_received { background: #FEF3C7; color: #D97706; }
+        .status-completed { background: #ECFDF5; color: #059669; }
+        .status-failed { background: #FEE2E2; color: #DC2626; }
+
+        .order-meta {
+            display: flex; gap: 20px; margin-top: 6px;
+            font-size: 13px; color: var(--text-light); flex-wrap: wrap;
+        }
+        .order-meta span { display: flex; align-items: center; gap: 4px; }
+
+        .order-price {
+            font-size: 18px; font-weight: 800; color: var(--primary);
+            text-align: right;
+        }
+        .order-price .ref {
+            font-size: 12px; font-weight: 500; color: var(--text-light);
+            display: block; margin-top: 4px;
         }
 
-        .status-active { background: #ECFDF5; color: #059669; }
-        .status-ready { background: #FEF3C7; color: #D97706; }
-        .status-expired { background: #FEE2E2; color: #DC2626; }
-
-        .esim-card-meta {
-            display: flex;
-            gap: 20px;
-            margin-top: 8px;
-            font-size: 13px;
-            color: var(--text-light);
-            flex-wrap: wrap;
+        .order-arrow {
+            font-size: 18px; color: var(--text-light); margin-left: 8px;
         }
 
-        .esim-card-meta span { display: flex; align-items: center; gap: 4px; }
-
-        /* Usage bar */
-        .usage-section { margin-top: 12px; }
-        .usage-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: var(--text-light);
-            margin-bottom: 6px;
+        /* Empty & Loading states */
+        .empty-state {
+            text-align: center; padding: 60px 20px;
         }
-        .usage-bar {
-            height: 8px;
-            background: #E2E8F0;
-            border-radius: 4px;
-            overflow: hidden;
+        .empty-state .emoji { font-size: 64px; margin-bottom: 16px; }
+        .empty-state h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+        .empty-state p { color: var(--text-light); margin-bottom: 24px; }
+
+        .loading-state {
+            text-align: center; padding: 60px 20px; color: var(--text-light); font-size: 16px;
         }
-        .usage-fill {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 0.5s ease;
+        .loading-spinner {
+            width: 40px; height: 40px;
+            border: 3px solid var(--border); border-top-color: var(--primary);
+            border-radius: 50%; animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
         }
-        .usage-fill.green { background: var(--success); }
-        .usage-fill.yellow { background: var(--warning); }
-        .usage-fill.red { background: var(--error); }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Card actions */
-        .esim-card-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            align-items: flex-end;
-        }
-
-        .btn-sm {
-            padding: 8px 16px;
-            font-size: 13px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            border: none;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .btn-sm-primary { background: var(--primary); color: white; }
-        .btn-sm-primary:hover { background: var(--primary-dark); }
-        .btn-sm-outline { background: white; color: var(--text); border: 1px solid var(--border); }
-        .btn-sm-outline:hover { border-color: var(--primary); color: var(--primary); }
-
-        /* ===== QR MODAL ===== */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(4px);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-overlay.open { display: flex; }
-
-        .modal {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            text-align: center;
-            max-width: 420px;
-            width: 90%;
-            animation: slideUp 0.3s ease;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .modal h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
-        .modal p { color: var(--text-light); font-size: 14px; margin-bottom: 24px; }
-
-        .qr-placeholder {
-            width: 200px;
-            height: 200px;
-            margin: 0 auto 24px;
-            background: white;
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .qr-pattern {
-            width: 160px;
-            height: 160px;
-            display: grid;
-            grid-template-columns: repeat(11, 1fr);
-            grid-template-rows: repeat(11, 1fr);
-            gap: 1px;
-        }
-
-        .qr-pattern .cell {
-            border-radius: 1px;
-        }
-
-        .qr-pattern .cell.dark { background: var(--text); }
-        .qr-pattern .cell.light { background: white; }
-
-        .modal-close {
-            padding: 12px 32px;
-            background: var(--bg-gray);
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            color: var(--text);
-            transition: all 0.2s;
-        }
-
-        .modal-close:hover { background: #E2E8F0; }
-
-        .install-hint {
-            margin-top: 16px;
-            font-size: 12px;
-            color: var(--text-light);
-            background: var(--bg-gray);
-            padding: 12px;
-            border-radius: 8px;
-            text-align: left;
-        }
-
-        /* ===== EMPTY STATE ===== */
-        .cta-section {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px 48px;
-        }
-
+        .cta-section { max-width: 1200px; margin: 0 auto; padding: 0 24px 48px; }
         .cta-card {
             background: linear-gradient(135deg, var(--primary-light), #F0F9FF);
-            border-radius: 16px;
-            padding: 40px;
-            text-align: center;
+            border-radius: 16px; padding: 40px; text-align: center;
         }
-
         .cta-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
         .cta-card p { color: var(--text-light); margin-bottom: 20px; }
 
-        /* ===== FOOTER ===== */
         footer {
-            background: #0F172A;
-            color: #94A3B8;
-            padding: 32px 24px;
-            text-align: center;
-            font-size: 13px;
+            background: #0F172A; color: #94A3B8; padding: 32px 24px;
+            text-align: center; font-size: 13px;
         }
         footer a { color: #94A3B8; text-decoration: none; }
         footer a:hover { color: white; }
 
-        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             .dash-header { flex-direction: column; align-items: flex-start; gap: 16px; }
             .stats-row { grid-template-columns: 1fr; }
-            .esim-card { grid-template-columns: 1fr; }
-            .esim-card-flag { display: none; }
-            .esim-card-actions { flex-direction: row; flex-wrap: wrap; }
+            .order-card { grid-template-columns: 1fr; }
+            .order-icon { display: none; }
+            .order-price { text-align: left; }
             nav { display: none; }
             .nav-buttons .btn-outline { display: none; }
             .hamburger { display: flex; }
@@ -461,151 +244,86 @@
             <a href="destinations.html">Destinations</a>
             <a href="index.html#how-it-works">How It Works</a>
             <a href="index.html#faq">FAQ</a>
-            <a href="#">Support</a>
         </nav>
         <div class="nav-buttons">
             <button class="hamburger" onclick="toggleMobileNav()" aria-label="Menu">
                 <span></span><span></span><span></span>
             </button>
-            <a href="dashboard.html" class="btn btn-outline active">My eSIMs</a>
-            <a href="destinations.html" class="btn btn-primary">Buy eSIM</a>
+            <a href="dashboard.html" class="btn btn-outline" data-auth="logged-in" style="display:none">Dashboard</a>
+            <a href="#" class="btn btn-primary" data-auth="logged-in" style="display:none" onclick="logout()">Log Out</a>
+            <a href="login.html" class="btn btn-outline" data-auth="logged-out">Log In</a>
+            <a href="signup.html" class="btn btn-primary" data-auth="logged-out">Sign Up</a>
         </div>
     </div>
 </header>
 <div class="mobile-nav" id="mobile-nav">
     <a href="destinations.html">Destinations</a>
     <a href="index.html#how-it-works">How It Works</a>
-    <a href="index.html#faq">FAQ</a>
-    <a href="dashboard.html">My eSIMs</a>
-    <a href="#">Support</a>
+    <a href="dashboard.html">My Orders</a>
+    <a href="profile.html">Profile</a>
 </div>
 
 <!-- DASHBOARD HEADER -->
-<div class="dash-header">
-    <h1>My eSIMs</h1>
+<div class="dash-header" id="dash-header" style="display: none;">
+    <h1>My Orders</h1>
     <div class="user-info">
-        <div class="user-avatar">JD</div>
+        <div class="user-avatar" data-auth-initials>?</div>
         <div>
-            <div class="user-name">Jane Doe</div>
-            <div class="user-email">jane@example.com</div>
+            <div class="user-name" data-auth-name></div>
+            <div class="user-email" data-auth-email></div>
         </div>
     </div>
 </div>
 
 <!-- STATS -->
-<div class="stats-row">
+<div class="stats-row" id="stats-row" style="display: none;">
     <div class="stat-card">
-        <div class="stat-label">Active eSIMs</div>
-        <div class="stat-value active">1</div>
+        <div class="stat-label">Completed</div>
+        <div class="stat-value completed" id="stat-completed">0</div>
     </div>
     <div class="stat-card">
-        <div class="stat-label">Total Purchased</div>
-        <div class="stat-value total">3</div>
+        <div class="stat-label">Processing</div>
+        <div class="stat-value" id="stat-processing" style="color: var(--warning);">0</div>
     </div>
     <div class="stat-card">
-        <div class="stat-label">Countries Visited</div>
-        <div class="stat-value">3</div>
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-value total" id="stat-total">0</div>
     </div>
 </div>
 
-<!-- ESIM CARDS -->
-<div class="esim-section">
-    <div class="esim-section-header">
-        <h2>Your eSIMs</h2>
-        <a href="destinations.html" class="btn btn-primary" style="font-size: 13px; padding: 8px 16px;">+ Buy New eSIM</a>
+<!-- TAB NAV -->
+<div class="tab-nav-container" id="tab-nav-container" style="display: none;">
+    <div class="tab-nav">
+        <a href="dashboard.html" class="active">My Orders</a>
+        <a href="profile.html">Profile</a>
+    </div>
+</div>
+
+<!-- ORDERS -->
+<div class="orders-section">
+    <div class="loading-state" id="loading">
+        <div class="loading-spinner"></div>
+        Loading your orders...
     </div>
 
-    <div class="esim-list">
-        <!-- Active eSIM -->
-        <div class="esim-card">
-            <span class="esim-card-flag">🇯🇵</span>
-            <div class="esim-card-info">
-                <div class="esim-card-title">
-                    Japan — 5 GB
-                    <span class="status-badge status-active">● Active</span>
-                </div>
-                <div class="esim-card-meta">
-                    <span>📅 Mar 10 – Apr 9, 2026</span>
-                    <span>📡 NTT Docomo</span>
-                    <span>⚡ 5G / LTE</span>
-                </div>
-                <div class="usage-section">
-                    <div class="usage-label">
-                        <span>Data Used</span>
-                        <span><strong>2.1 GB</strong> / 5 GB</span>
-                    </div>
-                    <div class="usage-bar">
-                        <div class="usage-fill green" style="width: 42%;"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="esim-card-actions">
-                <button class="btn-sm btn-sm-primary" onclick="openQrModal('Japan — 5 GB', '🇯🇵')">View QR Code</button>
-                <a href="destinations.html" class="btn-sm btn-sm-outline">Buy More Data</a>
-            </div>
+    <div id="orders-content" style="display: none;">
+        <div class="orders-section-header">
+            <h2>Your Orders</h2>
+            <a href="destinations.html" class="btn btn-primary" style="font-size: 13px; padding: 8px 16px;">+ Buy eSIM</a>
         </div>
+        <div class="order-list" id="order-list"></div>
+    </div>
 
-        <!-- Ready to Install -->
-        <div class="esim-card">
-            <span class="esim-card-flag">🇹🇭</span>
-            <div class="esim-card-info">
-                <div class="esim-card-title">
-                    Thailand — 3 GB
-                    <span class="status-badge status-ready">● Ready to Install</span>
-                </div>
-                <div class="esim-card-meta">
-                    <span>📅 Valid for 15 days after install</span>
-                    <span>📡 AIS</span>
-                    <span>⚡ LTE</span>
-                </div>
-                <div class="usage-section">
-                    <div class="usage-label">
-                        <span>Data Used</span>
-                        <span><strong>0 GB</strong> / 3 GB</span>
-                    </div>
-                    <div class="usage-bar">
-                        <div class="usage-fill green" style="width: 0%;"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="esim-card-actions">
-                <button class="btn-sm btn-sm-primary" onclick="openQrModal('Thailand — 3 GB', '🇹🇭')">View QR Code</button>
-                <a href="#" class="btn-sm btn-sm-outline">Installation Guide</a>
-            </div>
-        </div>
-
-        <!-- Expired -->
-        <div class="esim-card" style="opacity: 0.65;">
-            <span class="esim-card-flag">🇺🇸</span>
-            <div class="esim-card-info">
-                <div class="esim-card-title">
-                    USA — 10 GB
-                    <span class="status-badge status-expired">● Expired</span>
-                </div>
-                <div class="esim-card-meta">
-                    <span>📅 Jan 5 – Feb 4, 2026</span>
-                    <span>📡 T-Mobile</span>
-                    <span>⚡ 5G / LTE</span>
-                </div>
-                <div class="usage-section">
-                    <div class="usage-label">
-                        <span>Data Used</span>
-                        <span><strong>8.4 GB</strong> / 10 GB</span>
-                    </div>
-                    <div class="usage-bar">
-                        <div class="usage-fill red" style="width: 84%;"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="esim-card-actions">
-                <a href="destinations.html" class="btn-sm btn-sm-primary">Buy Again</a>
-            </div>
-        </div>
+    <div class="empty-state" id="empty-state" style="display: none;">
+        <div class="emoji">📱</div>
+        <h3>No orders yet</h3>
+        <p>Purchase your first eSIM and stay connected anywhere in the world.</p>
+        <a href="destinations.html" class="btn btn-primary">Browse eSIM Plans →</a>
     </div>
 </div>
 
 <!-- CTA -->
-<div class="cta-section">
+<div class="cta-section" id="cta-section" style="display: none;">
     <div class="cta-card">
         <h3>Planning your next trip?</h3>
         <p>Browse eSIM plans for 150+ countries worldwide.</p>
@@ -618,68 +336,96 @@
     <p>© 2026 GlobalSIM. All rights reserved. | <a href="#">Privacy</a> · <a href="#">Terms</a> · <a href="#">Support</a></p>
 </footer>
 
-<!-- QR CODE MODAL -->
-<div class="modal-overlay" id="qr-modal" onclick="if(event.target===this) closeQrModal()">
-    <div class="modal">
-        <h3 id="qr-modal-title">eSIM QR Code</h3>
-        <p id="qr-modal-subtitle">Scan this QR code to install your eSIM</p>
-        <div class="qr-placeholder">
-            <div class="qr-pattern" id="qr-pattern"></div>
-        </div>
-        <div class="install-hint">
-            <strong>How to scan:</strong><br>
-            iPhone: Settings → Cellular → Add eSIM → Use QR Code<br>
-            Android: Settings → Network → SIMs → Add eSIM
-        </div>
-        <br>
-        <button class="modal-close" onclick="closeQrModal()">Close</button>
-    </div>
-</div>
-
+<script src="js/auth.js"></script>
 <script>
     function toggleMobileNav() {
         document.getElementById('mobile-nav').classList.toggle('open');
         document.querySelector('.hamburger').classList.toggle('active');
     }
 
-    // QR Code Modal
-    function openQrModal(planName, flag) {
-        document.getElementById('qr-modal-title').textContent = flag + ' ' + planName;
-        generateQrPattern();
-        document.getElementById('qr-modal').classList.add('open');
-    }
+    const STATUS_LABELS = {
+        'created': 'Awaiting Payment',
+        'paid': 'Payment Confirmed',
+        'joytel_pending': 'Preparing eSIM',
+        'snpin_received': 'Generating QR',
+        'completed': 'Completed',
+        'failed': 'Failed'
+    };
 
-    function closeQrModal() {
-        document.getElementById('qr-modal').classList.remove('open');
-    }
+    document.addEventListener('DOMContentLoaded', async () => {
+        await initAuth();
 
-    function generateQrPattern() {
-        const container = document.getElementById('qr-pattern');
-        container.innerHTML = '';
-        // Generate a fake but realistic-looking QR pattern
-        const size = 11;
-        const pattern = [];
-        
-        // Create deterministic pattern
-        for (let i = 0; i < size * size; i++) {
-            const row = Math.floor(i / size);
-            const col = i % size;
-            let dark = false;
-            
-            // Corner squares (finder patterns)
-            if ((row < 3 && col < 3) || (row < 3 && col >= size-3) || (row >= size-3 && col < 3)) {
-                dark = (row === 0 || row === 2 || col === 0 || col === 2 || row === size-1 || row === size-3 || col === size-1 || col === size-3);
-                if (row >= 0 && row <= 2 && col >= 0 && col <= 2) dark = !(row === 1 && col === 1) || true;
-                if (row === 1 && col === 1) dark = true;
-            } else {
-                // Random-ish data pattern
-                dark = ((row * 7 + col * 13 + row * col) % 3) !== 0;
-            }
-            
-            const cell = document.createElement('div');
-            cell.className = 'cell ' + (dark ? 'dark' : 'light');
-            container.appendChild(cell);
+        if (!isLoggedIn()) {
+            window.location.href = 'login.html?redirect=dashboard.html';
+            return;
         }
+
+        // Show dashboard UI
+        document.getElementById('dash-header').style.display = 'flex';
+        document.getElementById('stats-row').style.display = 'grid';
+        document.getElementById('tab-nav-container').style.display = 'block';
+
+        await loadOrders();
+    });
+
+    async function loadOrders() {
+        try {
+            const res = await authFetch('/api/orders');
+            if (!res.ok) throw new Error('Failed to load orders');
+            const orders = await res.json();
+
+            document.getElementById('loading').style.display = 'none';
+
+            if (!orders || orders.length === 0) {
+                document.getElementById('empty-state').style.display = 'block';
+                return;
+            }
+
+            // Stats
+            const completed = orders.filter(o => o.status === 'completed').length;
+            const processing = orders.filter(o => !['completed', 'failed'].includes(o.status)).length;
+            document.getElementById('stat-completed').textContent = completed;
+            document.getElementById('stat-processing').textContent = processing;
+            document.getElementById('stat-total').textContent = orders.length;
+
+            // Render orders
+            const listEl = document.getElementById('order-list');
+            listEl.innerHTML = orders.map(order => renderOrder(order)).join('');
+
+            document.getElementById('orders-content').style.display = 'block';
+            document.getElementById('cta-section').style.display = 'block';
+
+        } catch (err) {
+            console.error('Error loading orders:', err);
+            document.getElementById('loading').innerHTML = '<p style="color: var(--error);">Failed to load orders. Please try again.</p>';
+        }
+    }
+
+    function renderOrder(order) {
+        const statusLabel = STATUS_LABELS[order.status] || order.status;
+        const statusClass = 'status-' + order.status;
+        const price = order.price_cents ? '$' + (order.price_cents / 100).toFixed(2) : '';
+        const date = order.created_at ? new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+        const planName = order.plan_name || order.plan_id || 'eSIM Plan';
+
+        return `
+        <a href="order.html?ref=${encodeURIComponent(order.reference)}" class="order-card">
+            <div class="order-icon">📱</div>
+            <div class="order-info">
+                <div class="order-title">
+                    ${planName}
+                    <span class="status-badge ${statusClass}">${statusLabel}</span>
+                </div>
+                <div class="order-meta">
+                    <span>📅 ${date}</span>
+                    <span>📧 ${order.email || ''}</span>
+                </div>
+            </div>
+            <div class="order-price">
+                ${price}
+                <span class="ref">${order.reference}</span>
+            </div>
+        </a>`;
     }
 </script>
 

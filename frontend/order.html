@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details — GlobalSIM</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #4338CA;
+            --primary-light: #EEF2FF;
+            --accent: #06B6D4;
+            --text: #1E293B;
+            --text-light: #64748B;
+            --bg: #FFFFFF;
+            --bg-gray: #F8FAFC;
+            --border: #E2E8F0;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --error: #EF4444;
+            --radius: 12px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: var(--text); line-height: 1.6; background: var(--bg-gray);
+        }
+
+        header {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+        .header-inner {
+            max-width: 1200px; margin: 0 auto; padding: 0 24px;
+            height: 64px; display: flex; align-items: center; justify-content: space-between;
+        }
+        .logo {
+            font-size: 22px; font-weight: 800; color: var(--primary);
+            text-decoration: none; display: flex; align-items: center; gap: 8px;
+        }
+        .logo-icon {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 8px; display: flex; align-items: center;
+            justify-content: center; color: white; font-size: 18px;
+        }
+        .nav-buttons { display: flex; gap: 12px; align-items: center; }
+        .btn {
+            padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px;
+            cursor: pointer; text-decoration: none; transition: all 0.2s; border: none;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+        .page-container {
+            max-width: 800px; margin: 40px auto; padding: 0 24px 80px;
+        }
+
+        .back-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            color: var(--text-light); text-decoration: none; font-size: 14px;
+            font-weight: 600; margin-bottom: 24px; transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--primary); }
+
+        .order-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 32px; flex-wrap: wrap; gap: 12px;
+        }
+        .order-header h1 { font-size: 28px; font-weight: 800; }
+
+        .status-badge {
+            padding: 6px 16px; border-radius: 8px; font-size: 14px;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
+        }
+        .status-created { background: #F1F5F9; color: #475569; }
+        .status-paid { background: #DBEAFE; color: #1D4ED8; }
+        .status-joytel_pending, .status-snpin_received { background: #FEF3C7; color: #D97706; }
+        .status-completed { background: #ECFDF5; color: #059669; }
+        .status-failed { background: #FEE2E2; color: #DC2626; }
+
+        .detail-card {
+            background: white; border-radius: 16px; border: 1px solid var(--border);
+            padding: 28px; margin-bottom: 24px;
+        }
+        .detail-card h2 {
+            font-size: 16px; font-weight: 700; margin-bottom: 20px;
+            padding-bottom: 12px; border-bottom: 1px solid var(--border);
+        }
+
+        .detail-row {
+            display: flex; justify-content: space-between; padding: 12px 0;
+            border-bottom: 1px solid var(--border); font-size: 15px;
+        }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { color: var(--text-light); }
+        .detail-value { font-weight: 600; text-align: right; max-width: 60%; word-break: break-all; }
+
+        /* Timeline */
+        .timeline { padding: 8px 0; }
+        .timeline-item {
+            display: flex; gap: 16px; padding-bottom: 24px; position: relative;
+        }
+        .timeline-item:last-child { padding-bottom: 0; }
+        .timeline-item::before {
+            content: ''; position: absolute; left: 15px; top: 32px;
+            bottom: 0; width: 2px; background: var(--border);
+        }
+        .timeline-item:last-child::before { display: none; }
+
+        .timeline-dot {
+            width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; position: relative; z-index: 1;
+        }
+        .timeline-dot.done { background: var(--success); color: white; }
+        .timeline-dot.active { background: var(--primary); color: white; animation: pulse 2s infinite; }
+        .timeline-dot.pending { background: var(--bg-gray); color: var(--text-light); border: 2px solid var(--border); }
+        .timeline-dot.failed { background: var(--error); color: white; }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(79, 70, 229, 0); }
+        }
+
+        .timeline-content h4 { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+        .timeline-content p { font-size: 13px; color: var(--text-light); }
+
+        /* QR Code section */
+        .qr-section {
+            text-align: center; padding: 20px 0;
+        }
+        .qr-image {
+            max-width: 240px; margin: 0 auto 16px; border-radius: 12px;
+            border: 2px solid var(--border); overflow: hidden;
+        }
+        .qr-image img {
+            width: 100%; display: block;
+        }
+        .qr-placeholder {
+            width: 240px; height: 240px; margin: 0 auto 16px;
+            background: var(--bg-gray); border-radius: 12px; border: 2px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 64px;
+        }
+        .install-hint {
+            font-size: 13px; color: var(--text-light); background: var(--bg-gray);
+            padding: 16px; border-radius: 8px; text-align: left; max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .loading-state {
+            text-align: center; padding: 80px 20px; color: var(--text-light); font-size: 16px;
+        }
+        .loading-spinner {
+            width: 40px; height: 40px;
+            border: 3px solid var(--border); border-top-color: var(--primary);
+            border-radius: 50%; animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .error-state {
+            text-align: center; padding: 80px 20px;
+        }
+        .error-state .emoji { font-size: 48px; margin-bottom: 16px; }
+        .error-state h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+        .error-state p { color: var(--text-light); margin-bottom: 24px; }
+
+        footer {
+            background: #0F172A; color: #94A3B8; padding: 32px 24px;
+            text-align: center; font-size: 13px;
+        }
+        footer a { color: #94A3B8; text-decoration: none; }
+        footer a:hover { color: white; }
+
+        @media (max-width: 768px) {
+            .order-header { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <a href="index.html" class="logo">
+            <div class="logo-icon">📶</div>
+            GlobalSIM
+        </a>
+        <div class="nav-buttons">
+            <a href="dashboard.html" class="btn btn-outline" data-auth="logged-in" style="display:none">Dashboard</a>
+            <a href="#" class="btn btn-primary" data-auth="logged-in" style="display:none" onclick="logout()">Log Out</a>
+        </div>
+    </div>
+</header>
+
+<div class="page-container">
+    <div class="loading-state" id="loading">
+        <div class="loading-spinner"></div>
+        Loading order details...
+    </div>
+
+    <div class="error-state" id="error-state" style="display: none;">
+        <div class="emoji">😕</div>
+        <h3>Order not found</h3>
+        <p>We couldn't find this order. It may not exist or you may not have access.</p>
+        <a href="dashboard.html" class="btn btn-primary">Back to Dashboard</a>
+    </div>
+
+    <div id="order-content" style="display: none;">
+        <a href="dashboard.html" class="back-link">← Back to My Orders</a>
+
+        <div class="order-header">
+            <h1 id="order-ref">—</h1>
+            <span class="status-badge" id="order-status-badge">—</span>
+        </div>
+
+        <!-- Order Details -->
+        <div class="detail-card">
+            <h2>Order Details</h2>
+            <div class="detail-row">
+                <span class="detail-label">Reference</span>
+                <span class="detail-value" id="detail-ref">—</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Plan</span>
+                <span class="detail-value" id="detail-plan">—</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Email</span>
+                <span class="detail-value" id="detail-email">—</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Date</span>
+                <span class="detail-value" id="detail-date">—</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Amount</span>
+                <span class="detail-value" id="detail-amount">—</span>
+            </div>
+        </div>
+
+        <!-- Status Timeline -->
+        <div class="detail-card">
+            <h2>Order Status</h2>
+            <div class="timeline" id="timeline"></div>
+        </div>
+
+        <!-- QR Code (if completed) -->
+        <div class="detail-card" id="qr-card" style="display: none;">
+            <h2>Your eSIM QR Code</h2>
+            <div class="qr-section" id="qr-section"></div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <p>© 2026 GlobalSIM. All rights reserved. | <a href="#">Privacy</a> · <a href="#">Terms</a> · <a href="#">Support</a></p>
+</footer>
+
+<script src="js/auth.js"></script>
+<script>
+    const STATUS_LABELS = {
+        'created': 'Awaiting Payment',
+        'paid': 'Payment Confirmed',
+        'joytel_pending': 'Preparing eSIM',
+        'snpin_received': 'Generating QR Code',
+        'completed': 'Completed',
+        'failed': 'Failed'
+    };
+
+    const STATUS_STEPS = ['created', 'paid', 'joytel_pending', 'snpin_received', 'completed'];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        await initAuth();
+
+        if (!isLoggedIn()) {
+            window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
+            return;
+        }
+
+        const ref = new URLSearchParams(window.location.search).get('ref');
+        if (!ref) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error-state').style.display = 'block';
+            return;
+        }
+
+        await loadOrder(ref);
+    });
+
+    async function loadOrder(ref) {
+        try {
+            const res = await authFetch(`/api/orders/${encodeURIComponent(ref)}`);
+            if (!res.ok) throw new Error('Order not found');
+            const order = await res.json();
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('order-content').style.display = 'block';
+            document.title = `Order ${order.reference} — GlobalSIM`;
+
+            renderOrder(order);
+
+            // Auto-refresh if still processing
+            if (!['completed', 'failed'].includes(order.status)) {
+                setTimeout(() => loadOrder(ref), 5000);
+            }
+
+        } catch (err) {
+            console.error('Error loading order:', err);
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error-state').style.display = 'block';
+        }
+    }
+
+    function renderOrder(order) {
+        const statusLabel = STATUS_LABELS[order.status] || order.status;
+        const statusClass = 'status-' + order.status;
+        const date = order.created_at ? new Date(order.created_at).toLocaleDateString('en-US', {
+            weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        }) : '—';
+        const price = order.price_cents ? '$' + (order.price_cents / 100).toFixed(2) + ' USD' : '—';
+
+        document.getElementById('order-ref').textContent = order.reference;
+        document.getElementById('order-status-badge').textContent = statusLabel;
+        document.getElementById('order-status-badge').className = 'status-badge ' + statusClass;
+
+        document.getElementById('detail-ref').textContent = order.reference;
+        document.getElementById('detail-plan').textContent = order.plan_name || order.plan_id || '—';
+        document.getElementById('detail-email').textContent = order.email || '—';
+        document.getElementById('detail-date').textContent = date;
+        document.getElementById('detail-amount').textContent = price;
+
+        // Timeline
+        renderTimeline(order.status);
+
+        // QR Code
+        if (order.status === 'completed' && order.qr_code_url) {
+            document.getElementById('qr-card').style.display = 'block';
+            document.getElementById('qr-section').innerHTML = `
+                <div class="qr-image"><img src="${order.qr_code_url}" alt="eSIM QR Code"></div>
+                <div class="install-hint">
+                    <strong>How to install:</strong><br>
+                    <strong>iPhone:</strong> Settings → Cellular → Add eSIM → Use QR Code<br>
+                    <strong>Android:</strong> Settings → Network → SIMs → Add eSIM
+                </div>
+            `;
+        } else if (order.status === 'completed') {
+            document.getElementById('qr-card').style.display = 'block';
+            document.getElementById('qr-section').innerHTML = `
+                <div class="qr-placeholder">📱</div>
+                <p style="color: var(--text-light); font-size: 14px;">QR code was sent to your email. Check your inbox.</p>
+            `;
+        }
+    }
+
+    function renderTimeline(currentStatus) {
+        const timelineEl = document.getElementById('timeline');
+        const isFailed = currentStatus === 'failed';
+        const currentIdx = STATUS_STEPS.indexOf(currentStatus);
+
+        const steps = [
+            { key: 'created', label: 'Order Created', desc: 'Your order has been placed' },
+            { key: 'paid', label: 'Payment Confirmed', desc: 'Payment received successfully' },
+            { key: 'joytel_pending', label: 'Preparing eSIM', desc: 'Provisioning your eSIM with the carrier' },
+            { key: 'snpin_received', label: 'Generating QR Code', desc: 'Creating your installation QR code' },
+            { key: 'completed', label: 'Completed', desc: 'Your eSIM is ready to install!' },
+        ];
+
+        timelineEl.innerHTML = steps.map((step, i) => {
+            let dotClass = 'pending';
+            let icon = (i + 1);
+
+            if (isFailed && i === currentIdx) {
+                dotClass = 'failed';
+                icon = '✕';
+            } else if (i < currentIdx || (currentStatus === 'completed' && i <= currentIdx)) {
+                dotClass = 'done';
+                icon = '✓';
+            } else if (i === currentIdx) {
+                dotClass = 'active';
+                icon = '⋯';
+            }
+
+            return `
+            <div class="timeline-item">
+                <div class="timeline-dot ${dotClass}">${icon}</div>
+                <div class="timeline-content">
+                    <h4>${step.label}</h4>
+                    <p>${step.desc}</p>
+                </div>
+            </div>`;
+        }).join('');
+
+        if (isFailed) {
+            timelineEl.innerHTML += `
+            <div class="timeline-item">
+                <div class="timeline-dot failed">✕</div>
+                <div class="timeline-content">
+                    <h4>Order Failed</h4>
+                    <p>Something went wrong. Please contact support or try again.</p>
+                </div>
+            </div>`;
+        }
+    }
+</script>
+
+</body>
+</html>
