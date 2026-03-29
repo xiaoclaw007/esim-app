@@ -305,6 +305,102 @@ Every new user gets a unique 8-character referral code on signup (e.g., `REF-X7K
 
 ---
 
+## Auth Token Deep Dive
+
+### What are access tokens and refresh tokens?
+
+Think of it like a hotel:
+
+- **Access token = your room key card.** Gets you into your room (API requests). Expires quickly (15 min). If someone steals it, it only works briefly. You use it constantly — every API call includes it.
+- **Refresh token = your booking confirmation.** You don't wave it around everywhere. When your key card expires, you go to the front desk with your confirmation and they give you a new key card. Lasts 30 days. Stored securely in an HttpOnly cookie (JavaScript can't touch it). Can be revoked server-side.
+
+**Why not just one long-lived token?** If an attacker steals it, they have access for the full 30 days and you can't revoke it (JWTs are stateless). With two tokens: a stolen access token is useless in 15 minutes, and a stolen refresh token is much harder to steal (HttpOnly cookie) plus we can revoke it in our database.
+
+### Concrete auth flow
+
+**Step 1 — Login:**
+```
+User submits email + password (or completes Google OAuth)
+  → Backend verifies credentials
+  → Backend returns:
+      - Access token in JSON response body → frontend stores in JS variable
+      - Refresh token in HttpOnly cookie → browser stores automatically
+```
+
+**Step 2 — Every API call (e.g. loading order history):**
+```
+Frontend: GET /api/orders
+Header: Authorization: Bearer <access_token>
+  → Backend checks: is this token valid and not expired?
+    ✅ Yes → return the data
+    ❌ Expired → return 401
+```
+
+**Step 3 — Access token expired (every ~15 min):**
+```
+Frontend gets 401 from an API call
+  → Frontend automatically calls: POST /api/auth/refresh
+    (browser sends the refresh token cookie automatically)
+  → Backend checks: is this refresh token valid in our DB?
+    ✅ Yes → issue a NEW access token, return it
+    ❌ No → return 401 → frontend redirects to login page
+  → Frontend stores new access token, retries the original request
+  → User never noticed anything happened
+```
+
+**Step 4 — Logout:**
+```
+Frontend: POST /api/auth/logout
+  → Backend marks refresh token as revoked in DB
+  → Clears the cookie
+  → Frontend deletes access token from memory
+```
+
+### Where each token lives
+
+| Token | Stored where | Sent how | Lifespan |
+|-------|-------------|----------|----------|
+| Access | JS variable (memory) | `Authorization` header | 15 min |
+| Refresh | HttpOnly cookie | Automatically by browser | 30 days |
+
+### What "frontend stores access token" actually means
+
+Literally just a JavaScript variable:
+
+```javascript
+// In our auth.js file
+let accessToken = null;
+
+// After login or refresh:
+async function login(email, password) {
+    const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password })
+    });
+    const data = await response.json();
+    accessToken = data.access_token;  // ← stored here
+}
+
+// Every API call uses it:
+async function getOrders() {
+    const response = await fetch('/api/orders', {
+        headers: {
+            'Authorization': `Bearer ${accessToken}`
+        }
+    });
+    return response.json();
+}
+```
+
+**Why a JS variable instead of localStorage or a cookie?**
+- `localStorage` → any JavaScript on the page can read it (XSS vulnerability)
+- Regular cookie → sent with every request, even ones we don't want
+- JS variable → dies when you close the tab, harder for injected scripts to access
+
+**The tradeoff:** refreshing the page loses the variable. So on page load, the frontend silently calls `/api/auth/refresh` (the HttpOnly cookie survived the refresh) to get a fresh access token. Takes milliseconds, user doesn't notice.
+
+---
+
 ## Security Considerations
 
 - Passwords hashed with bcrypt (cost factor 12)
