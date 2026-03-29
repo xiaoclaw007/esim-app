@@ -1,4 +1,4 @@
-"""Email delivery via AWS SES — sends eSIM QR codes to customers."""
+"""Email delivery via AWS SES — payment confirmation and QR code delivery."""
 
 import base64
 import io
@@ -14,6 +14,98 @@ from jinja2 import Template
 from app.config import settings
 
 logger = logging.getLogger(__name__)
+
+
+# --- Payment Confirmation Email ---
+
+PAYMENT_CONFIRMATION_TEMPLATE = Template("""
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333; }
+        .header { text-align: center; padding: 20px 0; }
+        .header h1 { color: #2563eb; margin: 0; }
+        .icon { text-align: center; font-size: 48px; margin: 20px 0; }
+        .details { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .details h3 { margin-top: 0; color: #1e40af; }
+        .details p { margin: 8px 0; }
+        .status-box { background: #fef3c7; border-radius: 8px; padding: 16px; margin: 20px 0; text-align: center; }
+        .status-box p { color: #92400e; font-weight: 600; margin: 0; }
+        .footer { text-align: center; color: #94a3b8; font-size: 12px; padding: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Payment Confirmed ✓</h1>
+    </div>
+
+    <div class="icon">💳</div>
+
+    <p>Hi there! We've received your payment. Your eSIM is now being prepared.</p>
+
+    <div class="details">
+        <h3>Order Details</h3>
+        <p><strong>Order Reference:</strong> {{ reference }}</p>
+        <p><strong>Plan:</strong> {{ plan_name }}</p>
+        <p><strong>Amount:</strong> ${{ amount }}</p>
+        <p><strong>Email:</strong> {{ email }}</p>
+    </div>
+
+    <div class="status-box">
+        <p>⏳ Your eSIM QR code is being generated. You'll receive a second email shortly with your QR code and setup instructions.</p>
+    </div>
+
+    <div class="footer">
+        <p>Order Reference: {{ reference }}</p>
+        <p>If you have any issues, reply to this email.</p>
+    </div>
+</body>
+</html>
+""")
+
+
+def send_payment_confirmation_email(
+    to_email: str,
+    reference: str,
+    plan_name: str,
+    amount_cents: int,
+) -> bool:
+    """Send a payment confirmation email immediately after Stripe payment.
+
+    This gives the customer immediate reassurance while we process
+    the JoyTel order and QR code generation.
+    """
+    try:
+        amount_str = f"{amount_cents / 100:.2f}"
+        html_body = PAYMENT_CONFIRMATION_TEMPLATE.render(
+            reference=reference,
+            plan_name=plan_name,
+            amount=amount_str,
+            email=to_email,
+        )
+
+        ses_client = boto3.client(
+            "ses",
+            region_name=settings.aws_region,
+            aws_access_key_id=settings.aws_access_key_id,
+            aws_secret_access_key=settings.aws_secret_access_key,
+        )
+        ses_client.send_email(
+            Source=settings.aws_ses_from_email,
+            Destination={"ToAddresses": [to_email]},
+            Message={
+                "Subject": {"Data": f"Payment Confirmed — {reference}"},
+                "Body": {"Html": {"Data": html_body}},
+            },
+        )
+
+        logger.info(f"Payment confirmation email sent to {to_email} for {reference}")
+        return True
+
+    except Exception as e:
+        logger.error(f"Failed to send payment confirmation to {to_email}: {e}")
+        return False
 
 # HTML email template for QR code delivery
 EMAIL_TEMPLATE = Template("""

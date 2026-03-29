@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Order, Plan
-from app.services.email_service import send_esim_email
+from app.services.email_service import send_esim_email, send_payment_confirmation_email
 from app.services.joytel_rsp import redeem_coupon
 from app.services.joytel_warehouse import place_order
 from app.services.stripe_service import verify_webhook_signature
@@ -63,11 +63,21 @@ async def stripe_webhook(
     order.stripe_payment_intent = session.get("payment_intent")
     db.commit()
 
-    logger.info(f"Order {order.reference} paid — submitting to JoyTel")
+    logger.info(f"Order {order.reference} paid — sending confirmation email")
+
+    # Send payment confirmation email immediately
+    plan = db.query(Plan).filter(Plan.id == order.plan_id).first()
+    send_payment_confirmation_email(
+        to_email=order.email,
+        reference=order.reference,
+        plan_name=plan.name if plan else order.plan_id,
+        amount_cents=order.amount_cents,
+    )
+
+    logger.info(f"Order {order.reference} — submitting to JoyTel")
 
     # Submit order to JoyTel Warehouse
     try:
-        plan = db.query(Plan).filter(Plan.id == order.plan_id).first()
         result = await place_order(order_id=order.id, sku=plan.joytel_sku)
 
         order.status = "joytel_pending"
