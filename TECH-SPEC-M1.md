@@ -142,11 +142,19 @@ Two options for the Python backend on AWS:
 
 ### Webhooks (called by external services)
 
+Webhooks are URLs on *our* server that external services call to notify us when something happens. We don't call these — they call us.
+
 | Method | Path | Called by |
 |--------|------|----------|
 | POST | `/api/webhooks/stripe` | Stripe (payment confirmation) |
 | POST | `/api/webhooks/joytel/order` | JoyTel Warehouse (order callback with snPin) |
 | POST | `/api/webhooks/joytel/qrcode` | JoyTel RSP+ (QR code delivery) |
+
+**`/api/webhooks/stripe`** — Stripe calls this when a customer successfully pays. Instead of trusting the frontend to tell us "payment succeeded" (which could be faked), Stripe sends a server-to-server notification. This is how we confirm the money actually landed before fulfilling the order.
+
+**`/api/webhooks/joytel/order`** — After we submit an order to JoyTel's Warehouse API, they process it (~30 seconds) and then call this URL with the `snPin` (the redemption code needed to get the QR code). We store the snPin and use it to request the QR code from RSP+.
+
+**`/api/webhooks/joytel/qrcode`** — After we use the `snPin` to request the QR code from JoyTel's RSP+ system, they call this URL to deliver the actual QR code data. Once we receive this, we have everything needed to email the customer their eSIM.
 
 ### Internal
 
