@@ -32,7 +32,7 @@ def seed_plans():
             region="north-america",
             data_gb=1,
             validity_days=1,
-            price_cents=799,  # $7.99 — wholesale is $5.00, TODO: confirm margin
+            price_cents=700,  # $7.00 — wholesale is $5.00
             currency="usd",
             active=True,
         ),
