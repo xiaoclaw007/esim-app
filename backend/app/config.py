@@ -28,6 +28,16 @@ class Settings(BaseSettings):
     joytel_app_id: str = ""
     joytel_app_secret: str = ""
 
+    # JWT / Auth
+    jwt_secret_key: str = "change-me-jwt-secret"
+    jwt_access_token_expire_minutes: int = 15
+    jwt_refresh_token_expire_days: int = 30
+
+    # Google OAuth
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    google_redirect_uri: str = ""
+
     # AWS SES
     aws_region: str = "us-east-1"
     aws_ses_from_email: str = "noreply@example.com"

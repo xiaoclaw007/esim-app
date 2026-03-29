@@ -3,6 +3,7 @@
 import hashlib
 import json
 import logging
+from typing import Optional
 import time
 
 import httpx
@@ -26,7 +27,7 @@ def _generate_rsp_sign(params: dict) -> str:
 
 async def redeem_coupon(
     sn_pin: str,
-    callback_url: str | None = None,
+    callback_url: "Optional[str]" = None,
 ) -> dict:
     """Redeem an snPin/coupon to get the eSIM QR code.
 

@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import Base, engine
-from app.routers import checkout, orders, plans, webhooks
+from app.routers import auth, checkout, orders, plans, users, webhooks
 from app.tasks.order_poller import poll_pending_orders
 
 # Configure logging
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="eSIM API",
     description="Backend API for eSIM reseller — handles checkout, JoyTel integration, and QR delivery.",
-    version="0.1.0",
+    version="0.2.0",
 )
 
 # CORS — allow the frontend to call our API
@@ -50,12 +50,14 @@ app.include_router(plans.router)
 app.include_router(checkout.router)
 app.include_router(orders.router)
 app.include_router(webhooks.router)
+app.include_router(auth.router)
+app.include_router(users.router)
 
 
 @app.on_event("startup")
 async def startup():
     """Run on app startup — create DB tables and start background tasks."""
-    # Create database tables (for M1 with SQLite, this is fine.
+    # Create database tables (for dev with SQLite, this is fine.
     # In production, use Alembic migrations instead.)
     Base.metadata.create_all(bind=engine)
     logger.info("Database tables created")

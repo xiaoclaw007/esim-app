@@ -3,6 +3,7 @@
 import hashlib
 import json
 import logging
+from typing import Optional
 import time
 
 import httpx
@@ -28,7 +29,7 @@ async def place_order(
     order_id: str,
     sku: str,
     quantity: int = 1,
-    callback_url: str | None = None,
+    callback_url: "Optional[str]" = None,
 ) -> dict:
     """Submit an order to JoyTel Warehouse.
 
