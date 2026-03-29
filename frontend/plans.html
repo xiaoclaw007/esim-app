@@ -185,7 +185,10 @@
 
 <script>
     // --- Config ---
-    const API_BASE = 'http://34.203.146.15';
+    // Use relative URLs when served from the same server, absolute for GitHub Pages
+    const API_BASE = window.location.hostname === 'localhost' || window.location.protocol === 'http:'
+        ? ''  // Same-origin (served from EC2)
+        : 'http://34.203.146.15';  // Cross-origin (GitHub Pages)
 
     const COUNTRY_FLAGS = {
         'US': '🇺🇸', 'JP': '🇯🇵', 'KR': '🇰🇷', 'TH': '🇹🇭',
