@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Japan eSIM Plans — GlobalSIM</title>
+    <title>eSIM Plans — GlobalSIM</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+
         :root {
             --primary: #4F46E5;
             --primary-dark: #4338CA;
@@ -30,378 +30,129 @@
             background: var(--bg-gray);
         }
 
-        /* ===== HEADER ===== */
+        /* Header */
         header {
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            position: sticky; top: 0; z-index: 100;
             background: rgba(255,255,255,0.95);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--border);
         }
-
         .header-inner {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
-            height: 64px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            max-width: 1200px; margin: 0 auto; padding: 0 24px;
+            height: 64px; display: flex; align-items: center; justify-content: space-between;
         }
-
         .logo {
-            font-size: 22px;
-            font-weight: 800;
-            color: var(--primary);
+            display: flex; align-items: center; gap: 8px;
+            font-size: 20px; font-weight: 700; color: var(--primary);
             text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
-
         .logo-icon {
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 18px;
+            width: 36px; height: 36px; background: var(--primary);
+            border-radius: 10px; display: flex; align-items: center;
+            justify-content: center; font-size: 18px;
         }
-
-        nav { display: flex; align-items: center; gap: 32px; }
-        nav a { text-decoration: none; color: var(--text-light); font-weight: 500; font-size: 15px; transition: color 0.2s; }
+        nav a {
+            text-decoration: none; color: var(--text-light); font-weight: 500;
+            margin: 0 16px; transition: color 0.2s;
+        }
         nav a:hover { color: var(--primary); }
 
-        .nav-buttons { display: flex; gap: 12px; align-items: center; }
-
-        .btn {
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all 0.2s;
-            border: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: var(--shadow-lg); }
-        .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
-        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
-
-        /* ===== BREADCRUMB ===== */
-        .breadcrumb {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 16px 24px;
-            font-size: 14px;
-            color: var(--text-light);
-        }
-
-        .breadcrumb a { color: var(--primary); text-decoration: none; }
-        .breadcrumb a:hover { text-decoration: underline; }
-        .breadcrumb span { margin: 0 8px; }
-
-        /* ===== COUNTRY HEADER ===== */
-        .country-header {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px 32px;
-            display: flex;
-            align-items: flex-start;
-            gap: 24px;
-        }
-
-        .country-flag { font-size: 56px; line-height: 1; }
-
-        .country-info h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.3px; }
-
-        .country-meta {
-            display: flex;
-            gap: 24px;
-            margin-top: 8px;
-        }
-
-        .country-meta-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 14px;
-            color: var(--text-light);
-        }
-
-        .country-meta-icon { font-size: 16px; }
-
-        /* ===== FILTER BAR ===== */
-        .filter-bar {
-            max-width: 1200px;
-            margin: 0 auto 24px;
-            padding: 0 24px;
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .filter-chip {
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            border: 1px solid var(--border);
-            background: white;
-            color: var(--text-light);
-            transition: all 0.2s;
-        }
-
-        .filter-chip:hover { border-color: var(--primary); color: var(--primary); }
-        .filter-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
-
-        /* ===== PLAN CARDS ===== */
-        .plans-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px 80px;
-        }
-
-        .plans-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-        }
-
-        .plan-card {
-            background: white;
-            border-radius: 16px;
-            border: 2px solid var(--border);
-            padding: 28px;
-            transition: all 0.2s;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .plan-card:hover {
-            border-color: var(--primary);
-            box-shadow: var(--shadow-lg);
-            transform: translateY(-2px);
-        }
-
-        .plan-card.popular {
-            border-color: var(--primary);
-        }
-
-        .popular-badge {
-            position: absolute;
-            top: -1px;
-            right: 24px;
-            background: var(--primary);
-            color: white;
-            padding: 4px 14px;
-            font-size: 12px;
-            font-weight: 700;
-            border-radius: 0 0 8px 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .plan-data {
-            font-size: 36px;
-            font-weight: 800;
-            color: var(--primary);
-            margin-bottom: 4px;
-        }
-
-        .plan-type {
-            font-size: 13px;
-            color: var(--text-light);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-        }
-
-        .plan-divider {
-            height: 1px;
-            background: var(--border);
-            margin: 20px 0;
-        }
-
-        .plan-details { flex: 1; }
-
-        .plan-detail {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 0;
-            font-size: 14px;
-        }
-
-        .plan-detail-icon {
-            width: 20px;
+        /* Page content */
+        .page-header {
+            max-width: 1200px; margin: 40px auto 0; padding: 0 24px;
             text-align: center;
-            font-size: 16px;
         }
+        .page-header h1 { font-size: 32px; margin-bottom: 8px; }
+        .page-header p { color: var(--text-light); font-size: 18px; }
 
+        /* Plans grid */
+        .plans-container {
+            max-width: 1200px; margin: 32px auto; padding: 0 24px;
+        }
+        .plans-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+        .plan-card {
+            background: var(--bg); border-radius: var(--radius);
+            border: 1px solid var(--border); padding: 28px;
+            box-shadow: var(--shadow); transition: all 0.2s;
+            display: flex; flex-direction: column;
+        }
+        .plan-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+        .plan-flag { font-size: 48px; margin-bottom: 12px; }
+        .plan-name { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+        .plan-meta { color: var(--text-light); font-size: 14px; margin-bottom: 16px; }
+        .plan-divider { height: 1px; background: var(--border); margin: 0 0 16px; }
+        .plan-details { flex: 1; margin-bottom: 20px; }
+        .plan-detail {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 0; font-size: 14px;
+        }
+        .plan-detail-icon { font-size: 16px; width: 24px; text-align: center; }
         .plan-detail-label { color: var(--text-light); }
         .plan-detail-value { font-weight: 600; margin-left: auto; }
-
-        .plan-price-section {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
         .plan-price {
-            font-size: 28px;
-            font-weight: 800;
+            font-size: 32px; font-weight: 800; color: var(--primary);
+            margin-bottom: 4px;
         }
+        .plan-price-unit { font-size: 16px; font-weight: 400; color: var(--text-light); }
 
-        .plan-price-unit {
-            font-size: 14px;
-            color: var(--text-light);
-            font-weight: 400;
+        /* Checkout form inline */
+        .checkout-section {
+            margin-top: 16px; padding-top: 16px;
+            border-top: 1px solid var(--border);
         }
-
-        .plan-price-per {
-            font-size: 13px;
-            color: var(--success);
-            font-weight: 600;
+        .email-input {
+            width: 100%; padding: 12px 16px; border: 1px solid var(--border);
+            border-radius: 8px; font-size: 14px; margin-bottom: 12px;
+            outline: none; transition: border-color 0.2s;
         }
-
+        .email-input:focus { border-color: var(--primary); }
         .btn-buy {
-            padding: 12px 28px;
-            font-size: 15px;
+            width: 100%; padding: 14px; background: var(--primary);
+            color: white; border: none; border-radius: 8px;
+            font-size: 16px; font-weight: 600; cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-buy:hover { background: var(--primary-dark); }
+        .btn-buy:disabled { background: #94a3b8; cursor: not-allowed; }
+        .btn-buy .spinner {
+            display: inline-block; width: 16px; height: 16px;
+            border: 2px solid rgba(255,255,255,0.3); border-top-color: white;
+            border-radius: 50%; animation: spin 0.6s linear infinite;
+            vertical-align: middle; margin-right: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .error-msg {
+            color: #EF4444; font-size: 13px; margin-top: 8px; display: none;
+        }
+        .stripe-badge {
+            text-align: center; margin-top: 12px;
+            font-size: 12px; color: var(--text-light);
         }
 
-        /* ===== INFO SECTIONS ===== */
-        .info-grid {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px 80px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-        }
-
-        .info-card {
-            background: white;
-            border-radius: var(--radius);
-            padding: 28px;
-            border: 1px solid var(--border);
-        }
-
-        .info-card h3 {
+        /* Loading state */
+        .loading {
+            text-align: center; padding: 60px; color: var(--text-light);
             font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
 
-        .info-list { list-style: none; }
-
-        .info-list li {
-            padding: 10px 0;
-            border-bottom: 1px solid var(--border);
-            font-size: 14px;
-            display: flex;
-            justify-content: space-between;
+        /* Footer */
+        footer {
+            margin-top: 60px; padding: 40px 24px;
+            background: var(--bg); border-top: 1px solid var(--border);
+            text-align: center; color: var(--text-light); font-size: 14px;
         }
 
-        .info-list li:last-child { border-bottom: none; }
-        .info-list .label { color: var(--text-light); }
-        .info-list .value { font-weight: 600; }
-
-        .compatible-devices {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 12px;
-        }
-
-        .device-tag {
-            padding: 6px 12px;
-            background: var(--bg-gray);
-            border-radius: 6px;
-            font-size: 13px;
-            color: var(--text-light);
-        }
-
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 768px) {
+        @media (max-width: 640px) {
             .plans-grid { grid-template-columns: 1fr; }
-            .info-grid { grid-template-columns: 1fr; }
-            .country-header { align-items: center; }
-            .country-info h1 { font-size: 24px; }
-            .country-meta { flex-direction: column; gap: 8px; }
             nav { display: none; }
-            .nav-buttons .btn-outline { display: none; }
-            .hamburger { display: flex; }
         }
-
-        /* ===== HAMBURGER ===== */
-        .hamburger {
-            display: none;
-            flex-direction: column;
-            gap: 5px;
-            cursor: pointer;
-            padding: 4px;
-            background: none;
-            border: none;
-        }
-        .hamburger span {
-            display: block;
-            width: 24px;
-            height: 2.5px;
-            background: var(--text);
-            border-radius: 2px;
-            transition: all 0.3s;
-        }
-        .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
-        .hamburger.active span:nth-child(2) { opacity: 0; }
-        .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
-
-        .mobile-nav {
-            display: none;
-            position: fixed;
-            top: 64px;
-            left: 0;
-            right: 0;
-            background: white;
-            border-bottom: 1px solid var(--border);
-            padding: 16px 24px;
-            z-index: 99;
-            box-shadow: var(--shadow-lg);
-        }
-        .mobile-nav.open { display: block; }
-        .mobile-nav a {
-            display: block;
-            padding: 12px 0;
-            text-decoration: none;
-            color: var(--text);
-            font-weight: 500;
-            font-size: 16px;
-            border-bottom: 1px solid var(--border);
-        }
-        .mobile-nav a:last-child { border-bottom: none; }
-        .mobile-nav a:hover { color: var(--primary); }
     </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <header>
     <div class="header-inner">
         <a href="index.html" class="logo">
@@ -409,408 +160,157 @@
             GlobalSIM
         </a>
         <nav>
-            <a href="destinations.html" class="active">Destinations</a>
+            <a href="index.html">Home</a>
+            <a href="plans.html" style="color: var(--primary);">Plans</a>
             <a href="index.html#how-it-works">How It Works</a>
             <a href="index.html#faq">FAQ</a>
-            <a href="#">Support</a>
         </nav>
-        <div class="nav-buttons">
-            <button class="hamburger" onclick="toggleMobileNav()" aria-label="Menu">
-                <span></span><span></span><span></span>
-            </button>
-            <a href="dashboard.html" class="btn btn-outline">My eSIMs</a>
-            <a href="destinations.html" class="btn btn-primary">Get Started</a>
-        </div>
     </div>
 </header>
 
-<div class="mobile-nav" id="mobile-nav">
-    <a href="destinations.html">Destinations</a>
-    <a href="index.html#how-it-works">How It Works</a>
-    <a href="index.html#faq">FAQ</a>
-    <a href="dashboard.html">My eSIMs</a>
-    <a href="#">Support</a>
+<div class="page-header">
+    <h1>eSIM Plans</h1>
+    <p>Stay connected anywhere. Instant delivery via email.</p>
 </div>
 
-<!-- BREADCRUMB -->
-<div class="breadcrumb">
-    <a href="index.html">Home</a>
-    <span>›</span>
-    <a href="destinations.html">Destinations</a>
-    <span>›</span>
-    Japan
-</div>
-
-<!-- COUNTRY HEADER -->
-<div class="country-header">
-    <span class="country-flag">🇯🇵</span>
-    <div class="country-info">
-        <h1>Japan eSIM Plans</h1>
-        <div class="country-meta">
-            <div class="country-meta-item">
-                <span class="country-meta-icon">📡</span>
-                NTT Docomo, SoftBank, KDDI
-            </div>
-            <div class="country-meta-item">
-                <span class="country-meta-icon">⚡</span>
-                5G / LTE
-            </div>
-            <div class="country-meta-item">
-                <span class="country-meta-icon">📦</span>
-                6 plans available
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- FILTERS -->
-<div class="filter-bar">
-    <button class="filter-chip active">All Plans</button>
-    <button class="filter-chip">Data Only</button>
-    <button class="filter-chip">Data + Calls</button>
-    <button class="filter-chip">Unlimited</button>
-    <button class="filter-chip">7 Days</button>
-    <button class="filter-chip">15 Days</button>
-    <button class="filter-chip">30 Days</button>
-</div>
-
-<!-- PLAN CARDS -->
 <div class="plans-container">
-    <div class="plans-grid">
-        <!-- Plan 1 -->
-        <div class="plan-card">
-            <div class="plan-data">1 GB</div>
-            <div class="plan-type">Data Only</div>
-            <div class="plan-divider"></div>
-            <div class="plan-details">
-                <div class="plan-detail">
-                    <span class="plan-detail-icon">📅</span>
-                    <span class="plan-detail-label">Validity</span>
-                    <span class="plan-detail-value">7 days</span>
-                </div>
-                <div class="plan-detail">
-                    <span class="plan-detail-icon">📡</span>
-                    <span class="plan-detail-label">Network</span>
-                    <span class="plan-detail-value">NTT Docomo</span>
-                </div>
-                <div class="plan-detail">
-                    <span class="plan-detail-icon">⚡</span>
-                    <span class="plan-detail-label">Speed</span>
-                    <span class="plan-detail-value">LTE</span>
-                </div>
-                <div class="plan-detail">
-                    <span class="plan-detail-icon">📞</span>
-                    <span class="plan-detail-label">Calls</span>
-                    <span class="plan-detail-value">—</span>
-                </div>
-            </div>
-            <div class="plan-price-section">
-                <div>
-                    <div class="plan-price">$4.50 <span class="plan-price-unit">USD</span></div>
-                    <div class="plan-price-per">$4.50 / GB</div>
-                </div>
-                <a href="checkout.html" class="btn btn-primary btn-buy">Buy Now</a>
-            </div>
-        </div>
-
-        <!-- Plan 2 -->
-        <div class="plan-card">
-            <div class="plan-data">3 GB</div>
-            <div class="plan-type">Data Only</div>
-            <div class="plan-divider"></div>
-            <div class="plan-details">
-                <div class="plan-detail">
-                    <span class="plan-detail-icon">📅</span>
-                    <span class="plan-detail-label">Validity</span>
-                    <span class="plan-detail-value">15 days</span>
-                </div>
-                <div class="plan-detail">
-                    <span class="plan-detail-icon">📡</span>
-                    <span class="plan-detail-label">Network</span>
-                    <span class="plan-detail-value">NTT Docomo</span>
-                </div>
-                <div class="plan-detail">
-                    <span class="plan-detail-icon">⚡</span>
-                    <span class="plan-detail-label">Speed</span>
-                    <span class="plan-detail-value">LTE</span>
-                </div>
-                <div class="plan-detail">
-                    <span class="plan-detail-icon">📞</span>
-                    <span class="plan-detail-label">Calls</span>
-                    <span class="plan-detail-value">—</span>
-                </div>
-            </div>
-            <div class="plan-price-section">
-                <div>
-                    <div class="plan-price">$9.00 <span class="plan-price-unit">USD</span></div>
-                    <div class="plan-price-per">$3.00 / GB</div>
-                </div>
-                <a href="checkout.html" class="btn btn-primary btn-buy">Buy Now</a>
-            </div>
-        </div>
-
-        <!-- Plan 3 - Popular -->
-        <div class="plan-card popular">
-            <div class="popular-badge">Most Popular</div>
-            <div class="plan-data">5 GB</div>
-            <div class="plan-type">Data Only</div>
-            <div class="plan-divider"></div>
-            <div class="plan-details">
-                <div class="plan-detail">
-                    <span class="plan-detail-icon">📅</span>
-                    <span class="plan-detail-label">Validity</span>
-                    <span class="plan-detail-value">30 days</span>
-                </div>
-                <div class="plan-detail">
-                    <span class="plan-detail-icon">📡</span>
-                    <span class="plan-detail-label">Network</span>
-                    <span class="plan-detail-value">NTT Docomo</span>
-                </div>
-                <div class="plan-detail">
-                    <span class="plan-detail-icon">⚡</span>
-                    <span class="plan-detail-label">Speed</span>
-                    <span class="plan-detail-value">5G / LTE</span>
-                </div>
-                <div class="plan-detail">
-                    <span class="plan-detail-icon">📞</span>
-                    <span class="plan-detail-label">Calls</span>
-                    <span class="plan-detail-value">—</span>
-                </div>
-            </div>
-            <div class="plan-price-section">
-                <div>
-                    <div class="plan-price">$13.00 <span class="plan-price-unit">USD</span></div>
-                    <div class="plan-price-per">$2.60 / GB</div>
-                </div>
-                <a href="checkout.html" class="btn btn-primary btn-buy">Buy Now</a>
-            </div>
-        </div>
-
-        <!-- Plan 4 -->
-        <div class="plan-card">
-            <div class="plan-data">10 GB</div>
-            <div class="plan-type">Data Only</div>
-            <div class="plan-divider"></div>
-            <div class="plan-details">
-                <div class="plan-detail">
-                    <span class="plan-detail-icon">📅</span>
-                    <span class="plan-detail-label">Validity</span>
-                    <span class="plan-detail-value">30 days</span>
-                </div>
-                <div class="plan-detail">
-                    <span class="plan-detail-icon">📡</span>
-                    <span class="plan-detail-label">Network</span>
-                    <span class="plan-detail-value">SoftBank</span>
-                </div>
-                <div class="plan-detail">
-                    <span class="plan-detail-icon">⚡</span>
-                    <span class="plan-detail-label">Speed</span>
-                    <span class="plan-detail-value">5G / LTE</span>
-                </div>
-                <div class="plan-detail">
-                    <span class="plan-detail-icon">📞</span>
-                    <span class="plan-detail-label">Calls</span>
-                    <span class="plan-detail-value">—</span>
-                </div>
-            </div>
-            <div class="plan-price-section">
-                <div>
-                    <div class="plan-price">$20.00 <span class="plan-price-unit">USD</span></div>
-                    <div class="plan-price-per">$2.00 / GB</div>
-                </div>
-                <a href="checkout.html" class="btn btn-primary btn-buy">Buy Now</a>
-            </div>
-        </div>
-
-        <!-- Plan 5 -->
-        <div class="plan-card">
-            <div class="plan-data">20 GB</div>
-            <div class="plan-type">Data + Calls</div>
-            <div class="plan-divider"></div>
-            <div class="plan-details">
-                <div class="plan-detail">
-                    <span class="plan-detail-icon">📅</span>
-                    <span class="plan-detail-label">Validity</span>
-                    <span class="plan-detail-value">30 days</span>
-                </div>
-                <div class="plan-detail">
-                    <span class="plan-detail-icon">📡</span>
-                    <span class="plan-detail-label">Network</span>
-                    <span class="plan-detail-value">NTT Docomo</span>
-                </div>
-                <div class="plan-detail">
-                    <span class="plan-detail-icon">⚡</span>
-                    <span class="plan-detail-label">Speed</span>
-                    <span class="plan-detail-value">5G / LTE</span>
-                </div>
-                <div class="plan-detail">
-                    <span class="plan-detail-icon">📞</span>
-                    <span class="plan-detail-label">Calls</span>
-                    <span class="plan-detail-value">50 min local</span>
-                </div>
-            </div>
-            <div class="plan-price-section">
-                <div>
-                    <div class="plan-price">$32.00 <span class="plan-price-unit">USD</span></div>
-                    <div class="plan-price-per">$1.60 / GB</div>
-                </div>
-                <a href="checkout.html" class="btn btn-primary btn-buy">Buy Now</a>
-            </div>
-        </div>
-
-        <!-- Plan 6 - Unlimited -->
-        <div class="plan-card">
-            <div class="plan-data">Unlimited</div>
-            <div class="plan-type">Data Only</div>
-            <div class="plan-divider"></div>
-            <div class="plan-details">
-                <div class="plan-detail">
-                    <span class="plan-detail-icon">📅</span>
-                    <span class="plan-detail-label">Validity</span>
-                    <span class="plan-detail-value">30 days</span>
-                </div>
-                <div class="plan-detail">
-                    <span class="plan-detail-icon">📡</span>
-                    <span class="plan-detail-label">Network</span>
-                    <span class="plan-detail-value">SoftBank</span>
-                </div>
-                <div class="plan-detail">
-                    <span class="plan-detail-icon">⚡</span>
-                    <span class="plan-detail-label">Speed</span>
-                    <span class="plan-detail-value">5G / LTE</span>
-                </div>
-                <div class="plan-detail">
-                    <span class="plan-detail-icon">📞</span>
-                    <span class="plan-detail-label">Calls</span>
-                    <span class="plan-detail-value">—</span>
-                </div>
-            </div>
-            <div class="plan-price-section">
-                <div>
-                    <div class="plan-price">$35.00 <span class="plan-price-unit">USD</span></div>
-                    <div class="plan-price-per">Best for heavy use</div>
-                </div>
-                <a href="checkout.html" class="btn btn-primary btn-buy">Buy Now</a>
-            </div>
-        </div>
+    <div class="plans-grid" id="plans-grid">
+        <div class="loading" id="loading">Loading plans...</div>
     </div>
 </div>
 
-<!-- INFO CARDS -->
-<div class="info-grid">
-    <div class="info-card">
-        <h3>📋 Plan Information</h3>
-        <ul class="info-list">
-            <li>
-                <span class="label">Coverage</span>
-                <span class="value">Japan (nationwide)</span>
-            </li>
-            <li>
-                <span class="label">Networks</span>
-                <span class="value">NTT Docomo, SoftBank, KDDI</span>
-            </li>
-            <li>
-                <span class="label">eSIM Type</span>
-                <span class="value">Prepaid data</span>
-            </li>
-            <li>
-                <span class="label">Activation</span>
-                <span class="value">Scan QR code</span>
-            </li>
-            <li>
-                <span class="label">Top-Up</span>
-                <span class="value">Available via dashboard</span>
-            </li>
-            <li>
-                <span class="label">Tethering</span>
-                <span class="value">Supported ✓</span>
-            </li>
-        </ul>
-    </div>
-
-    <div class="info-card">
-        <h3>📱 Compatible Devices</h3>
-        <p style="font-size: 14px; color: var(--text-light); margin-bottom: 12px;">Your device must be eSIM-compatible and carrier-unlocked.</p>
-        <div class="compatible-devices">
-            <span class="device-tag">iPhone XR+</span>
-            <span class="device-tag">iPhone 15 Pro</span>
-            <span class="device-tag">Samsung S20+</span>
-            <span class="device-tag">Samsung S24</span>
-            <span class="device-tag">Pixel 3a+</span>
-            <span class="device-tag">Pixel 8</span>
-            <span class="device-tag">iPad Pro</span>
-            <span class="device-tag">iPad Air 3+</span>
-        </div>
-        <p style="font-size: 13px; color: var(--primary); margin-top: 16px; cursor: pointer;">View full compatibility list →</p>
-    </div>
-
-    <div class="info-card">
-        <h3>📖 How to Install</h3>
-        <ul class="info-list" style="list-style: none;">
-            <li>
-                <span class="label">Step 1</span>
-                <span class="value">Purchase a plan</span>
-            </li>
-            <li>
-                <span class="label">Step 2</span>
-                <span class="value">Receive QR code via email</span>
-            </li>
-            <li>
-                <span class="label">Step 3</span>
-                <span class="value">Settings → Cellular → Add eSIM</span>
-            </li>
-            <li>
-                <span class="label">Step 4</span>
-                <span class="value">Scan QR code</span>
-            </li>
-            <li>
-                <span class="label">Step 5</span>
-                <span class="value">Turn on data roaming</span>
-            </li>
-            <li>
-                <span class="label">Done!</span>
-                <span class="value">You're connected 🎉</span>
-            </li>
-        </ul>
-    </div>
-
-    <div class="info-card">
-        <h3>⚠️ Good to Know</h3>
-        <ul class="info-list">
-            <li>
-                <span class="label">Install before travel</span>
-                <span class="value">Recommended</span>
-            </li>
-            <li>
-                <span class="label">Physical SIM</span>
-                <span class="value">Stays active for calls/SMS</span>
-            </li>
-            <li>
-                <span class="label">Refund policy</span>
-                <span class="value">Before activation only</span>
-            </li>
-            <li>
-                <span class="label">After data used</span>
-                <span class="value">Top up or buy new plan</span>
-            </li>
-            <li>
-                <span class="label">Support</span>
-                <span class="value">24/7 live chat</span>
-            </li>
-        </ul>
-    </div>
-</div>
-
-<!-- FOOTER -->
-<footer style="background: #0F172A; color: #94A3B8; padding: 32px 24px; text-align: center; font-size: 13px;">
-    <p>© 2026 GlobalSIM. All rights reserved. | <a href="#" style="color: #94A3B8;">Privacy</a> · <a href="#" style="color: #94A3B8;">Terms</a> · <a href="#" style="color: #94A3B8;">Support</a></p>
+<footer>
+    <p>&copy; 2026 GlobalSIM. All rights reserved.</p>
 </footer>
 
 <script>
-    function toggleMobileNav() {
-        document.getElementById('mobile-nav').classList.toggle('open');
-        document.querySelector('.hamburger').classList.toggle('active');
+    // --- Config ---
+    const API_BASE = 'http://34.203.146.15';
+
+    const COUNTRY_FLAGS = {
+        'US': '🇺🇸', 'JP': '🇯🇵', 'KR': '🇰🇷', 'TH': '🇹🇭',
+        'GB': '🇬🇧', 'FR': '🇫🇷', 'IT': '🇮🇹', 'ES': '🇪🇸',
+        'DE': '🇩🇪', 'AU': '🇦🇺', 'SG': '🇸🇬', 'CN': '🇨🇳',
+    };
+
+    const COUNTRY_NAMES = {
+        'US': 'United States', 'JP': 'Japan', 'KR': 'South Korea',
+        'TH': 'Thailand', 'GB': 'United Kingdom', 'FR': 'France',
+        'IT': 'Italy', 'ES': 'Spain', 'DE': 'Germany', 'AU': 'Australia',
+        'SG': 'Singapore', 'CN': 'China',
+    };
+
+    // --- Load plans from API ---
+    async function loadPlans() {
+        const grid = document.getElementById('plans-grid');
+        const loading = document.getElementById('loading');
+
+        try {
+            const res = await fetch(`${API_BASE}/api/plans`);
+            if (!res.ok) throw new Error('Failed to load plans');
+            const plans = await res.json();
+
+            if (plans.length === 0) {
+                loading.textContent = 'No plans available yet. Check back soon!';
+                return;
+            }
+
+            grid.innerHTML = plans.map(plan => renderPlanCard(plan)).join('');
+
+        } catch (err) {
+            console.error('Error loading plans:', err);
+            loading.textContent = 'Unable to load plans. Please try again later.';
+        }
     }
+
+    function renderPlanCard(plan) {
+        const flag = COUNTRY_FLAGS[plan.country] || '🌐';
+        const countryName = COUNTRY_NAMES[plan.country] || plan.country;
+        const price = (plan.price_cents / 100).toFixed(2);
+
+        return `
+        <div class="plan-card">
+            <div class="plan-flag">${flag}</div>
+            <div class="plan-name">${plan.name}</div>
+            <div class="plan-meta">${countryName}</div>
+            <div class="plan-divider"></div>
+            <div class="plan-details">
+                <div class="plan-detail">
+                    <span class="plan-detail-icon">📊</span>
+                    <span class="plan-detail-label">Data</span>
+                    <span class="plan-detail-value">${plan.data_gb} GB</span>
+                </div>
+                <div class="plan-detail">
+                    <span class="plan-detail-icon">📅</span>
+                    <span class="plan-detail-label">Validity</span>
+                    <span class="plan-detail-value">${plan.validity_days} day${plan.validity_days > 1 ? 's' : ''}</span>
+                </div>
+            </div>
+            <div class="plan-price">$${price} <span class="plan-price-unit">USD</span></div>
+            <div class="checkout-section">
+                <input type="email" class="email-input" id="email-${plan.id}"
+                    placeholder="Enter your email" required>
+                <button class="btn-buy" id="btn-${plan.id}"
+                    onclick="checkout('${plan.id}')">
+                    Buy Now — $${price}
+                </button>
+                <div class="error-msg" id="error-${plan.id}"></div>
+                <div class="stripe-badge">🔒 Secure payment powered by Stripe</div>
+            </div>
+        </div>
+        `;
+    }
+
+    // --- Checkout ---
+    async function checkout(planId) {
+        const emailInput = document.getElementById(`email-${planId}`);
+        const btn = document.getElementById(`btn-${planId}`);
+        const errorDiv = document.getElementById(`error-${planId}`);
+        const email = emailInput.value.trim();
+
+        // Validate email
+        if (!email || !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+            errorDiv.textContent = 'Please enter a valid email address.';
+            errorDiv.style.display = 'block';
+            emailInput.focus();
+            return;
+        }
+
+        errorDiv.style.display = 'none';
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Redirecting to payment...';
+
+        try {
+            const res = await fetch(`${API_BASE}/api/checkout`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ plan_id: planId, email: email }),
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.detail || 'Checkout failed');
+            }
+
+            const data = await res.json();
+
+            // Store reference for the confirmation page
+            localStorage.setItem('order_reference', data.order_reference);
+
+            // Redirect to Stripe Checkout
+            window.location.href = data.checkout_url;
+
+        } catch (err) {
+            console.error('Checkout error:', err);
+            errorDiv.textContent = err.message || 'Something went wrong. Please try again.';
+            errorDiv.style.display = 'block';
+            btn.disabled = false;
+            btn.innerHTML = 'Buy Now';
+        }
+    }
+
+    // Load plans on page load
+    loadPlans();
 </script>
 
 </body>

@@ -6,648 +6,205 @@
     <title>Order Confirmed — GlobalSIM</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+
         :root {
             --primary: #4F46E5;
-            --primary-dark: #4338CA;
             --primary-light: #EEF2FF;
-            --accent: #06B6D4;
             --text: #1E293B;
             --text-light: #64748B;
             --bg: #FFFFFF;
             --bg-gray: #F8FAFC;
             --border: #E2E8F0;
             --success: #10B981;
+            --success-light: #ECFDF5;
             --radius: 12px;
             --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
-            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            color: var(--text);
-            line-height: 1.6;
-            background: var(--bg-gray);
+            color: var(--text); line-height: 1.6; background: var(--bg-gray);
         }
 
-        /* ===== HEADER ===== */
         header {
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            position: sticky; top: 0; z-index: 100;
             background: rgba(255,255,255,0.95);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--border);
         }
-
         .header-inner {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
-            height: 64px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            max-width: 1200px; margin: 0 auto; padding: 0 24px;
+            height: 64px; display: flex; align-items: center; justify-content: space-between;
         }
-
         .logo {
-            font-size: 22px;
-            font-weight: 800;
-            color: var(--primary);
+            display: flex; align-items: center; gap: 8px;
+            font-size: 20px; font-weight: 700; color: var(--primary);
             text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
-
         .logo-icon {
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 18px;
+            width: 36px; height: 36px; background: var(--primary);
+            border-radius: 10px; display: flex; align-items: center;
+            justify-content: center; font-size: 18px;
         }
 
-        nav { display: flex; align-items: center; gap: 32px; }
-        nav a { text-decoration: none; color: var(--text-light); font-weight: 500; font-size: 15px; transition: color 0.2s; }
-        nav a:hover { color: var(--primary); }
-
-        .nav-buttons { display: flex; gap: 12px; align-items: center; }
-
-        .btn {
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all 0.2s;
-            border: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: var(--shadow-lg); }
-        .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
-        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
-
-        /* ===== HAMBURGER ===== */
-        .hamburger {
-            display: none;
-            flex-direction: column;
-            gap: 5px;
-            cursor: pointer;
-            padding: 4px;
-            background: none;
-            border: none;
-        }
-        .hamburger span {
-            display: block;
-            width: 24px;
-            height: 2.5px;
-            background: var(--text);
-            border-radius: 2px;
-            transition: all 0.3s;
-        }
-        .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
-        .hamburger.active span:nth-child(2) { opacity: 0; }
-        .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
-
-        .mobile-nav {
-            display: none;
-            position: fixed;
-            top: 64px;
-            left: 0;
-            right: 0;
-            background: white;
-            border-bottom: 1px solid var(--border);
-            padding: 16px 24px;
-            z-index: 99;
-            box-shadow: var(--shadow-lg);
-        }
-        .mobile-nav.open { display: block; }
-        .mobile-nav a {
-            display: block;
-            padding: 12px 0;
-            text-decoration: none;
-            color: var(--text);
-            font-weight: 500;
-            font-size: 16px;
-            border-bottom: 1px solid var(--border);
-        }
-        .mobile-nav a:last-child { border-bottom: none; }
-        .mobile-nav a:hover { color: var(--primary); }
-
-        /* ===== PROGRESS BAR ===== */
-        .progress-bar {
-            max-width: 600px;
-            margin: 32px auto 0;
-            padding: 0 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .progress-step {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-light);
-        }
-
-        .progress-step.done { color: var(--success); }
-
-        .progress-circle {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            font-weight: 700;
-            background: var(--success);
-            border: 2px solid var(--success);
-            color: white;
-        }
-
-        .progress-line {
-            width: 60px;
-            height: 2px;
-            background: var(--success);
-            margin: 0 12px;
-        }
-
-        /* ===== MAIN CONTENT ===== */
         .confirmation-container {
-            max-width: 680px;
-            margin: 40px auto;
-            padding: 0 24px 80px;
-        }
-
-        /* Success header */
-        .success-header {
+            max-width: 600px; margin: 60px auto; padding: 0 24px;
             text-align: center;
-            margin-bottom: 40px;
+        }
+        .success-icon {
+            width: 80px; height: 80px; background: var(--success-light);
+            border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; margin: 0 auto 24px; font-size: 40px;
+        }
+        h1 { font-size: 28px; margin-bottom: 12px; }
+        .subtitle { color: var(--text-light); font-size: 16px; margin-bottom: 32px; }
+
+        .status-card {
+            background: var(--bg); border-radius: var(--radius);
+            border: 1px solid var(--border); padding: 24px;
+            box-shadow: var(--shadow); text-align: left; margin-bottom: 24px;
+        }
+        .status-row {
+            display: flex; justify-content: space-between;
+            padding: 12px 0; border-bottom: 1px solid var(--border);
+        }
+        .status-row:last-child { border-bottom: none; }
+        .status-label { color: var(--text-light); }
+        .status-value { font-weight: 600; }
+        .status-badge {
+            display: inline-block; padding: 4px 12px; border-radius: 20px;
+            font-size: 13px; font-weight: 600;
+        }
+        .status-badge.processing {
+            background: #FEF3C7; color: #92400E;
+        }
+        .status-badge.completed {
+            background: var(--success-light); color: #065F46;
+        }
+        .status-badge.failed {
+            background: #FEE2E2; color: #991B1B;
         }
 
-        .success-checkmark {
-            width: 80px;
-            height: 80px;
-            background: #ECFDF5;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        .info-box {
+            background: var(--primary-light); border-radius: var(--radius);
+            padding: 20px; margin-bottom: 24px;
         }
+        .info-box p { color: var(--primary); font-size: 14px; }
 
-        @keyframes popIn {
-            0% { transform: scale(0); opacity: 0; }
-            60% { transform: scale(1.2); }
-            100% { transform: scale(1); opacity: 1; }
+        .btn-home {
+            display: inline-block; padding: 14px 32px;
+            background: var(--primary); color: white; border: none;
+            border-radius: 8px; font-size: 16px; font-weight: 600;
+            text-decoration: none; transition: background 0.2s;
         }
+        .btn-home:hover { background: #4338CA; }
 
-        .checkmark-svg {
-            width: 40px;
-            height: 40px;
+        .refresh-link {
+            display: block; margin-top: 16px; color: var(--primary);
+            text-decoration: none; font-size: 14px; cursor: pointer;
         }
+        .refresh-link:hover { text-decoration: underline; }
 
-        .checkmark-svg path {
-            stroke: var(--success);
-            stroke-width: 3;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            fill: none;
-            stroke-dasharray: 50;
-            stroke-dashoffset: 50;
-            animation: drawCheck 0.6s 0.3s ease forwards;
-        }
-
-        @keyframes drawCheck {
-            to { stroke-dashoffset: 0; }
-        }
-
-        .success-header h1 {
-            font-size: 28px;
-            font-weight: 800;
-            margin-bottom: 8px;
-        }
-
-        .success-header p {
-            color: var(--text-light);
-            font-size: 16px;
-        }
-
-        .email-notice {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--primary-light);
-            color: var(--primary);
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            margin-top: 16px;
-        }
-
-        /* Order details */
-        .order-card {
-            background: white;
-            border-radius: 16px;
-            border: 1px solid var(--border);
-            overflow: hidden;
-            margin-bottom: 24px;
-        }
-
-        .order-card-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .order-card-header h3 { font-size: 16px; font-weight: 700; }
-
-        .order-id {
-            font-size: 13px;
-            color: var(--text-light);
-            font-family: monospace;
-        }
-
-        .order-plan {
-            display: flex;
-            gap: 16px;
-            padding: 20px 24px;
-            align-items: center;
-        }
-
-        .order-plan-flag { font-size: 48px; line-height: 1; }
-        .order-plan-info { flex: 1; }
-        .order-plan-name { font-weight: 700; font-size: 17px; }
-        .order-plan-details { font-size: 13px; color: var(--text-light); margin-top: 2px; }
-        .order-plan-price { font-size: 20px; font-weight: 800; color: var(--primary); }
-
-        .order-details-grid {
-            padding: 0 24px 20px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .order-detail-item {
-            background: var(--bg-gray);
-            border-radius: 8px;
-            padding: 12px;
-        }
-
-        .order-detail-label { font-size: 12px; color: var(--text-light); }
-        .order-detail-value { font-size: 14px; font-weight: 600; margin-top: 2px; }
-
-        /* QR Code section */
-        .qr-section {
-            background: white;
-            border-radius: 16px;
-            border: 1px solid var(--border);
-            padding: 32px;
-            text-align: center;
-            margin-bottom: 24px;
-        }
-
-        .qr-section h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-        .qr-section > p { color: var(--text-light); font-size: 14px; margin-bottom: 24px; }
-
-        .qr-display {
-            width: 220px;
-            height: 220px;
-            margin: 0 auto 24px;
-            background: white;
-            border: 2px solid var(--border);
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        .qr-grid {
-            width: 180px;
-            height: 180px;
-            display: grid;
-            grid-template-columns: repeat(15, 1fr);
-            grid-template-rows: repeat(15, 1fr);
-            gap: 1px;
-        }
-
-        .qr-grid .qc { border-radius: 1px; }
-        .qr-grid .qc.d { background: var(--text); }
-        .qr-grid .qc.l { background: white; }
-
-        .qr-label {
-            position: absolute;
-            bottom: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--primary);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-
-        /* Installation steps */
-        .install-card {
-            background: white;
-            border-radius: 16px;
-            border: 1px solid var(--border);
-            padding: 28px;
-            margin-bottom: 24px;
-        }
-
-        .install-card h3 {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .install-steps { list-style: none; }
-
-        .install-step {
-            display: flex;
-            gap: 16px;
-            padding: 14px 0;
-            border-bottom: 1px solid var(--border);
-            align-items: flex-start;
-        }
-
-        .install-step:last-child { border-bottom: none; }
-
-        .step-number {
-            width: 32px;
-            height: 32px;
-            min-width: 32px;
-            border-radius: 50%;
-            background: var(--primary-light);
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: 700;
-        }
-
-        .step-content h4 { font-size: 15px; font-weight: 600; }
-        .step-content p { font-size: 13px; color: var(--text-light); margin-top: 2px; }
-
-        /* Action buttons */
-        .action-buttons {
-            display: flex;
-            gap: 12px;
-            margin-top: 8px;
-        }
-
-        .action-buttons .btn { flex: 1; justify-content: center; padding: 14px 20px; }
-
-        /* ===== FOOTER ===== */
         footer {
-            background: #0F172A;
-            color: #94A3B8;
-            padding: 32px 24px;
-            text-align: center;
-            font-size: 13px;
-        }
-        footer a { color: #94A3B8; text-decoration: none; }
-        footer a:hover { color: white; }
-
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 768px) {
-            .success-header h1 { font-size: 24px; }
-            .order-details-grid { grid-template-columns: 1fr; }
-            .action-buttons { flex-direction: column; }
-            nav { display: none; }
-            .nav-buttons .btn-outline { display: none; }
-            .hamburger { display: flex; }
-            .progress-step span:not(.progress-circle) { display: none; }
+            margin-top: 60px; padding: 40px 24px;
+            background: var(--bg); border-top: 1px solid var(--border);
+            text-align: center; color: var(--text-light); font-size: 14px;
         }
     </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <header>
     <div class="header-inner">
         <a href="index.html" class="logo">
             <div class="logo-icon">📶</div>
             GlobalSIM
         </a>
-        <nav>
-            <a href="destinations.html">Destinations</a>
-            <a href="index.html#how-it-works">How It Works</a>
-            <a href="index.html#faq">FAQ</a>
-            <a href="#">Support</a>
-        </nav>
-        <div class="nav-buttons">
-            <button class="hamburger" onclick="toggleMobileNav()" aria-label="Menu">
-                <span></span><span></span><span></span>
-            </button>
-            <a href="dashboard.html" class="btn btn-outline">My eSIMs</a>
-            <a href="destinations.html" class="btn btn-primary">Browse Plans</a>
-        </div>
     </div>
 </header>
-<div class="mobile-nav" id="mobile-nav">
-    <a href="destinations.html">Destinations</a>
-    <a href="dashboard.html">My eSIMs</a>
-    <a href="index.html#how-it-works">How It Works</a>
-    <a href="index.html#faq">FAQ</a>
-    <a href="#">Support</a>
-</div>
 
-<!-- PROGRESS -->
-<div class="progress-bar">
-    <div class="progress-step done">
-        <div class="progress-circle">✓</div>
-        <span>Select Plan</span>
-    </div>
-    <div class="progress-line"></div>
-    <div class="progress-step done">
-        <div class="progress-circle">✓</div>
-        <span>Payment</span>
-    </div>
-    <div class="progress-line"></div>
-    <div class="progress-step done">
-        <div class="progress-circle">✓</div>
-        <span>Confirmation</span>
-    </div>
-</div>
-
-<!-- MAIN CONTENT -->
 <div class="confirmation-container">
+    <div class="success-icon">✅</div>
+    <h1>Payment Received!</h1>
+    <p class="subtitle">Your eSIM is being prepared. You'll receive an email with your QR code shortly.</p>
 
-    <!-- Success Header -->
-    <div class="success-header">
-        <div class="success-checkmark">
-            <svg class="checkmark-svg" viewBox="0 0 40 40">
-                <path d="M10 20 L17 27 L30 13"/>
-            </svg>
+    <div class="status-card" id="status-card">
+        <div class="status-row">
+            <span class="status-label">Order Reference</span>
+            <span class="status-value" id="order-ref">—</span>
         </div>
-        <h1>Payment Successful!</h1>
-        <p>Your eSIM is ready to install. You're one scan away from connectivity.</p>
-        <div class="email-notice">
-            ✉️ Confirmation & QR code sent to you@example.com
+        <div class="status-row">
+            <span class="status-label">Plan</span>
+            <span class="status-value" id="order-plan">—</span>
+        </div>
+        <div class="status-row">
+            <span class="status-label">Email</span>
+            <span class="status-value" id="order-email">—</span>
+        </div>
+        <div class="status-row">
+            <span class="status-label">Status</span>
+            <span id="order-status"><span class="status-badge processing">Processing</span></span>
         </div>
     </div>
 
-    <!-- Order Details -->
-    <div class="order-card">
-        <div class="order-card-header">
-            <h3>Order Details</h3>
-            <span class="order-id">ORD-2026-GS48KT</span>
-        </div>
-        <div class="order-plan">
-            <span class="order-plan-flag">🇯🇵</span>
-            <div class="order-plan-info">
-                <div class="order-plan-name">Japan eSIM — 5 GB</div>
-                <div class="order-plan-details">30 days · NTT Docomo · 5G/LTE · Data Only</div>
-            </div>
-            <div class="order-plan-price">$13.99</div>
-        </div>
-        <div class="order-details-grid">
-            <div class="order-detail-item">
-                <div class="order-detail-label">Order Date</div>
-                <div class="order-detail-value">March 21, 2026</div>
-            </div>
-            <div class="order-detail-item">
-                <div class="order-detail-label">Payment Method</div>
-                <div class="order-detail-value">💳 •••• 4242</div>
-            </div>
-            <div class="order-detail-item">
-                <div class="order-detail-label">Validity</div>
-                <div class="order-detail-value">30 days from activation</div>
-            </div>
-            <div class="order-detail-item">
-                <div class="order-detail-label">Status</div>
-                <div class="order-detail-value" style="color: var(--success);">● Ready to Install</div>
-            </div>
-        </div>
+    <div class="info-box">
+        <p>📧 Check your inbox (and spam folder) for an email with your eSIM QR code and setup instructions.</p>
     </div>
 
-    <!-- QR Code -->
-    <div class="qr-section">
-        <h3>Your eSIM QR Code</h3>
-        <p>Open your phone's camera or settings to scan this code and install your eSIM.</p>
-        <div class="qr-display">
-            <div class="qr-grid" id="qr-grid"></div>
-            <span class="qr-label">GlobalSIM — Japan 5GB</span>
-        </div>
-        <p style="font-size: 12px; color: var(--text-light); margin-top: 20px;">💡 Tip: You can also find this QR code in your email and dashboard at any time.</p>
-    </div>
-
-    <!-- Installation Steps -->
-    <div class="install-card">
-        <h3>📱 How to Install Your eSIM</h3>
-        <ul class="install-steps">
-            <li class="install-step">
-                <div class="step-number">1</div>
-                <div class="step-content">
-                    <h4>Open Settings</h4>
-                    <p>iPhone: Settings → Cellular → Add eSIM<br>Android: Settings → Network & Internet → SIMs → Add SIM</p>
-                </div>
-            </li>
-            <li class="install-step">
-                <div class="step-number">2</div>
-                <div class="step-content">
-                    <h4>Scan the QR Code</h4>
-                    <p>Use your phone's camera to scan the QR code above, or enter the details manually.</p>
-                </div>
-            </li>
-            <li class="install-step">
-                <div class="step-number">3</div>
-                <div class="step-content">
-                    <h4>Label Your eSIM</h4>
-                    <p>Give it a recognizable name like "Japan Travel" so you can identify it easily.</p>
-                </div>
-            </li>
-            <li class="install-step">
-                <div class="step-number">4</div>
-                <div class="step-content">
-                    <h4>Enable Data Roaming</h4>
-                    <p>Go to Cellular → select your eSIM → turn on Data Roaming. This is required for the eSIM to work abroad.</p>
-                </div>
-            </li>
-            <li class="install-step">
-                <div class="step-number">5</div>
-                <div class="step-content">
-                    <h4>You're Connected! 🎉</h4>
-                    <p>Your eSIM will activate automatically when you arrive in Japan. Enjoy your trip!</p>
-                </div>
-            </li>
-        </ul>
-    </div>
-
-    <!-- Action Buttons -->
-    <div class="action-buttons">
-        <a href="dashboard.html" class="btn btn-primary">Go to My eSIMs</a>
-        <a href="destinations.html" class="btn btn-outline">Browse More Plans</a>
-    </div>
+    <a href="plans.html" class="btn-home">Browse More Plans</a>
+    <a class="refresh-link" onclick="checkStatus()">🔄 Refresh order status</a>
 </div>
 
-<!-- FOOTER -->
 <footer>
-    <p>© 2026 GlobalSIM. All rights reserved. | <a href="#">Privacy</a> · <a href="#">Terms</a> · <a href="#">Support</a></p>
+    <p>&copy; 2026 GlobalSIM. All rights reserved.</p>
 </footer>
 
 <script>
-    function toggleMobileNav() {
-        document.getElementById('mobile-nav').classList.toggle('open');
-        document.querySelector('.hamburger').classList.toggle('active');
+    const API_BASE = 'http://34.203.146.15';
+
+    // Get order reference from URL param or localStorage
+    const urlParams = new URLSearchParams(window.location.search);
+    const orderRef = urlParams.get('ref') || localStorage.getItem('order_reference');
+
+    if (orderRef) {
+        document.getElementById('order-ref').textContent = orderRef;
+        checkStatus();
     }
 
-    // Generate fake QR code pattern
-    function generateQR() {
-        const grid = document.getElementById('qr-grid');
-        const size = 15;
-        // Seed pattern for consistent look
-        const seed = [1,1,1,1,1,1,1,0,1,0,1,1,1,1,1,
-                      1,0,0,0,0,0,1,0,0,1,1,0,0,0,1,
-                      1,0,1,1,1,0,1,0,1,0,1,0,1,0,1,
-                      1,0,1,1,1,0,1,0,0,1,1,0,1,0,1,
-                      1,0,1,1,1,0,1,0,1,1,1,0,1,0,1,
-                      1,0,0,0,0,0,1,0,0,0,1,0,0,0,1,
-                      1,1,1,1,1,1,1,0,1,0,1,1,1,1,1,
-                      0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,
-                      1,0,1,0,1,1,1,1,0,1,1,0,1,0,1,
-                      0,1,0,1,1,0,0,0,1,0,1,1,0,1,0,
-                      1,1,0,0,1,1,1,0,0,1,0,0,1,1,0,
-                      0,0,1,1,0,1,0,1,1,0,1,0,1,0,1,
-                      1,1,1,1,1,1,1,0,1,0,0,1,1,0,1,
-                      1,0,0,0,0,0,1,0,0,1,1,0,1,1,0,
-                      1,0,1,1,1,0,1,0,1,1,0,1,0,1,1];
-        
-        for (let i = 0; i < size * size; i++) {
-            const cell = document.createElement('div');
-            cell.className = 'qc ' + (seed[i] ? 'd' : 'l');
-            grid.appendChild(cell);
+    async function checkStatus() {
+        if (!orderRef) return;
+
+        try {
+            const res = await fetch(`${API_BASE}/api/orders/${orderRef}/status`);
+            if (!res.ok) throw new Error('Order not found');
+            const data = await res.json();
+
+            document.getElementById('order-ref').textContent = data.reference;
+            document.getElementById('order-plan').textContent = data.plan_id;
+            document.getElementById('order-email').textContent = data.email;
+
+            const statusEl = document.getElementById('order-status');
+            const statusMap = {
+                'created': { label: 'Awaiting Payment', class: 'processing' },
+                'paid': { label: 'Payment Confirmed', class: 'processing' },
+                'joytel_pending': { label: 'Preparing eSIM...', class: 'processing' },
+                'snpin_received': { label: 'Generating QR Code...', class: 'processing' },
+                'completed': { label: 'Completed ✓', class: 'completed' },
+                'failed': { label: 'Failed', class: 'failed' },
+            };
+
+            const status = statusMap[data.status] || { label: data.status, class: 'processing' };
+            statusEl.innerHTML = `<span class="status-badge ${status.class}">${status.label}</span>`;
+
+            // Auto-refresh if still processing
+            if (!['completed', 'failed'].includes(data.status)) {
+                setTimeout(checkStatus, 5000);
+            }
+
+        } catch (err) {
+            console.error('Status check error:', err);
         }
     }
-
-    generateQR();
 </script>
 
 </body>
