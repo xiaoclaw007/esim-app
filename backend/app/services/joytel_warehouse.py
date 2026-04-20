@@ -5,6 +5,7 @@ Spec reference: JoyTel API R.20240222.01, System 1 (Warehouse - eSIM Order).
 
 import hashlib
 import logging
+import random
 import time
 from typing import Optional
 
@@ -13,6 +14,17 @@ import httpx
 from app.config import settings
 
 logger = logging.getLogger(__name__)
+
+
+def generate_order_tid() -> str:
+    """Generate a JoyTel-compatible orderTid.
+
+    JoyTel rejects arbitrary formats with "Order Number Format Error" (code 4).
+    Per spec: customerCode + yyyyMMddHHmmss + 6 random digits.
+    """
+    ts = time.strftime("%Y%m%d%H%M%S")
+    rnd = f"{random.randint(0, 999999):06d}"
+    return f"{settings.joytel_customer_code}{ts}{rnd}"
 
 
 def _sha1(s: str) -> str:

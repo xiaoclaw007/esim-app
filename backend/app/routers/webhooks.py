@@ -14,7 +14,7 @@ from app.database import get_db
 from app.models import Order, Plan
 from app.services.email_service import send_esim_email, send_payment_confirmation_email
 from app.services.joytel_rsp import redeem_coupon
-from app.services.joytel_warehouse import place_order
+from app.services.joytel_warehouse import generate_order_tid, place_order
 from app.services.stripe_service import verify_webhook_signature
 
 logger = logging.getLogger(__name__)
@@ -76,10 +76,16 @@ async def stripe_webhook(
 
     logger.info(f"Order {order.reference} — submitting to JoyTel")
 
-    # Submit order to JoyTel Warehouse
+    # Generate and persist a JoyTel-compatible orderTid before calling the API,
+    # so an incoming callback can match the Order row even if we crash after
+    # the submit succeeds.
+    order_tid = generate_order_tid()
+    order.joytel_order_id = order_tid
+    db.commit()
+
     try:
         result = await place_order(
-            order_tid=order.reference,
+            order_tid=order_tid,
             sku=plan.joytel_sku,
             email=order.email,
         )
@@ -88,7 +94,6 @@ async def stripe_webhook(
             raise RuntimeError(f"JoyTel rejected order: {result}")
 
         order.status = "joytel_pending"
-        order.joytel_order_id = (result.get("data") or {}).get("orderCode")
         db.commit()
 
         logger.info(f"Order {order.reference} submitted to JoyTel: {result}")
@@ -123,7 +128,6 @@ async def joytel_order_callback(
     logger.info(f"JoyTel order callback received: {body}")
 
     order_tid = body.get("orderTid")
-    order_code = body.get("orderCode")
 
     sn_pin = None
     for item in body.get("itemList") or []:
@@ -138,14 +142,12 @@ async def joytel_order_callback(
         logger.error(f"JoyTel order callback missing orderTid/snPin: {body}")
         return {"status": "ok"}  # Return 200 anyway to stop retries
 
-    order = db.query(Order).filter(Order.reference == order_tid).first()
+    order = db.query(Order).filter(Order.joytel_order_id == order_tid).first()
     if not order:
         logger.error(f"JoyTel order callback: order {order_tid} not found")
         return {"status": "ok"}
 
     order.sn_pin = sn_pin
-    if order_code:
-        order.joytel_order_id = order_code
     order.status = "snpin_received"
     db.commit()
 
