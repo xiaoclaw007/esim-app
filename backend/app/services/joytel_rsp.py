@@ -1,10 +1,16 @@
-"""JoyTel RSP+ API client — QR code retrieval for eSIM profiles."""
+"""JoyTel RSP+ API client — QR code retrieval for eSIM profiles.
+
+Spec reference: JoyTel API R.20240222.01, System 2 (RSP Business).
+
+Auth: HTTP headers AppId / TransId / Timestamp / Ciphertext,
+where Ciphertext = MD5(AppId + TransId + Timestamp + AppSecret).
+"""
 
 import hashlib
-import json
 import logging
-from typing import Optional
 import time
+import uuid
+from typing import Any
 
 import httpx
 
@@ -13,77 +19,58 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 
-def _generate_rsp_sign(params: dict) -> str:
-    """Generate auth signature for JoyTel RSP+ API.
-
-    RSP+ uses AppID + AppSecret in its signature scheme.
-    Sort params, concatenate, append AppSecret, MD5 hash.
-    """
-    sorted_keys = sorted(params.keys())
-    sign_str = "&".join(f"{k}={params[k]}" for k in sorted_keys if params[k])
-    sign_str += f"&appSecret={settings.joytel_app_secret}"
-    return hashlib.md5(sign_str.encode()).hexdigest().upper()
+def _new_trans_id() -> str:
+    """Unique per-request transaction ID (max 50 chars)."""
+    return uuid.uuid4().hex
 
 
-async def redeem_coupon(
-    sn_pin: str,
-    callback_url: "Optional[str]" = None,
-) -> dict:
-    """Redeem an snPin/coupon to get the eSIM QR code.
+def _auth_headers() -> tuple[dict[str, str], str]:
+    """Build RSP+ auth headers. Returns (headers, trans_id)."""
+    app_id = settings.joytel_app_id
+    trans_id = _new_trans_id()
+    timestamp = str(int(time.time() * 1000))
+    ciphertext = hashlib.md5(
+        f"{app_id}{trans_id}{timestamp}{settings.joytel_app_secret}".encode()
+    ).hexdigest()
 
-    After JoyTel Warehouse gives us an snPin, we use it here
-    to request the actual eSIM profile (QR code).
-
-    Args:
-        sn_pin: The redemption code from the Warehouse order callback
-        callback_url: URL for JoyTel RSP+ to send the QR code callback
-
-    Returns:
-        RSP+ API response dict
-    """
-    if callback_url is None:
-        callback_url = f"{settings.backend_url}/api/webhooks/joytel/qrcode"
-
-    params = {
-        "appId": settings.joytel_app_id,
-        "coupon": sn_pin,
-        "notifyUrl": callback_url,
-        "timestamp": str(int(time.time() * 1000)),
+    headers = {
+        "AppId": app_id,
+        "TransId": trans_id,
+        "Timestamp": timestamp,
+        "Ciphertext": ciphertext,
+        "Content-Type": "application/json",
     }
-    params["sign"] = _generate_rsp_sign(params)
+    return headers, trans_id
 
+
+async def _post(path: str, body: dict[str, Any]) -> dict:
+    headers, _ = _auth_headers()
     async with httpx.AsyncClient(timeout=30.0) as client:
         response = await client.post(
-            f"{settings.joytel_rsp_url}/coupon/redeem",
-            json=params,
+            f"{settings.joytel_rsp_url}{path}",
+            headers=headers,
+            json=body,
         )
         response.raise_for_status()
-        result = response.json()
+        return response.json()
 
+
+async def redeem_coupon(sn_pin: str, qrcode_type: int = 1) -> dict:
+    """Redeem an snPin/coupon to trigger async QR code delivery.
+
+    qrcode_type: 0 = QR image URL, 1 = QR content text (LPA string). Default 1.
+    Real QR code arrives asynchronously via the redeem callback.
+    """
+    result = await _post("/coupon/redeem", {"coupon": sn_pin, "qrcodeType": qrcode_type})
     logger.info(f"RSP+ redeem response for {sn_pin}: {result}")
     return result
 
 
-async def get_esim_status(sn_code: str) -> dict:
-    """Query eSIM profile status by snCode.
+async def get_esim_status(coupon: str) -> dict:
+    """Query eSIM profile status by coupon."""
+    return await _post("/esim/status/query", {"coupon": coupon})
 
-    Args:
-        sn_code: The eSIM serial code (format: 898620003xxxxxxx)
 
-    Returns:
-        RSP+ API response with eSIM status and usage data
-    """
-    params = {
-        "appId": settings.joytel_app_id,
-        "snCode": sn_code,
-        "timestamp": str(int(time.time() * 1000)),
-    }
-    params["sign"] = _generate_rsp_sign(params)
-
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        response = await client.post(
-            f"{settings.joytel_rsp_url}/esim/status",
-            json=params,
-        )
-        response.raise_for_status()
-        return response.json()
+async def get_esim_usage(coupon: str) -> dict:
+    """Query eSIM data usage by coupon."""
+    return await _post("/esim/usage/query", {"coupon": coupon})

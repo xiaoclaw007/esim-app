@@ -78,10 +78,17 @@ async def stripe_webhook(
 
     # Submit order to JoyTel Warehouse
     try:
-        result = await place_order(order_id=order.id, sku=plan.joytel_sku)
+        result = await place_order(
+            order_id=order.id,
+            sku=plan.joytel_sku,
+            email=order.email,
+        )
+
+        if result.get("code") != 0:
+            raise RuntimeError(f"JoyTel rejected order: {result}")
 
         order.status = "joytel_pending"
-        order.joytel_order_id = result.get("orderId")
+        order.joytel_order_id = (result.get("data") or {}).get("orderCode")
         db.commit()
 
         logger.info(f"Order {order.reference} submitted to JoyTel: {result}")
@@ -115,21 +122,30 @@ async def joytel_order_callback(
     body = await request.json()
     logger.info(f"JoyTel order callback received: {body}")
 
-    order_id = body.get("outTradeNo")
-    sn_pin = body.get("snPin")
+    order_id = body.get("orderTid")
+    order_code = body.get("orderCode")
+
+    sn_pin = None
+    for item in body.get("itemList") or []:
+        for sn in item.get("snList") or []:
+            if sn.get("snPin"):
+                sn_pin = sn["snPin"]
+                break
+        if sn_pin:
+            break
 
     if not order_id or not sn_pin:
-        logger.error(f"JoyTel callback missing required fields: {body}")
+        logger.error(f"JoyTel order callback missing orderTid/snPin: {body}")
         return {"status": "ok"}  # Return 200 anyway to stop retries
 
-    # Find the order
     order = db.query(Order).filter(Order.id == order_id).first()
     if not order:
-        logger.error(f"JoyTel callback: order {order_id} not found")
+        logger.error(f"JoyTel order callback: order {order_id} not found")
         return {"status": "ok"}
 
-    # Store the snPin
     order.sn_pin = sn_pin
+    if order_code:
+        order.joytel_order_id = order_code
     order.status = "snpin_received"
     db.commit()
 
@@ -149,7 +165,7 @@ async def joytel_order_callback(
 # --- JoyTel QR Code Callback ---
 
 
-@router.post("/joytel/qrcode")
+@router.post("/joytel/notify/coupon/redeem")
 async def joytel_qrcode_callback(
     request: Request,
     db: Session = Depends(get_db),
@@ -165,22 +181,37 @@ async def joytel_qrcode_callback(
     body = await request.json()
     logger.info(f"JoyTel QR code callback received: {body}")
 
-    # Extract QR code data — the exact field names depend on JoyTel's actual response
-    coupon = body.get("coupon")
-    qr_data = body.get("qrCode") or body.get("activationCode") or body.get("matchingId")
+    result_code = body.get("resultCode")
+    data = body.get("data") or {}
+    coupon = data.get("coupon")
+    qrcode_type = data.get("qrcodeType")
+    qrcode = data.get("qrcode")
 
-    if not coupon or not qr_data:
-        logger.error(f"QR callback missing required fields: {body}")
-        return {"status": "ok"}
+    success = {"code": "000", "mesg": "success"}
 
-    # Find the order by snPin
+    if result_code != "000":
+        logger.error(f"RSP+ redeem failed for coupon {coupon}: {body}")
+        if coupon:
+            order = db.query(Order).filter(Order.sn_pin == coupon).first()
+            if order:
+                order.status = "failed"
+                order.error_message = f"RSP+ redeem failed: {body.get('resultMesg')}"
+                db.commit()
+        return success
+
+    if not coupon or not qrcode:
+        logger.error(f"QR callback missing coupon/qrcode: {body}")
+        return success
+
     order = db.query(Order).filter(Order.sn_pin == coupon).first()
     if not order:
         logger.error(f"QR callback: no order found for coupon {coupon}")
-        return {"status": "ok"}
+        return success
 
-    # Store QR code
-    order.qr_code_data = qr_data
+    if qrcode_type == 0:
+        order.qr_code_url = qrcode
+    else:
+        order.qr_code_data = qrcode
     order.status = "completed"
     db.commit()
 
@@ -196,11 +227,28 @@ async def joytel_qrcode_callback(
             data_gb=plan.data_gb if plan else 0,
             validity_days=plan.validity_days if plan else 0,
             country=plan.country if plan else "",
-            qr_code_data=qr_data,
+            qr_code_data=qrcode,
         )
     except Exception as e:
         logger.error(f"Email delivery failed for {order.reference}: {e}")
         order.error_message = f"Email failed: {str(e)}"
         db.commit()
 
-    return {"status": "ok"}
+    return success
+
+
+# --- JoyTel eSIM Installation Event Notification ---
+
+
+@router.post("/joytel/notify/esim/esim-progress")
+async def joytel_esim_progress(request: Request):
+    """Receive eSIM installation lifecycle events from RSP+.
+
+    Events: eligibility check, BPP download, install, enable, disable, delete, etc.
+    We log for audit; no order state change required for basic order flow.
+
+    Must return {"code":"000","mesg":"success"} or RSP+ will retry.
+    """
+    body = await request.json()
+    logger.info(f"JoyTel eSIM progress event: {body}")
+    return {"code": "000", "mesg": "success"}

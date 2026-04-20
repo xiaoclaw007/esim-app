@@ -33,7 +33,7 @@ uvicorn app.main:app --reload --port 8000
 ### Webhooks (called by external services)
 - `POST /api/webhooks/stripe` — Stripe payment confirmation
 - `POST /api/webhooks/joytel/order` — JoyTel order callback (delivers snPin)
-- `POST /api/webhooks/joytel/qrcode` — JoyTel QR code callback
+- `POST /api/webhooks/joytel/notify/coupon/redeem` — JoyTel RSP+ QR code callback (redeem notification)
 
 ### Internal
 - `GET /api/health` — Health check
