@@ -79,7 +79,7 @@ async def stripe_webhook(
     # Submit order to JoyTel Warehouse
     try:
         result = await place_order(
-            order_id=order.id,
+            order_tid=order.reference,
             sku=plan.joytel_sku,
             email=order.email,
         )
@@ -122,7 +122,7 @@ async def joytel_order_callback(
     body = await request.json()
     logger.info(f"JoyTel order callback received: {body}")
 
-    order_id = body.get("orderTid")
+    order_tid = body.get("orderTid")
     order_code = body.get("orderCode")
 
     sn_pin = None
@@ -134,13 +134,13 @@ async def joytel_order_callback(
         if sn_pin:
             break
 
-    if not order_id or not sn_pin:
+    if not order_tid or not sn_pin:
         logger.error(f"JoyTel order callback missing orderTid/snPin: {body}")
         return {"status": "ok"}  # Return 200 anyway to stop retries
 
-    order = db.query(Order).filter(Order.id == order_id).first()
+    order = db.query(Order).filter(Order.reference == order_tid).first()
     if not order:
-        logger.error(f"JoyTel order callback: order {order_id} not found")
+        logger.error(f"JoyTel order callback: order {order_tid} not found")
         return {"status": "ok"}
 
     order.sn_pin = sn_pin

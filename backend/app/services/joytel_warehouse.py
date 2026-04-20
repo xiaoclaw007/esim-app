@@ -50,7 +50,7 @@ def _query_autograph(
 
 
 async def place_order(
-    order_id: str,
+    order_tid: str,
     sku: str,
     email: str,
     quantity: int = 1,
@@ -60,6 +60,10 @@ async def place_order(
 ) -> dict:
     """Submit an eSIM order to JoyTel Warehouse.
 
+    order_tid is echoed in the async callback, so callers must be able to look
+    up the matching Order row by it. JoyTel rejects UUID formatting; pass the
+    short Order.reference instead.
+
     Callback URL is pre-configured on JoyTel's side (not sent per-request).
     """
     timestamp = int(time.time() * 1000)
@@ -67,7 +71,7 @@ async def place_order(
 
     body = {
         "customerCode": settings.joytel_customer_code,
-        "orderTid": order_id,
+        "orderTid": order_tid,
         "type": 3,
         "receiveName": receive_name,
         "phone": phone,
@@ -77,7 +81,7 @@ async def place_order(
             customer_auth=settings.joytel_customer_auth,
             warehouse="",
             type_=3,
-            order_tid=order_id,
+            order_tid=order_tid,
             receive_name=receive_name,
             phone=phone,
             timestamp=timestamp,
@@ -96,22 +100,22 @@ async def place_order(
         response.raise_for_status()
         result = response.json()
 
-    logger.info(f"JoyTel order response for {order_id}: {result}")
+    logger.info(f"JoyTel order response for {order_tid}: {result}")
     return result
 
 
-async def get_order_status(order_id: str, order_code: Optional[str] = None) -> dict:
+async def get_order_status(order_tid: str, order_code: Optional[str] = None) -> dict:
     """Query order status (fallback if callback missed)."""
     timestamp = int(time.time() * 1000)
     body = {
         "customerCode": settings.joytel_customer_code,
-        "orderTid": order_id,
+        "orderTid": order_tid,
         "timestamp": timestamp,
         "autoGraph": _query_autograph(
             customer_code=settings.joytel_customer_code,
             customer_auth=settings.joytel_customer_auth,
             order_code=order_code or "",
-            order_tid=order_id,
+            order_tid=order_tid,
             timestamp=timestamp,
         ),
     }
