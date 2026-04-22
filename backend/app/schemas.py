@@ -16,6 +16,7 @@ class PlanResponse(BaseModel):
     name: str
     country: str
     region: str
+    plan_type: str
     data_gb: int
     validity_days: int
     price_cents: int

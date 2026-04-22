@@ -124,9 +124,14 @@ class Plan(Base):
     id: Mapped[str] = mapped_column(String(50), primary_key=True)
     joytel_sku: Mapped[str] = mapped_column(String(100), nullable=False)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
-    country: Mapped[str] = mapped_column(String(2), nullable=False)  # ISO country code
+    # ISO-2 for country plans ("US", "JP"); bespoke codes for regional ("EU",
+    # "AP", "CHM"). Widened from 2 chars once multi-country SKUs landed.
+    country: Mapped[str] = mapped_column(String(10), nullable=False)
     region: Mapped[str] = mapped_column(String(50), nullable=False)
-    data_gb: Mapped[int] = mapped_column(Integer, nullable=False)  # in MB for precision
+    # "country" or "regional" — lets the frontend split the single-country
+    # grid from the regional banner without sniffing country codes.
+    plan_type: Mapped[str] = mapped_column(String(20), default="country")
+    data_gb: Mapped[int] = mapped_column(Integer, nullable=False)  # 999 = unlimited
     validity_days: Mapped[int] = mapped_column(Integer, nullable=False)
     price_cents: Mapped[int] = mapped_column(Integer, nullable=False)
     currency: Mapped[str] = mapped_column(String(3), default="usd")
