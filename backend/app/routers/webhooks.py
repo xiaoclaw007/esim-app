@@ -30,42 +30,59 @@ async def stripe_webhook(
     stripe_signature: str = Header(alias="Stripe-Signature"),
     db: Session = Depends(get_db),
 ):
-    """Handle Stripe payment confirmation.
+    """Handle Stripe payment confirmation (both hosted Checkout and on-site
+    Payment Element flows).
 
-    When a customer completes checkout, Stripe sends this webhook.
-    We verify the signature, update the order to 'paid', then
-    immediately submit the order to JoyTel Warehouse.
+    checkout.session.completed — fired by the legacy hosted flow. We pull
+    the order_id out of session.metadata and the payment intent id off
+    session.payment_intent.
+
+    payment_intent.succeeded — fired by the React Payment Element flow. The
+    PaymentIntent object has metadata.order_id on it directly, and its own
+    id is the payment_intent.
     """
     payload = await request.body()
 
-    # Verify this is really from Stripe (not a spoofed request)
     try:
         event = verify_webhook_signature(payload, stripe_signature)
     except Exception as e:
         logger.error(f"Stripe webhook signature verification failed: {e}")
         raise HTTPException(status_code=400, detail="Invalid signature")
 
-    if event["type"] != "checkout.session.completed":
-        # We only care about successful payments for now
+    event_type = event["type"]
+    obj = event["data"]["object"]
+
+    if event_type == "checkout.session.completed":
+        order_id = (obj.get("metadata") or {}).get("order_id")
+        payment_intent_id = obj.get("payment_intent")
+    elif event_type == "payment_intent.succeeded":
+        order_id = (obj.get("metadata") or {}).get("order_id")
+        payment_intent_id = obj.get("id")
+    else:
         return {"status": "ignored"}
 
-    session = event["data"]["object"]
-    order_id = session["metadata"]["order_id"]
+    if not order_id:
+        logger.error(f"Stripe {event_type}: missing metadata.order_id on {obj.get('id')}")
+        return {"status": "ignored"}
 
-    # Find the order
     order = db.query(Order).filter(Order.id == order_id).first()
     if not order:
         logger.error(f"Stripe webhook: order {order_id} not found")
         raise HTTPException(status_code=404, detail="Order not found")
 
-    # Update order with payment info
+    # Idempotency guard — Stripe retries deliveries; a second identical event
+    # shouldn't re-submit the order to JoyTel.
+    if order.status not in ("created", "failed"):
+        logger.info(f"Order {order.reference} already in status {order.status}; ignoring {event_type}")
+        return {"status": "ok"}
+
     order.status = "paid"
-    order.stripe_payment_intent = session.get("payment_intent")
+    if payment_intent_id:
+        order.stripe_payment_intent = payment_intent_id
     db.commit()
 
-    logger.info(f"Order {order.reference} paid — sending confirmation email")
+    logger.info(f"Order {order.reference} paid ({event_type}) — sending confirmation email")
 
-    # Send payment confirmation email immediately
     plan = db.query(Plan).filter(Plan.id == order.plan_id).first()
     send_payment_confirmation_email(
         to_email=order.email,
@@ -76,9 +93,6 @@ async def stripe_webhook(
 
     logger.info(f"Order {order.reference} — submitting to JoyTel")
 
-    # Generate and persist a JoyTel-compatible orderTid before calling the API,
-    # so an incoming callback can match the Order row even if we crash after
-    # the submit succeeds.
     order_tid = generate_order_tid()
     order.joytel_order_id = order_tid
     db.commit()

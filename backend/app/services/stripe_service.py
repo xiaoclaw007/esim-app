@@ -1,7 +1,6 @@
 """Stripe payment integration."""
 
 import stripe
-from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.models import Order, Plan
@@ -9,12 +8,12 @@ from app.models import Order, Plan
 stripe.api_key = settings.stripe_secret_key
 
 
-def create_checkout_session(order: Order, plan: Plan) -> str:
-    """Create a Stripe Checkout Session and return the URL.
+def create_checkout_session(order: Order, plan: Plan) -> tuple[str, str]:
+    """Create a Stripe Checkout Session (hosted) and return (url, session_id).
 
-    Stripe hosts the entire payment page — we just redirect the user there.
-    After payment, Stripe redirects them to our success page and sends
-    a webhook to confirm the payment server-side.
+    Legacy: used by the old static site, which redirects to Stripe's hosted
+    page. The React site uses create_payment_intent instead for on-site
+    Payment Element.
     """
     session = stripe.checkout.Session.create(
         payment_method_types=["card"],
@@ -42,6 +41,33 @@ def create_checkout_session(order: Order, plan: Plan) -> str:
     )
 
     return session.url, session.id
+
+
+def create_payment_intent(order: Order, plan: Plan) -> stripe.PaymentIntent:
+    """Create a Stripe PaymentIntent for on-site Payment Element checkout.
+
+    The frontend mounts <PaymentElement> with the returned client_secret,
+    then calls stripe.confirmPayment({ return_url }). Stripe emits
+    payment_intent.succeeded once the card authorizes, which the webhook
+    translates into the JoyTel fulfillment pipeline (same as the legacy
+    checkout.session.completed path).
+
+    automatic_payment_methods=enabled lets the PaymentElement surface cards,
+    Apple Pay, Google Pay, and Link from the Stripe account config without
+    us enumerating them here.
+    """
+    return stripe.PaymentIntent.create(
+        amount=plan.price_cents,
+        currency=plan.currency,
+        receipt_email=order.email,
+        automatic_payment_methods={"enabled": True},
+        description=f"Nimvoy eSIM — {plan.name}",
+        metadata={
+            "order_id": order.id,
+            "order_reference": order.reference,
+            "plan_id": plan.id,
+        },
+    )
 
 
 def verify_webhook_signature(payload: bytes, sig_header: str) -> dict:

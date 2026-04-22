@@ -38,6 +38,17 @@ class CheckoutResponse(BaseModel):
     order_reference: str
 
 
+class PaymentIntentResponse(BaseModel):
+    client_secret: str
+    order_reference: str
+    amount_cents: int
+    currency: str
+
+
+class CheckoutConfigResponse(BaseModel):
+    publishable_key: str
+
+
 # --- Order Status ---
 
 
@@ -46,8 +57,14 @@ class OrderStatusResponse(BaseModel):
     status: str
     plan_id: str
     email: str
+    amount_cents: int
+    currency: str
     created_at: datetime
     qr_code_url: Optional[str] = None
+    # LPA activation string (from JoyTel when qrcode_type=1). Frontend uses
+    # this with a QR library to render a scannable image for the user.
+    qr_code_data: Optional[str] = None
+    error_message: Optional[str] = None
 
     model_config = {"from_attributes": True}
 
@@ -101,6 +118,7 @@ class OrderDetailResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     qr_code_url: Optional[str] = None
+    qr_code_data: Optional[str] = None
 
     model_config = {"from_attributes": True}
 

@@ -31,13 +31,18 @@ def get_order_status(reference: str, db: Session = Depends(get_db)):
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
 
+    qr_delivered = order.status == "completed"
     return OrderStatusResponse(
         reference=order.reference,
         status=order.status,
         plan_id=order.plan_id,
         email=order.email,
+        amount_cents=order.amount_cents,
+        currency=order.currency,
         created_at=order.created_at,
-        qr_code_url=order.qr_code_url if order.status == "completed" else None,
+        qr_code_url=order.qr_code_url if qr_delivered else None,
+        qr_code_data=order.qr_code_data if qr_delivered else None,
+        error_message=order.error_message if order.status == "failed" else None,
     )
 
 
@@ -70,6 +75,7 @@ def list_orders(
                 created_at=o.created_at,
                 updated_at=o.updated_at,
                 qr_code_url=o.qr_code_url if o.status == "completed" else None,
+                qr_code_data=o.qr_code_data if o.status == "completed" else None,
             )
             for o in orders
         ],
@@ -103,4 +109,5 @@ def get_order_detail(
         created_at=order.created_at,
         updated_at=order.updated_at,
         qr_code_url=order.qr_code_url if order.status == "completed" else None,
+        qr_code_data=order.qr_code_data if order.status == "completed" else None,
     )
