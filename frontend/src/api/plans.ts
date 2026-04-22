@@ -5,10 +5,10 @@
 
 import { PLANS, type Plan } from '../data/catalog'
 
-// Toggle to `true` to fetch from the live /api/plans endpoint during dev
-// (e.g. against a seeded backend). Defaults to the fixture so the FE is
-// always self-contained until M5 cutover.
-const USE_LIVE_API = false
+// Source of plan data. At M5 cutover we flipped to the live API; the
+// fixture in src/data/catalog.ts stays around as an offline fallback and
+// as a reference for what /api/plans is expected to return.
+const USE_LIVE_API = true
 
 let cache: Plan[] | null = null
 
