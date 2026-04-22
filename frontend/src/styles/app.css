@@ -1,0 +1,25 @@
+/* App-level additions on top of design.css. Keep this small; prefer editing
+   design.css when porting patterns from the handoff prototype. */
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Router <Link> reset: the design uses <button> a lot; when we swap in
+   <Link> components we want them to inherit the button-like look without
+   default anchor underlines bleeding through. */
+a.reset {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* M1 placeholder scaffolding — delete once real pages land in M2. */
+.page-stub {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 64px 32px;
+}
+.page-stub h1 { margin-bottom: 12px; }
+.page-stub .muted { font-size: 15px; }
