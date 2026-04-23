@@ -167,7 +167,7 @@ function EsimListTab({
         const name = dest?.name ?? o.plan_id
         const statusClass = uiStatusClass(o.status)
         return (
-          <div key={o.reference} className="esim-item" style={{ gridTemplateColumns: '64px 1.3fr 1fr 1fr auto' }}>
+          <div key={o.reference} className="esim-item esim-item--compact">
             <div className="flag">{flag}</div>
             <div>
               <div className="name">{name} eSIM</div>
@@ -238,11 +238,7 @@ function OrdersTab({
         const flag = dest?.flag ?? '🌐'
         const name = dest?.name ?? o.plan_id
         return (
-          <div
-            key={o.reference}
-            className="esim-item"
-            style={{ gridTemplateColumns: '60px 1.5fr 1fr 1fr 1fr auto' }}
-          >
+          <div key={o.reference} className="esim-item">
             <div className="flag">{flag}</div>
             <div>
               <div className="name">{name} eSIM</div>

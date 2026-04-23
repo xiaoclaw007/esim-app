@@ -181,19 +181,7 @@ export default function OrderConfirmation() {
         )}
       </p>
 
-      <div
-        style={{
-          display: 'inline-flex',
-          gap: 32,
-          padding: '16px 24px',
-          border: '1px solid var(--line)',
-          borderRadius: 12,
-          background: 'var(--bg-elev)',
-          marginBottom: 40,
-          fontSize: 13.5,
-          textAlign: 'left',
-        }}
-      >
+      <div className="order-details">
         <OrderDetail k="Order" v={order.reference} mono />
         <OrderDetail
           k="Destination"
@@ -276,27 +264,8 @@ export default function OrderConfirmation() {
 function OrderDetail({ k, v, mono }: { k: string; v: string; mono?: boolean }) {
   return (
     <div>
-      <div
-        style={{
-          fontFamily: 'var(--mono)',
-          fontSize: 11,
-          color: 'var(--ink-3)',
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-        }}
-      >
-        {k}
-      </div>
-      <div
-        style={{
-          fontWeight: 500,
-          fontSize: 14,
-          marginTop: 2,
-          fontFamily: mono ? 'var(--mono)' : undefined,
-        }}
-      >
-        {v}
-      </div>
+      <span className="k">{k}</span>
+      <span className="v" style={{ fontFamily: mono ? 'var(--mono)' : undefined }}>{v}</span>
     </div>
   )
 }

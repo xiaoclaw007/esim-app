@@ -1204,6 +1204,10 @@ input, select, textarea { font: inherit; color: inherit; }
   border-radius: var(--radius-md);
   transition: all .15s ease;
 }
+/* 5-column layout used on the "My eSIMs" tab — skips the price column. */
+.esim-item--compact {
+  grid-template-columns: 64px 1.3fr 1fr 1fr auto;
+}
 .esim-item:hover { border-color: var(--line-strong); }
 .esim-item .flag { width: 48px; height: 48px; border-radius: 12px; background: var(--bg-sunk); display: grid; place-items: center; font-size: 24px; }
 .esim-item .name { font-weight: 500; font-size: 15px; }
@@ -1283,8 +1287,16 @@ input, select, textarea { font: inherit; color: inherit; }
 *:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: 4px; }
 
 /* ============================================================
-   Responsive (coarse)
+   Responsive
    ============================================================ */
+
+/* Prevent horizontal scroll on all viewports. The design system has a lot
+   of `max-width: 1280px` layouts that can overflow narrow viewports if
+   anything (e.g. a fixed-width SVG) slips past. */
+html, body { overflow-x: hidden; }
+img, svg { max-width: 100%; }
+
+/* ---- Tablet + small desktop (≤ 960px) — grids collapse, copy reflow ---- */
 @media (max-width: 960px) {
   .hero-grid, .detail-hero-inner, .checkout { grid-template-columns: 1fr; }
   .checkout-right { border-left: 0; border-top: 1px solid var(--line); }
@@ -1292,7 +1304,106 @@ input, select, textarea { font: inherit; color: inherit; }
   .how, .reviews, .plans-grid, .regional-banner { grid-template-columns: 1fr; }
   .country-grid { grid-template-columns: repeat(2, 1fr); }
   .detail-info { grid-template-columns: 1fr; }
-  .esim-item { grid-template-columns: 1fr; gap: 10px; }
+  .esim-item, .esim-item--compact { grid-template-columns: 1fr; gap: 10px; }
   .order-details { grid-template-columns: repeat(2, 1fr); }
   .footer-inner { grid-template-columns: 1fr 1fr; }
+  .compat { grid-template-columns: 1fr; padding: 32px; gap: 24px; }
+}
+
+/* ---- Phone (≤ 640px) — aggressive simplification ---- */
+@media (max-width: 640px) {
+  /* Nav: drop secondary links on phones, keep only logo + CTA cluster. */
+  .nav-inner { padding: 14px 18px; gap: 12px; }
+  .nav-links { display: none; }
+  .nav-right { gap: 8px; }
+  .nav-right .btn.sm { padding: 8px 12px; font-size: 12.5px; }
+
+  /* Hero: tighter padding, smaller display type, single-column. */
+  .hero { padding: 40px 20px 64px; }
+  .hero-grid { gap: 36px; }
+  .hero-copy .display { font-size: clamp(36px, 9vw, 48px); }
+  .hero-copy .lede { font-size: 16px; margin-bottom: 24px; }
+  .hero-search { padding: 6px; border-radius: 14px; }
+  .hero-search input { padding: 12px 10px; font-size: 15px; }
+  .hero-search .btn.primary { padding: 10px 14px; font-size: 13px; }
+  .hero-chips { margin-top: 18px; gap: 6px; }
+  .hero-chips .chip { font-size: 12.5px; padding: 5px 10px; }
+
+  /* Stats row: keep 3 columns but shrink; on very narrow drop to stacked.
+     These numbers are marketing — compression is OK, overflow is not. */
+  .hero-stats { gap: 14px; margin-top: 36px; padding-top: 24px; }
+  .hero-stat .num { font-size: 20px; }
+  .hero-stat .muted { font-size: 12px; }
+
+  /* Globe: shrink the wrap + let the SVG scale (covered by generic
+     `svg { max-width: 100%; }` above). Hide the floating callouts —
+     they overlap and add noise at phone width. */
+  .hero-globe-wrap { height: 320px; }
+  .globe-card { display: none; }
+
+  /* Section rhythm: cut the vertical breathing room by ~half. */
+  .section { padding: 56px 20px; }
+  .section-head { flex-direction: column; align-items: flex-start; margin-bottom: 28px; }
+  .section-head .btn.ghost { align-self: flex-start; }
+  .feat-grid { grid-template-columns: 1fr; gap: 14px; }
+  .feat-card { aspect-ratio: 16/10; } /* portrait 3/4 wastes vertical space on phones */
+  .footer { padding: 48px 20px 32px; }
+  .footer-inner { grid-template-columns: 1fr; gap: 32px; }
+  .footer-meta { flex-direction: column; gap: 8px; align-items: flex-start; }
+  .compat { padding: 28px 22px; border-radius: var(--radius-md); }
+  .compat h2 { font-size: 26px; }
+
+  /* Destinations page */
+  .dest-hero { padding: 32px 20px 20px; }
+  .dest-hero .h1 { font-size: 28px !important; }
+  .dest-body { padding: 32px 20px 64px; }
+  .dest-search-row { gap: 10px; }
+  .region-tabs { overflow-x: auto; scrollbar-width: none; padding: 3px; max-width: 100%; }
+  .region-tabs::-webkit-scrollbar { display: none; }
+  .region-tabs button { flex-shrink: 0; padding: 7px 13px; font-size: 13px; }
+  .country-grid { grid-template-columns: 1fr; }
+  .regional-banner { grid-template-columns: 1fr; gap: 12px; }
+
+  /* Destination detail */
+  .detail-hero { padding: 40px 20px 28px; }
+  .detail-hero-inner { gap: 28px; }
+  .detail-title { font-size: clamp(36px, 9vw, 52px) !important; }
+  .detail-facts { grid-template-columns: repeat(2, 1fr); gap: 16px; padding-top: 20px; margin-top: 24px; }
+  .detail-fact .val { font-size: 15px; }
+  .plans-section { padding: 40px 20px 64px; }
+  .plans-head { flex-direction: column; align-items: flex-start; gap: 16px; margin-bottom: 24px; }
+  .plan-tabs { width: 100%; }
+  .plan-tabs button { flex: 1; justify-content: center; }
+  .plan { padding: 22px; }
+  .plan .data { font-size: 30px; }
+
+  /* Checkout */
+  .checkout-left, .checkout-right { padding: 32px 20px; }
+  .checkout h1 { font-size: 24px; }
+  .card-input-row { grid-template-columns: 1fr 1fr; }
+  .pay-methods { flex-wrap: wrap; }
+  .pay-method { flex-basis: calc(50% - 3px); }
+
+  /* Confirmation */
+  .confirm { padding: 56px 20px 64px; }
+  .confirm h1 { font-size: 32px; }
+  .install { padding: 22px; margin-top: 32px; }
+  .install-body { grid-template-columns: 1fr; gap: 24px; }
+  .install-steps li { padding: 12px 0 12px 40px; font-size: 14px; }
+
+  /* Account */
+  .account { padding: 32px 20px 64px; }
+  .account-head { flex-direction: column; align-items: flex-start; gap: 16px; margin-bottom: 28px; }
+  .account-head h1 { font-size: 28px; }
+  .account-tabs { overflow-x: auto; scrollbar-width: none; gap: 20px; }
+  .account-tabs::-webkit-scrollbar { display: none; }
+  .account-tabs button { flex-shrink: 0; padding-bottom: 10px; font-size: 14px; }
+  .esim-item { padding: 18px; }
+}
+
+/* ---- Very small phones (≤ 380px) — last-resort safety for old iPhones ---- */
+@media (max-width: 380px) {
+  .hero-stats { grid-template-columns: 1fr 1fr; }
+  .hero-stats .hero-stat:nth-child(3) { grid-column: span 2; }
+  .detail-facts { grid-template-columns: 1fr; }
 }
