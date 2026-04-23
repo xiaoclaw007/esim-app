@@ -9,6 +9,7 @@ import OrderConfirmation from './routes/OrderConfirmation'
 import Account from './routes/Account'
 import Login from './routes/Login'
 import Signup from './routes/Signup'
+import AuthCallback from './routes/AuthCallback'
 
 function Shell() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
         <Route path="/account" element={<Account />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

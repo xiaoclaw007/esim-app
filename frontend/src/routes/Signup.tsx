@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { Divider, GoogleButton } from '../components/GoogleButton'
 
 export default function Signup() {
   const { signup } = useAuth()
@@ -28,6 +29,8 @@ export default function Signup() {
   return (
     <div className="page-stub" style={{ maxWidth: 420 }}>
       <h1 className="h1" style={{ marginBottom: 24 }}>Create your account</h1>
+      <GoogleButton label="Sign up with Google" />
+      <Divider />
       <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div>
           <label className="label">Name (optional)</label>
