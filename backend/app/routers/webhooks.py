@@ -12,10 +12,14 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Order, Plan
-from app.services.email_service import send_esim_email, send_payment_confirmation_email
+from app.services.email_service import (
+    send_esim_email,
+    send_order_failed_email,
+    send_payment_confirmation_email,
+)
 from app.services.joytel_rsp import redeem_coupon
 from app.services.joytel_warehouse import generate_order_tid, place_order
-from app.services.stripe_service import verify_webhook_signature
+from app.services.stripe_service import refund_payment_intent, verify_webhook_signature
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/webhooks", tags=["webhooks"])
@@ -114,10 +118,45 @@ async def stripe_webhook(
 
     except Exception as e:
         logger.error(f"JoyTel order submission failed for {order.reference}: {e}")
-        order.status = "failed"
         order.error_message = f"JoyTel order failed: {str(e)}"
-        db.commit()
-        # TODO: trigger Stripe refund here
+
+        # Automatic refund: customer was charged but we can't fulfill. Reverse
+        # the Stripe charge so they don't have to chase support. If the refund
+        # itself fails, keep the order at `failed` for manual intervention.
+        if order.stripe_payment_intent and not order.stripe_refund_id:
+            try:
+                refund = refund_payment_intent(
+                    order.stripe_payment_intent,
+                    metadata={"order_reference": order.reference, "reason": "joytel_failed"},
+                )
+                order.stripe_refund_id = refund.id
+                order.status = "refunded"
+                db.commit()
+                logger.info(
+                    f"Order {order.reference}: auto-refunded Stripe payment {order.stripe_payment_intent} → {refund.id}"
+                )
+
+                plan_for_email = plan or db.query(Plan).filter(Plan.id == order.plan_id).first()
+                send_order_failed_email(
+                    to_email=order.email,
+                    reference=order.reference,
+                    plan_name=plan_for_email.name if plan_for_email else order.plan_id,
+                    amount_cents=order.amount_cents,
+                )
+            except Exception as refund_err:
+                logger.error(
+                    f"Order {order.reference}: Stripe refund FAILED — manual refund needed: {refund_err}"
+                )
+                order.status = "failed"
+                order.error_message = (
+                    f"{order.error_message} | refund failed: {refund_err}"
+                )
+                db.commit()
+        else:
+            # No PaymentIntent recorded (shouldn't happen in M3 flow) OR
+            # already refunded. Mark failed and move on.
+            order.status = "failed"
+            db.commit()
 
     return {"status": "ok"}
 

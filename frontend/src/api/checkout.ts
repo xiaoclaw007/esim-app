@@ -38,6 +38,7 @@ export interface OrderStatus {
   qr_code_url: string | null
   qr_code_data: string | null
   error_message: string | null
+  stripe_refund_id: string | null
 }
 
 export async function fetchOrderStatus(reference: string): Promise<OrderStatus> {

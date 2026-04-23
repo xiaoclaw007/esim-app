@@ -79,3 +79,27 @@ def verify_webhook_signature(payload: bytes, sig_header: str) -> dict:
         payload, sig_header, settings.stripe_webhook_secret
     )
     return event
+
+
+def refund_payment_intent(
+    payment_intent_id: str,
+    reason: str = "requested_by_customer",
+    metadata: dict | None = None,
+) -> stripe.Refund:
+    """Fully refund a successful PaymentIntent.
+
+    Used when JoyTel fails to fulfill a paid order — we reverse the charge so
+    the customer is made whole automatically, rather than having to email
+    support. Stripe returns funds to the original payment method in 5–10
+    business days.
+
+    `reason` accepts Stripe's enum: duplicate | fraudulent | requested_by_customer.
+    JoyTel stock-out / audit failure is closest to "requested_by_customer"
+    (we're requesting it on their behalf) — Stripe doesn't have a "service
+    unavailable" reason.
+    """
+    return stripe.Refund.create(
+        payment_intent=payment_intent_id,
+        reason=reason,
+        metadata=metadata or {},
+    )

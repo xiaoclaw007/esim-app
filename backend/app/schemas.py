@@ -119,6 +119,7 @@ class OrderDetailResponse(BaseModel):
     updated_at: datetime
     qr_code_url: Optional[str] = None
     qr_code_data: Optional[str] = None
+    stripe_refund_id: Optional[str] = None
 
     model_config = {"from_attributes": True}
 

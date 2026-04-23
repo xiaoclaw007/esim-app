@@ -328,6 +328,8 @@ function humanStatus(status: string): string {
       return 'Ready to install'
     case 'failed':
       return 'Failed'
+    case 'refunded':
+      return 'Refunded'
     case 'created':
       return 'Awaiting payment'
     case 'paid':
@@ -344,6 +346,7 @@ function humanStatus(status: string): string {
 function badgeLabel(status: string): string {
   if (status === 'completed') return 'PAID'
   if (status === 'failed') return 'FAILED'
+  if (status === 'refunded') return 'REFUNDED'
   return status.toUpperCase()
 }
 

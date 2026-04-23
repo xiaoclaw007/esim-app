@@ -109,6 +109,27 @@ export default function OrderConfirmation() {
     )
   }
 
+  if (order.status === 'refunded') {
+    return (
+      <div className="confirm">
+        <div className="ok-mark" style={{ background: '#E8F3EC', color: 'var(--ok)' }}>
+          <Icon name="check" size={28} />
+        </div>
+        <h1>We've refunded your order.</h1>
+        <p className="lede muted" style={{ maxWidth: '52ch', margin: '0 auto 24px' }}>
+          Sorry — we couldn't get your {destination?.name || 'eSIM'} activated.
+          We've refunded <strong>${priceDollars(order.amount_cents)}</strong>{' '}
+          to your card; it typically shows up in 5–10 business days.
+        </p>
+        <div style={{ marginTop: 24 }}>
+          <button className="btn primary" onClick={() => navigate('/destinations')}>
+            Try another destination <Icon name="arrow" size={14} />
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   if (order.status === 'failed') {
     return (
       <div className="confirm">
@@ -122,6 +143,10 @@ export default function OrderConfirmation() {
         <p className="lede muted" style={{ maxWidth: '50ch' }}>
           Order <span className="num">{order.reference}</span> couldn't be
           fulfilled. {order.error_message || 'Please contact support.'}
+        </p>
+        <p className="muted" style={{ marginTop: 16, fontSize: 14 }}>
+          Reach us at <a href="mailto:support@nimvoy.com" style={{ color: 'var(--ink)' }}>support@nimvoy.com</a> and
+          we'll sort out a refund.
         </p>
       </div>
     )
@@ -284,6 +309,8 @@ function humanStatus(status: string): string {
       return 'Ready to install'
     case 'failed':
       return 'Failed'
+    case 'refunded':
+      return 'Refunded'
     default:
       return status
   }

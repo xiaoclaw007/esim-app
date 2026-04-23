@@ -96,7 +96,8 @@ class Order(Base):
     amount_cents: Mapped[int] = mapped_column(Integer, nullable=False)
     currency: Mapped[str] = mapped_column(String(3), default="usd")
 
-    # Order status: created → paid → joytel_pending → snpin_received → completed | failed
+    # Order status: created → paid → joytel_pending → snpin_received → completed
+    # Terminal bad states: failed (no refund — requires human) | refunded (money returned)
     status: Mapped[str] = mapped_column(String(20), default="created")
 
     # JoyTel
@@ -104,6 +105,10 @@ class Order(Base):
     sn_pin: Mapped[Optional[str]] = mapped_column(String(255))
     qr_code_data: Mapped[Optional[str]] = mapped_column(Text)
     qr_code_url: Mapped[Optional[str]] = mapped_column(String(500))
+
+    # Stripe refund tracking (set when JoyTel rejects a paid order and we
+    # automatically reverse the Stripe charge).
+    stripe_refund_id: Mapped[Optional[str]] = mapped_column(String(255))
 
     # Error tracking
     error_message: Mapped[Optional[str]] = mapped_column(Text)

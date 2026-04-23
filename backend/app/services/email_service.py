@@ -186,6 +186,90 @@ def generate_qr_image(data: str) -> bytes:
     return buffer.getvalue()
 
 
+ORDER_FAILED_TEMPLATE = Template("""
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #0B1F3A; }
+        .header { text-align: center; padding: 20px 0; }
+        .header h1 { color: #0B1F3A; margin: 0; font-size: 24px; }
+        .icon { text-align: center; font-size: 48px; margin: 20px 0; }
+        .details { background: #F6F4EE; border: 1px solid #E2DED2; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .details h3 { margin-top: 0; color: #0B1F3A; }
+        .details p { margin: 8px 0; }
+        .refund-box { background: #E8F3EC; border-radius: 8px; padding: 16px; margin: 20px 0; }
+        .refund-box p { color: #2F7A5B; font-weight: 500; margin: 0; }
+        .footer { text-align: center; color: #6B7A8E; font-size: 12px; padding: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>We couldn't complete your order</h1>
+    </div>
+
+    <p>Hi — we're sorry, something went wrong while preparing your eSIM and we weren't able to deliver it. Your money hasn't been kept.</p>
+
+    <div class="details">
+        <h3>Order Details</h3>
+        <p><strong>Order Reference:</strong> {{ reference }}</p>
+        <p><strong>Plan:</strong> {{ plan_name }}</p>
+        <p><strong>Amount:</strong> ${{ amount }}</p>
+    </div>
+
+    <div class="refund-box">
+        <p>✓ We've refunded ${{ amount }} to your card. It typically appears on your statement in 5–10 business days.</p>
+    </div>
+
+    <p>If you don't see the refund within 10 business days, just reply to this email and we'll track it down for you.</p>
+
+    <div class="footer">
+        <p>Order Reference: {{ reference }}</p>
+        <p>Nimvoy — Global eSIM</p>
+    </div>
+</body>
+</html>
+""")
+
+
+def send_order_failed_email(
+    to_email: str,
+    reference: str,
+    plan_name: str,
+    amount_cents: int,
+) -> bool:
+    """Notify the customer that fulfillment failed and we've refunded them."""
+    try:
+        amount_str = f"{amount_cents / 100:.2f}"
+        html_body = ORDER_FAILED_TEMPLATE.render(
+            reference=reference,
+            plan_name=plan_name,
+            amount=amount_str,
+        )
+
+        ses_client = boto3.client(
+            "ses",
+            region_name=settings.aws_region,
+            aws_access_key_id=settings.aws_access_key_id,
+            aws_secret_access_key=settings.aws_secret_access_key,
+        )
+        ses_client.send_email(
+            Source=settings.aws_ses_from_email,
+            Destination={"ToAddresses": [to_email]},
+            Message={
+                "Subject": {"Data": f"Your order couldn't be completed — refunded — {reference}"},
+                "Body": {"Html": {"Data": html_body}},
+            },
+        )
+
+        logger.info(f"Order-failed email sent to {to_email} for {reference}")
+        return True
+
+    except Exception as e:
+        logger.error(f"Failed to send order-failed email to {to_email}: {e}")
+        return False
+
+
 def send_esim_email(
     to_email: str,
     reference: str,
