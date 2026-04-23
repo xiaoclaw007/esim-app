@@ -172,22 +172,55 @@ def logout(
     return {"detail": "Logged out"}
 
 
+OAUTH_STATE_COOKIE = "oauth_state"
+OAUTH_STATE_MAX_AGE = 600  # 10 minutes — user should finish OAuth in this window
+
+
 @router.get("/google")
 def google_login():
-    """Redirect to Google OAuth consent screen."""
+    """Redirect to Google OAuth consent screen.
+
+    Generates a random `state` and stores it in a short-lived HttpOnly cookie
+    alongside sending it to Google. The callback then verifies the returned
+    state matches the cookie — prevents CSRF login-fixation where an attacker
+    tricks a victim's browser into completing the attacker's OAuth flow.
+    """
     if not settings.google_client_id:
         raise HTTPException(status_code=501, detail="Google OAuth not configured")
 
     state = secrets.token_urlsafe(32)
     url = get_google_auth_url(state)
-    return RedirectResponse(url=url)
+
+    resp = RedirectResponse(url=url)
+    resp.set_cookie(
+        key=OAUTH_STATE_COOKIE,
+        value=state,
+        httponly=True,
+        secure=settings.app_env != "development",
+        samesite="lax",  # must allow the cross-site redirect from accounts.google.com back to us
+        max_age=OAUTH_STATE_MAX_AGE,
+        path="/api/auth",
+    )
+    return resp
 
 
 @router.get("/google/callback")
-async def google_callback(code: str, state: str = "", db: Session = Depends(get_db)):
+async def google_callback(
+    code: str,
+    state: str = "",
+    oauth_state: Optional[str] = Cookie(None),
+    db: Session = Depends(get_db),
+):
     """Handle Google OAuth callback — create or find user, issue tokens, redirect to frontend."""
     if not settings.google_client_id:
         raise HTTPException(status_code=501, detail="Google OAuth not configured")
+
+    # CSRF guard: the state Google returned must match the one we stashed in
+    # the oauth_state cookie when /google was first hit. constant_time compare
+    # keeps this immune to timing side channels.
+    if not state or not oauth_state or not secrets.compare_digest(state, oauth_state):
+        logger.warning("Google OAuth state mismatch — dropping callback (possible CSRF or expired state cookie)")
+        raise HTTPException(status_code=400, detail="OAuth state mismatch — please retry sign-in")
 
     try:
         tokens = await exchange_code_for_tokens(code)
@@ -230,8 +263,9 @@ async def google_callback(code: str, state: str = "", db: Session = Depends(get_
     raw_refresh, token_hash = create_refresh_token()
     _store_refresh_token(db, user.id, token_hash)
 
-    # Redirect to frontend with tokens
+    # Redirect to frontend with tokens; clear the one-shot state cookie.
     redirect_url = f"{settings.frontend_url}/auth/callback?access_token={access_token}"
     resp = RedirectResponse(url=redirect_url)
     _set_refresh_cookie(resp, raw_refresh)
+    resp.delete_cookie(OAUTH_STATE_COOKIE, path="/api/auth")
     return resp
