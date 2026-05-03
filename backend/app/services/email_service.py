@@ -226,18 +226,21 @@ h1 { font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif; font-s
         <p class="tap-eyebrow">Tap to install</p>
         <h4 class="tap-h4">One-tap install</h4>
         <p class="tap-sub">Reading this on the phone you'll use? Tap below — your system pops the eSIM setup straight away.</p>
+        {# Color is also set inline + wrapped in <span> because Gmail web
+           overrides <a> color from CSS classes; inline + nested span is the
+           bulletproof pattern for forcing a link text color in email. #}
         {% if apple_install_url %}
-        <a class="tap-btn" href="{{ apple_install_url }}">Install on iPhone <span class="arr">→</span></a>
+        <a class="tap-btn" href="{{ apple_install_url }}" style="color:#F1EFE6;text-decoration:none"><span style="color:#F1EFE6">Install on iPhone <span class="arr">→</span></span></a>
         {% endif %}
         {% if android_install_url %}
-        <a class="tap-btn" href="{{ android_install_url }}">Install on Android <span class="arr">→</span></a>
+        <a class="tap-btn" href="{{ android_install_url }}" style="color:#F1EFE6;text-decoration:none"><span style="color:#F1EFE6">Install on Android <span class="arr">→</span></span></a>
         {% endif %}
         <p class="tap-fine">Works on iOS 17.4+ and Android 10+</p>
       </div>
       {% endif %}
 
       <div class="qr-card">
-        <p class="tap-eyebrow">Phone not supported? Scan instead</p>
+        <p class="tap-eyebrow">One-tap didn't work? Scan instead</p>
         <div class="qr-box">
           <img src="cid:qrcode" alt="eSIM activation QR" />
         </div>
