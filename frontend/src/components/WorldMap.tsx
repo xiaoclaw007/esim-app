@@ -27,7 +27,15 @@ export interface MapCity {
   latencyMs: number
   lng: number
   lat: number
+  /** Pin position in viewBox coordinates (0..MAP_VB_W, 0..MAP_VB_H).
+   *  Lets parents place HTML overlays at the pin location. */
+  vbX: number
+  vbY: number
 }
+
+/** Exported so parents can convert vbX/vbY to a percentage of the SVG. */
+export const MAP_VB_W = 800
+export const MAP_VB_H = 400
 
 interface WorldMapProps {
   onSelectCountry?: (code: string) => void
@@ -35,11 +43,14 @@ interface WorldMapProps {
    *  (like the floating "Tokyo · 5G live" cards in the hero) to the
    *  current pair instead of hard-coding it. Fires on initial render too. */
   onActiveArcChange?: (a: MapCity, b: MapCity) => void
-  width?: number
-  height?: number
+  width?: number | string
+  height?: number | string
 }
 
-const CITIES: MapCity[] = [
+// CITIES is the static source list — vbX/vbY are computed once below
+// (see CITIES_PROJECTED) since they're a pure projection of (lng, lat).
+type CityBase = Omit<MapCity, 'vbX' | 'vbY'>
+const CITIES: CityBase[] = [
   { code: 'US',  name: 'New York',  flag: '🇺🇸', network: 'T-Mobile',    latencyMs: 142, lng: -74.0,  lat: 40.7  },
   { code: 'JP',  name: 'Tokyo',     flag: '🇯🇵', network: 'NTT Docomo',  latencyMs: 184, lng: 139.69, lat: 35.68 },
   { code: 'KR',  name: 'Seoul',     flag: '🇰🇷', network: 'SK Telecom',  latencyMs:  72, lng: 126.98, lat: 37.57 },
@@ -104,16 +115,20 @@ function pointOnLand(lng: number, lat: number): boolean {
 
 // Equirectangular projection. Latitudes clipped so the map fills the
 // viewBox without giant polar bands.
-const VB_W = 800
-const VB_H = 400
 const LAT_TOP = 78
 const LAT_BOT = -58
 
 function project(lng: number, lat: number) {
-  const x = ((lng + 180) / 360) * VB_W
-  const y = ((LAT_TOP - lat) / (LAT_TOP - LAT_BOT)) * VB_H
+  const x = ((lng + 180) / 360) * MAP_VB_W
+  const y = ((LAT_TOP - lat) / (LAT_TOP - LAT_BOT)) * MAP_VB_H
   return { x, y }
 }
+
+// Pre-compute viewBox-space coordinates so consumers don't have to.
+const CITIES_PROJECTED: MapCity[] = CITIES.map((c) => {
+  const p = project(c.lng, c.lat)
+  return { ...c, vbX: p.x, vbY: p.y }
+})
 
 const ARC_DURATION_MS = 2800
 
@@ -133,12 +148,14 @@ export function WorldMap({
   }, [])
 
   // Fire onActiveArcChange on initial render and every cycle so parents
-  // can sync overlays (e.g. the floating Tokyo/Seoul info pills).
+  // can sync overlays (e.g. the floating info pills) — including the
+  // pin's pre-projected viewBox position, which the parent uses to place
+  // the card next to the active pin.
   useEffect(() => {
     if (!onActiveArcChange) return
     const [aCode, bCode] = ARC_PAIRS[arcIdx]
-    const a = CITIES.find((c) => c.code === aCode)!
-    const b = CITIES.find((c) => c.code === bCode)!
+    const a = CITIES_PROJECTED.find((c) => c.code === aCode)!
+    const b = CITIES_PROJECTED.find((c) => c.code === bCode)!
     onActiveArcChange(a, b)
   }, [arcIdx, onActiveArcChange])
 
@@ -174,7 +191,7 @@ export function WorldMap({
     <svg
       width={width}
       height={height}
-      viewBox={`0 0 ${VB_W} ${VB_H}`}
+      viewBox={`0 0 ${MAP_VB_W} ${MAP_VB_H}`}
       preserveAspectRatio="xMidYMid meet"
       style={{ overflow: 'visible' }}
     >

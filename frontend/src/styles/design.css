@@ -435,11 +435,20 @@ input, select, textarea { font: inherit; color: inherit; }
 .hero-globe-wrap {
   position: relative;
   /* 420 instead of 540 — the map is naturally 2:1 so a square wrap left
-     ~½ the wrap empty above/below. Floating Tokyo/Seoul cards still
-     anchor to top/bottom of the wrap and read fine at this height. */
+     ~½ the wrap empty above/below. */
   height: 420px;
   display: grid;
   place-items: center;
+}
+
+/* Inner stage that shares the map's aspect ratio — both the SVG and the
+   floating CardOverlay components live inside it. Cards use % of this
+   box for positioning so they land exactly on their pin. */
+.hero-map-stage {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  aspect-ratio: 2 / 1;
 }
 
 /* Driven by inline `style` on the active arc <path> in WorldMap.tsx —
@@ -475,6 +484,9 @@ input, select, textarea { font: inherit; color: inherit; }
 .globe-card .flag { width: 32px; height: 32px; border-radius: 8px; overflow: hidden; background: var(--bg-sunk); display: grid; place-items: center; font-size: 18px; }
 .globe-card strong { display: block; font-weight: 500; font-size: 14px; }
 .globe-card .muted { font-size: 12px; }
+/* Smooth glide between pin positions instead of a snap when the active
+   arc cycles. left/top are set inline via the CardOverlay component. */
+.globe-card { transition: left .55s cubic-bezier(.4,.05,.2,1), top .55s cubic-bezier(.4,.05,.2,1), transform .55s cubic-bezier(.4,.05,.2,1); }
 /* Pulses in whenever the inner key changes — i.e. on each arc cycle —
    so the dynamic city/network swap reads as a "new ping arriving"
    instead of an instant text snap. */

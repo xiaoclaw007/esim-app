@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { Stars } from '../components/Stars'
-import { WorldMap, type MapCity } from '../components/WorldMap'
+import { WorldMap, MAP_VB_W, MAP_VB_H, type MapCity } from '../components/WorldMap'
 import { useCatalog } from '../hooks/useCatalog'
 import {
   COUNTRIES,
@@ -133,27 +133,29 @@ export default function Landing() {
           </div>
 
           <div className="hero-globe-wrap">
-            <WorldMap onSelectCountry={goTo} onActiveArcChange={(a, b) => setActiveArc({ a, b })} />
-            {/* Cards re-key on the active city code so React remounts them
-                and the CSS pulse-in animation replays — gives the swap a
-                subtle "new ping just landed" feel instead of an instant snap. */}
-            <div className="globe-card tl">
-              <div className="flag">{activeArc?.a.flag ?? '🇯🇵'}</div>
-              <div className="globe-card-body" key={activeArc?.a.code ?? 'JP'}>
-                <strong>{activeArc?.a.name ?? 'Tokyo'} · 5G live</strong>
-                <div className="muted mono">
-                  {activeArc?.a.network ?? 'NTT Docomo'} · {activeArc?.a.latencyMs ?? 184} ms
-                </div>
-              </div>
-            </div>
-            <div className="globe-card br">
-              <div className="flag">{activeArc?.b.flag ?? '🇰🇷'}</div>
-              <div className="globe-card-body" key={activeArc?.b.code ?? 'KR'}>
-                <strong>{activeArc?.b.name ?? 'Seoul'} · Connected</strong>
-                <div className="muted mono">
-                  {activeArc?.b.network ?? 'SK Telecom'} · {activeArc?.b.latencyMs ?? 72} ms
-                </div>
-              </div>
+            {/* Inner stage matches the WorldMap's intrinsic 2:1 aspect, so
+                cards positioned by % of this box land exactly on the pins. */}
+            <div className="hero-map-stage">
+              <WorldMap
+                onSelectCountry={goTo}
+                onActiveArcChange={(a, b) => setActiveArc({ a, b })}
+                width="100%"
+                height="100%"
+              />
+              {/* Cards re-key on the active city code so React remounts them
+                  and the CSS pulse-in animation replays. The position is
+                  driven by the pin's projected coordinates (vbX/vbY) — see
+                  positionCardForPin() for the smart edge-flipping. */}
+              <CardOverlay
+                city={activeArc?.a}
+                fallback={{ flag: '🇯🇵', name: 'Tokyo', network: 'NTT Docomo', latencyMs: 184, code: 'JP' }}
+                label="5G live"
+              />
+              <CardOverlay
+                city={activeArc?.b}
+                fallback={{ flag: '🇰🇷', name: 'Seoul', network: 'SK Telecom', latencyMs: 72, code: 'KR' }}
+                label="Connected"
+              />
             </div>
           </div>
         </div>
@@ -491,6 +493,52 @@ function SuggestionRow({
 // Popular destinations section. Same shape works for both single countries
 // and regional packs — caller supplies flag emoji, display name, sub line,
 // and the cheapest price.
+// Floating info card that anchors to one of the active arc's pins.
+// `city` may be undefined on first render (before the WorldMap has fired
+// its first onActiveArcChange) — we render the fallback in that case so
+// the cards don't pop in/out.
+function CardOverlay({
+  city,
+  fallback,
+  label,
+}: {
+  city: MapCity | undefined
+  fallback: { flag: string; name: string; network: string; latencyMs: number; code: string }
+  label: string
+}) {
+  const flag = city?.flag ?? fallback.flag
+  const name = city?.name ?? fallback.name
+  const network = city?.network ?? fallback.network
+  const latencyMs = city?.latencyMs ?? fallback.latencyMs
+  const code = city?.code ?? fallback.code
+  // For first-render (no city yet) center the card so it doesn't appear
+  // at (0,0). Once we have a city, place it at the pin's vbX/vbY %.
+  const leftPct = city ? (city.vbX / MAP_VB_W) * 100 : 50
+  const topPct = city ? (city.vbY / MAP_VB_H) * 100 : 50
+  // Smart edge-flip: card sits opposite to the closer edge so it doesn't
+  // overflow the map. 16px gap between pin and card.
+  const isRightHalf = (city?.vbX ?? 0) >= MAP_VB_W / 2
+  const isBottomHalf = (city?.vbY ?? 0) >= MAP_VB_H / 2
+  const tx = isRightHalf ? 'calc(-100% - 14px)' : '14px'
+  const ty = isBottomHalf ? 'calc(-100% - 14px)' : '14px'
+  return (
+    <div
+      className="globe-card"
+      style={{ left: `${leftPct}%`, top: `${topPct}%`, transform: `translate(${tx}, ${ty})` }}
+    >
+      <div className="flag">{flag}</div>
+      <div className="globe-card-body" key={code}>
+        <strong>
+          {name} · {label}
+        </strong>
+        <div className="muted mono">
+          {network} · {latencyMs} ms
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function FeatRow({
   flag,
   name,
