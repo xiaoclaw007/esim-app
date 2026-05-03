@@ -232,7 +232,7 @@ h1 { font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif; font-s
         {% if android_install_url %}
         <a class="tap-btn" href="{{ android_install_url }}">Install on Android <span class="arr">→</span></a>
         {% endif %}
-        <p class="tap-fine">iOS 17.4+ · Android 10+ with recent Google Play Services</p>
+        <p class="tap-fine">Works on iOS 17.4+ and Android 10+</p>
       </div>
       {% endif %}
 
