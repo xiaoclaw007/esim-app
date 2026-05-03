@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { Stars } from '../components/Stars'
-import { Globe } from '../components/Globe'
+import { WorldMap } from '../components/WorldMap'
 import { useCatalog } from '../hooks/useCatalog'
 import {
   COUNTRIES,
@@ -128,7 +128,7 @@ export default function Landing() {
           </div>
 
           <div className="hero-globe-wrap">
-            <Globe onSelectCountry={goTo} />
+            <WorldMap onSelectCountry={goTo} />
             <div className="globe-card tl">
               <div className="flag">🇯🇵</div>
               <div>

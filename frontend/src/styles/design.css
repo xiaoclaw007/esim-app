@@ -439,6 +439,15 @@ input, select, textarea { font: inherit; color: inherit; }
   place-items: center;
 }
 
+/* Driven by inline `style` on the active arc <path> in WorldMap.tsx —
+   the dasharray/offset start fully hidden and reveal as the arc draws. */
+@keyframes worldmap-arc-draw {
+  0%   { stroke-dashoffset: 900; opacity: 0; }
+  10%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { stroke-dashoffset: 0;   opacity: 0; }
+}
+
 /* globe info card floating */
 .globe-card {
   position: absolute;
