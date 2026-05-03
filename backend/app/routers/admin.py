@@ -18,8 +18,9 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.middleware.auth import get_admin_user
-from app.models import Order, Plan, User
+from app.models import Coupon, Order, Plan, User
 from app.schemas import UserResponse
+from app.services import coupons as coupons_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/admin", tags=["admin"])
@@ -496,6 +497,185 @@ def admin_kpis(
         top_destinations=top_destinations,
         queue=queue,
     )
+
+
+# ---- Coupons (admin write endpoints — first ones in the admin router) ----
+
+
+class AdminCouponRow(BaseModel):
+    id: str
+    code: str
+    kind: str  # "percent" | "fixed"
+    value: int
+    max_uses: Optional[int] = None
+    uses: int
+    valid_from: Optional[datetime] = None
+    valid_until: Optional[datetime] = None
+    active: bool
+    notes: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class AdminCouponCreate(BaseModel):
+    code: str
+    kind: str  # "percent" | "fixed"
+    value: int
+    max_uses: Optional[int] = None
+    valid_from: Optional[datetime] = None
+    valid_until: Optional[datetime] = None
+    active: bool = True
+    notes: Optional[str] = None
+
+
+class AdminCouponUpdate(BaseModel):
+    active: Optional[bool] = None
+    max_uses: Optional[int] = None
+    valid_from: Optional[datetime] = None
+    valid_until: Optional[datetime] = None
+    notes: Optional[str] = None
+
+
+def _coupon_row(c: Coupon) -> AdminCouponRow:
+    return AdminCouponRow(
+        id=c.id,
+        code=c.code,
+        kind=c.kind,
+        value=c.value,
+        max_uses=c.max_uses,
+        uses=c.uses,
+        valid_from=c.valid_from,
+        valid_until=c.valid_until,
+        active=c.active,
+        notes=c.notes,
+        created_at=c.created_at,
+        updated_at=c.updated_at,
+    )
+
+
+@router.get("/coupons", response_model=list[AdminCouponRow])
+def admin_list_coupons(
+    db: Session = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+) -> list[AdminCouponRow]:
+    rows = db.query(Coupon).order_by(Coupon.created_at.desc()).all()
+    return [_coupon_row(c) for c in rows]
+
+
+@router.post("/coupons", response_model=AdminCouponRow)
+def admin_create_coupon(
+    body: AdminCouponCreate,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_admin_user),
+) -> AdminCouponRow:
+    code = coupons_service.normalize_code(body.code)
+    if not code:
+        raise HTTPException(status_code=422, detail="Code is required")
+    if body.kind not in ("percent", "fixed"):
+        raise HTTPException(status_code=422, detail="kind must be 'percent' or 'fixed'")
+    if body.kind == "percent" and not (1 <= body.value <= 100):
+        raise HTTPException(status_code=422, detail="Percent value must be 1-100")
+    if body.kind == "fixed" and body.value < 1:
+        raise HTTPException(status_code=422, detail="Fixed value must be > 0 cents")
+    if body.max_uses is not None and body.max_uses < 1:
+        raise HTTPException(status_code=422, detail="max_uses must be >= 1 if provided")
+    if (
+        body.valid_from
+        and body.valid_until
+        and body.valid_from > body.valid_until
+    ):
+        raise HTTPException(status_code=422, detail="valid_from must be before valid_until")
+
+    if db.query(Coupon).filter(Coupon.code == code).first():
+        raise HTTPException(status_code=409, detail=f"Coupon code {code} already exists")
+
+    c = Coupon(
+        code=code,
+        kind=body.kind,
+        value=body.value,
+        max_uses=body.max_uses,
+        valid_from=body.valid_from,
+        valid_until=body.valid_until,
+        active=body.active,
+        notes=body.notes,
+        created_by=admin.id,
+    )
+    db.add(c)
+    db.commit()
+    db.refresh(c)
+    return _coupon_row(c)
+
+
+@router.patch("/coupons/{coupon_id}", response_model=AdminCouponRow)
+def admin_update_coupon(
+    coupon_id: str,
+    body: AdminCouponUpdate,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+) -> AdminCouponRow:
+    c = db.query(Coupon).filter(Coupon.id == coupon_id).first()
+    if not c:
+        raise HTTPException(status_code=404, detail="Coupon not found")
+
+    # Note: code/kind/value are intentionally NOT editable — those are
+    # accounting-relevant; if you need to change them, kill the old coupon
+    # and make a new one.
+    if body.active is not None:
+        c.active = body.active
+    if body.max_uses is not None:
+        if body.max_uses < c.uses:
+            raise HTTPException(
+                status_code=422,
+                detail=f"max_uses ({body.max_uses}) cannot be below current uses ({c.uses})",
+            )
+        c.max_uses = body.max_uses
+    if body.valid_from is not None:
+        c.valid_from = body.valid_from
+    if body.valid_until is not None:
+        c.valid_until = body.valid_until
+    if body.notes is not None:
+        c.notes = body.notes
+
+    db.commit()
+    db.refresh(c)
+    return _coupon_row(c)
+
+
+class AdminCouponRedemption(BaseModel):
+    reference: str
+    created_at: datetime
+    email: str
+    discount_cents: int
+    final_amount_cents: int
+    status: str
+
+
+@router.get("/coupons/{coupon_id}/redemptions", response_model=list[AdminCouponRedemption])
+def admin_coupon_redemptions(
+    coupon_id: str,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+) -> list[AdminCouponRedemption]:
+    if not db.query(Coupon).filter(Coupon.id == coupon_id).first():
+        raise HTTPException(status_code=404, detail="Coupon not found")
+    orders = (
+        db.query(Order)
+        .filter(Order.coupon_id == coupon_id)
+        .order_by(Order.created_at.desc())
+        .limit(200)
+        .all()
+    )
+    return [
+        AdminCouponRedemption(
+            reference=o.reference,
+            created_at=o.created_at,
+            email=o.email,
+            discount_cents=o.discount_cents,
+            final_amount_cents=o.amount_cents,
+            status=o.status,
+        )
+        for o in orders
+    ]
 
 
 @router.get("/analytics/revenue-series")

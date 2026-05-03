@@ -113,6 +113,16 @@ class Order(Base):
     # automatically reverse the Stripe charge).
     stripe_refund_id: Mapped[Optional[str]] = mapped_column(String(255))
 
+    # Coupon redemption: id is the live FK; code is the frozen value at the
+    # time of order so historical orders survive coupon deletion. discount_cents
+    # is the amount subtracted from the plan price. amount_cents on the Order
+    # row is the final charged amount (post-discount).
+    coupon_id: Mapped[Optional[str]] = mapped_column(
+        String(36), ForeignKey("coupons.id"), nullable=True
+    )
+    coupon_code: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    discount_cents: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
     # Error tracking
     error_message: Mapped[Optional[str]] = mapped_column(Text)
 
@@ -124,6 +134,32 @@ class Order(Base):
 
     # Relationships
     user: Mapped[Optional[User]] = relationship("User", back_populates="orders")
+
+
+class Coupon(Base):
+    __tablename__ = "coupons"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    # Stored canonical-uppercase. Frontend uppercases on submit; lookup is case-insensitive.
+    code: Mapped[str] = mapped_column(String(40), unique=True, nullable=False, index=True)
+    # "percent" → value is 1-100. "fixed" → value is cents off.
+    kind: Mapped[str] = mapped_column(String(10), nullable=False)
+    value: Mapped[int] = mapped_column(Integer, nullable=False)
+    # Optional global usage cap. Null = unlimited.
+    max_uses: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    uses: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    # Optional date window. Null bounds = open-ended.
+    valid_from: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    valid_until: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_by: Mapped[Optional[str]] = mapped_column(
+        String(36), ForeignKey("users.id"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
 
 
 class Plan(Base):

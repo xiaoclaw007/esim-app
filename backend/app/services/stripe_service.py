@@ -43,8 +43,15 @@ def create_checkout_session(order: Order, plan: Plan) -> tuple[str, str]:
     return session.url, session.id
 
 
-def create_payment_intent(order: Order, plan: Plan) -> stripe.PaymentIntent:
+def create_payment_intent(
+    order: Order,
+    plan: Plan,
+    override_amount_cents: int | None = None,
+) -> stripe.PaymentIntent:
     """Create a Stripe PaymentIntent for on-site Payment Element checkout.
+
+    `override_amount_cents` allows the caller to pass a discounted amount
+    when a coupon is applied; defaults to the plan's full retail price.
 
     The frontend mounts <PaymentElement> with the returned client_secret,
     then calls stripe.confirmPayment({ return_url }). Stripe emits
@@ -56,8 +63,9 @@ def create_payment_intent(order: Order, plan: Plan) -> stripe.PaymentIntent:
     Apple Pay, Google Pay, and Link from the Stripe account config without
     us enumerating them here.
     """
+    amount = override_amount_cents if override_amount_cents is not None else plan.price_cents
     return stripe.PaymentIntent.create(
-        amount=plan.price_cents,
+        amount=amount,
         currency=plan.currency,
         receipt_email=order.email,
         automatic_payment_methods={"enabled": True},
@@ -66,6 +74,8 @@ def create_payment_intent(order: Order, plan: Plan) -> stripe.PaymentIntent:
             "order_id": order.id,
             "order_reference": order.reference,
             "plan_id": plan.id,
+            "coupon_code": order.coupon_code or "",
+            "discount_cents": order.discount_cents or 0,
         },
     )
 

@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Order, Plan
+from app.services import coupons as coupons_service
 from app.services.email_service import (
     send_esim_email,
     send_order_failed_email,
@@ -84,6 +85,18 @@ async def stripe_webhook(
     if payment_intent_id:
         order.stripe_payment_intent = payment_intent_id
     db.commit()
+
+    # Consume the coupon use now that Stripe has actually charged the card.
+    # Ignore failure — at this point the order is paid; the coupon-cap
+    # accounting being slightly off is a much smaller problem than refusing
+    # a successful payment.
+    if order.coupon_id:
+        if coupons_service.redeem(db, order.coupon_id):
+            logger.info(f"Order {order.reference}: redeemed coupon {order.coupon_code}")
+        else:
+            logger.warning(
+                f"Order {order.reference}: coupon {order.coupon_code} redeem skipped (cap reached or coupon gone)"
+            )
 
     logger.info(f"Order {order.reference} paid ({event_type}) — sending confirmation email")
 

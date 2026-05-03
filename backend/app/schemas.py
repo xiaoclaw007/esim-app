@@ -31,6 +31,21 @@ class PlanResponse(BaseModel):
 class CheckoutRequest(BaseModel):
     plan_id: str
     email: Optional[EmailStr] = None  # Optional if user is authenticated
+    coupon_code: Optional[str] = None
+
+
+class CouponValidateRequest(BaseModel):
+    code: str
+    plan_id: str
+
+
+class CouponValidateResponse(BaseModel):
+    valid: bool
+    code: Optional[str] = None
+    discount_cents: int = 0
+    final_cents: int = 0
+    free: bool = False
+    error: Optional[str] = None
 
 
 class CheckoutResponse(BaseModel):
@@ -39,10 +54,33 @@ class CheckoutResponse(BaseModel):
 
 
 class PaymentIntentResponse(BaseModel):
+    """Returned when the order requires Stripe payment.
+
+    For 100%-off coupons we skip Stripe and return FreeOrderResponse instead;
+    the frontend looks at `free` to choose between the two flows.
+    """
+
     client_secret: str
     order_reference: str
     amount_cents: int
     currency: str
+    discount_cents: int = 0
+    coupon_code: Optional[str] = None
+    free: bool = False  # always false for this response — present so the
+    # union type the frontend handles is uniform
+
+
+class FreeOrderResponse(BaseModel):
+    """Returned when a 100%-off coupon makes the order $0 — Stripe is bypassed,
+    the order is created paid, and JoyTel fulfillment kicks off immediately."""
+
+    order_reference: str
+    amount_cents: int = 0
+    currency: str = "usd"
+    discount_cents: int
+    coupon_code: str
+    free: bool = True
+    client_secret: Optional[str] = None  # always null; same union shape as above
 
 
 class CheckoutConfigResponse(BaseModel):
