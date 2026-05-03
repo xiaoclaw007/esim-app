@@ -1,13 +1,53 @@
+import { Link } from 'react-router-dom'
 import { Logo } from './Logo'
 
-const cols = [
+// Items can be plain strings (placeholder) or { label, href } pairs.
+// href starting with "/" is a SPA route, "mailto:" / "https:" stay external.
+type FooterItem = string | { label: string; href: string }
+interface FooterCol {
+  h: string
+  items: FooterItem[]
+}
+
+const cols: FooterCol[] = [
   {
     h: 'Destinations',
-    items: ['Japan', 'Spain', 'United States', 'Thailand', 'Europe regional', 'Global plan'],
+    items: [
+      { label: 'Japan', href: '/destinations/jp' },
+      { label: 'United States', href: '/destinations/us' },
+      { label: 'South Korea', href: '/destinations/kr' },
+      { label: 'China', href: '/destinations/cn' },
+      { label: 'Europe regional', href: '/destinations/eu' },
+      { label: 'Asia-Pacific', href: '/destinations/ap' },
+    ],
   },
   { h: 'Company', items: ['About', 'Careers', 'Press', 'Affiliates'] },
-  { h: 'Support', items: ['Help center', 'Compatibility', 'Contact us', 'Status'] },
+  {
+    h: 'Support',
+    items: [
+      { label: 'FAQ', href: '/faq' },
+      'Compatibility',
+      { label: 'Contact us', href: 'mailto:support@nimvoy.com' },
+      'Status',
+    ],
+  },
 ]
+
+function FooterLink({ item }: { item: FooterItem }) {
+  if (typeof item === 'string') return <li>{item}</li>
+  if (item.href.startsWith('/')) {
+    return (
+      <li>
+        <Link to={item.href}>{item.label}</Link>
+      </li>
+    )
+  }
+  return (
+    <li>
+      <a href={item.href}>{item.label}</a>
+    </li>
+  )
+}
 
 export function Footer() {
   return (
@@ -25,8 +65,8 @@ export function Footer() {
           <div key={c.h}>
             <h4>{c.h}</h4>
             <ul>
-              {c.items.map((i) => (
-                <li key={i}>{i}</li>
+              {c.items.map((it, i) => (
+                <FooterLink key={i} item={it} />
               ))}
             </ul>
           </div>
