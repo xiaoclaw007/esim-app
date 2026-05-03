@@ -17,6 +17,7 @@ const NAV: NavSpec[] = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: 'grid' },
   { to: '/admin/orders', label: 'Orders', icon: 'receipt', badgeKey: 'failed' },
   { to: '/admin/customers', label: 'Customers', icon: 'users' },
+  { to: '/admin/coupons', label: 'Coupons', icon: 'qr-code' },
   { to: '/admin/catalog', label: 'Catalog', icon: 'box' },
   { to: '/admin/analytics', label: 'Analytics', icon: 'bar-chart' },
 ]

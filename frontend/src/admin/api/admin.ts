@@ -131,6 +131,49 @@ export interface AdminRevenuePoint {
   revenue_cents: number
 }
 
+export interface AdminCouponRow {
+  id: string
+  code: string
+  kind: 'percent' | 'fixed'
+  value: number
+  max_uses: number | null
+  uses: number
+  valid_from: string | null
+  valid_until: string | null
+  active: boolean
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminCouponCreate {
+  code: string
+  kind: 'percent' | 'fixed'
+  value: number
+  max_uses?: number | null
+  valid_from?: string | null
+  valid_until?: string | null
+  active?: boolean
+  notes?: string | null
+}
+
+export interface AdminCouponUpdate {
+  active?: boolean
+  max_uses?: number | null
+  valid_from?: string | null
+  valid_until?: string | null
+  notes?: string | null
+}
+
+export interface AdminCouponRedemption {
+  reference: string
+  created_at: string
+  email: string
+  discount_cents: number
+  final_amount_cents: number
+  status: string
+}
+
 export const adminApi = {
   me: () => apiFetch<AdminUser>('/api/admin/me'),
   listOrders: (params: { q?: string; status?: string; page?: number; per_page?: number } = {}) => {
@@ -155,4 +198,15 @@ export const adminApi = {
     apiFetch<AdminPlanRow[]>(`/api/admin/catalog/plans${country ? `?country=${country}` : ''}`),
   kpis: () => apiFetch<AdminKpiResponse>('/api/admin/kpis'),
   revenueSeries: (days = 30) => apiFetch<AdminRevenuePoint[]>(`/api/admin/analytics/revenue-series?days=${days}`),
+  // Coupons
+  listCoupons: () => apiFetch<AdminCouponRow[]>('/api/admin/coupons'),
+  createCoupon: (body: AdminCouponCreate) =>
+    apiFetch<AdminCouponRow>('/api/admin/coupons', { method: 'POST', body: JSON.stringify(body) }),
+  updateCoupon: (id: string, body: AdminCouponUpdate) =>
+    apiFetch<AdminCouponRow>(`/api/admin/coupons/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    }),
+  couponRedemptions: (id: string) =>
+    apiFetch<AdminCouponRedemption[]>(`/api/admin/coupons/${encodeURIComponent(id)}/redemptions`),
 }

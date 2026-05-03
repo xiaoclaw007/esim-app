@@ -18,6 +18,7 @@ const AdminLayout = lazy(() => import('./admin/AdminLayout'))
 const CrmDashboard = lazy(() => import('./admin/pages/Dashboard'))
 const CrmOrders = lazy(() => import('./admin/pages/Orders'))
 const CrmCustomers = lazy(() => import('./admin/pages/Customers'))
+const CrmCoupons = lazy(() => import('./admin/pages/Coupons'))
 const CrmCatalog = lazy(() => import('./admin/pages/Catalog'))
 const CrmAnalytics = lazy(() => import('./admin/pages/Analytics'))
 
@@ -63,6 +64,7 @@ export default function App() {
         <Route path="orders" element={<CrmOrders />} />
         <Route path="orders/:reference" element={<CrmOrders />} />
         <Route path="customers" element={<CrmCustomers />} />
+        <Route path="coupons" element={<CrmCoupons />} />
         <Route path="catalog" element={<CrmCatalog />} />
         <Route path="analytics" element={<CrmAnalytics />} />
       </Route>

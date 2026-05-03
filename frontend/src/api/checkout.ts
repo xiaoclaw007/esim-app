@@ -8,11 +8,27 @@ interface CheckoutConfig {
   publishable_key: string
 }
 
-interface PaymentIntentResponse {
-  client_secret: string
+// Backend returns one of two shapes from /api/payment-intent:
+//   - paid via Stripe → has client_secret
+//   - 100%-off coupon → free=true, no client_secret
+// Frontend branches on `free`.
+export interface PaymentIntentResponse {
+  client_secret: string | null
   order_reference: string
   amount_cents: number
   currency: string
+  discount_cents: number
+  coupon_code: string | null
+  free: boolean
+}
+
+export interface CouponValidateResponse {
+  valid: boolean
+  code: string | null
+  discount_cents: number
+  final_cents: number
+  free: boolean
+  error: string | null
 }
 
 export async function fetchStripePublishableKey(): Promise<string> {
@@ -20,10 +36,21 @@ export async function fetchStripePublishableKey(): Promise<string> {
   return cfg.publishable_key
 }
 
-export async function createPaymentIntent(plan_id: string, email: string): Promise<PaymentIntentResponse> {
+export async function createPaymentIntent(
+  plan_id: string,
+  email: string,
+  coupon_code?: string,
+): Promise<PaymentIntentResponse> {
   return apiFetch<PaymentIntentResponse>('/api/payment-intent', {
     method: 'POST',
-    body: JSON.stringify({ plan_id, email }),
+    body: JSON.stringify(coupon_code ? { plan_id, email, coupon_code } : { plan_id, email }),
+  })
+}
+
+export async function validateCoupon(code: string, plan_id: string): Promise<CouponValidateResponse> {
+  return apiFetch<CouponValidateResponse>('/api/checkout/validate-coupon', {
+    method: 'POST',
+    body: JSON.stringify({ code, plan_id }),
   })
 }
 
