@@ -434,7 +434,10 @@ input, select, textarea { font: inherit; color: inherit; }
 
 .hero-globe-wrap {
   position: relative;
-  height: 540px;
+  /* 420 instead of 540 — the map is naturally 2:1 so a square wrap left
+     ~½ the wrap empty above/below. Floating Tokyo/Seoul cards still
+     anchor to top/bottom of the wrap and read fine at this height. */
+  height: 420px;
   display: grid;
   place-items: center;
 }

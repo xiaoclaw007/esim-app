@@ -112,8 +112,8 @@ const ARC_DURATION_MS = 2800
 
 export function WorldMap({
   onSelectCountry,
-  width = 540,
-  height = 540,
+  width = 600,
+  height = 300,
 }: WorldMapProps) {
   const [arcIdx, setArcIdx] = useState(0)
 
@@ -173,12 +173,21 @@ export function WorldMap({
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
+        {/* Soft halo around the travelling arc dot — makes it pop against
+            the dot mask without looking lit-on-fire. */}
+        <filter id="worldmap-traveler-glow" x="-100%" y="-100%" width="300%" height="300%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
       </defs>
 
       {/* Land dots — Natural Earth 110m coastlines */}
       <g>
         {landDots.map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r={1.6} fill="var(--ink)" opacity={0.22} />
+          <circle key={i} cx={p.x} cy={p.y} r={1.7} fill="var(--ink)" opacity={0.28} />
         ))}
       </g>
 
@@ -197,8 +206,9 @@ export function WorldMap({
             animation: `worldmap-arc-draw ${ARC_DURATION_MS}ms cubic-bezier(.4,.05,.2,1) forwards`,
           }}
         />
-        {/* Travelling dot riding the arc */}
-        <circle r="6" fill="var(--pop)">
+        {/* Travelling dot riding the arc — glow filter makes it visible
+            against the dot mask without requiring a huge solid disc. */}
+        <circle r="7.5" fill="var(--pop)" filter="url(#worldmap-traveler-glow)">
           <animateMotion dur={`${ARC_DURATION_MS}ms`} repeatCount="1" path={arcD} keyPoints="0;1" keyTimes="0;1" />
           <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.85;1" dur={`${ARC_DURATION_MS}ms`} repeatCount="1" />
         </circle>
