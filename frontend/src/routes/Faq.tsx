@@ -92,11 +92,7 @@ export default function Faq() {
             <div key={section.id} id={section.id} className="faq-section">
               <div className="faq-section-head">
                 <div className="eyebrow">0{sectionIdx + 1}</div>
-                <h2>
-                  <em style={{ fontFamily: 'var(--serif)', fontStyle: 'italic', fontWeight: 400 }}>
-                    {section.title}
-                  </em>
-                </h2>
+                <h2>{section.title}</h2>
                 {section.intro && <p className="muted">{section.intro}</p>}
               </div>
 
