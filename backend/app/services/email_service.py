@@ -101,8 +101,9 @@ h1 { font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif; font-s
 
       <p class="letter">
         Your <em>${{ amount_display }}</em> has cleared, and we're now whispering quietly to our
-        network partners to wake up your {{ country_name }} eSIM. The QR lands in your inbox in
-        about a minute — keep an eye out, that's the one you'll scan.
+        network partners to wake up your {{ country_name }} eSIM. Your activation email lands in
+        your inbox in about a minute. Open it on the phone you'll use and you're 60 seconds from
+        online.
       </p>
       <p class="letter" style="margin-top:14px">
         Nothing for you to do right now. We'll take it from here.
@@ -111,8 +112,8 @@ h1 { font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif; font-s
 
       <div class="status-section">
         <p class="status-eyebrow"><span class="status-pulse"></span>Provisioning</p>
-        <h4 class="status-h4">QR code on the way</h4>
-        <p class="status-sub">Typically lands in under 60 seconds. We'll send a separate email with your QR code and one-tap install links.</p>
+        <h4 class="status-h4">Almost ready</h4>
+        <p class="status-sub">Activation email arrives in under 60 seconds with everything you need to install.</p>
       </div>
 
       <table class="meta-tbl" role="presentation" cellpadding="0" cellspacing="0">
