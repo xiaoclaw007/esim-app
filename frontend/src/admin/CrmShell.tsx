@@ -1,9 +1,10 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Link, NavLink, useLocation } from 'react-router-dom'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { CrmIcon, type CrmIconName } from './components/CrmIcon'
 import { Avatar } from './components/Avatar'
 import { CommandPalette } from './CommandPalette'
 import { adminApi, type AdminUser } from './api/admin'
+import { useAuth } from '../auth/AuthContext'
 
 interface NavSpec {
   to: string
@@ -22,8 +23,20 @@ const NAV: NavSpec[] = [
 
 export function CrmShell({ admin, children }: { admin: AdminUser; children: ReactNode }) {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { logout } = useAuth()
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [failedCount, setFailedCount] = useState<number>(0)
+  const [signingOut, setSigningOut] = useState(false)
+
+  async function onSignOut() {
+    setSigningOut(true)
+    try {
+      await logout()
+    } finally {
+      navigate('/', { replace: true })
+    }
+  }
 
   // ⌘K toggle, Esc close
   useEffect(() => {
@@ -86,10 +99,19 @@ export function CrmShell({ admin, children }: { admin: AdminUser; children: Reac
         <div className="crm-side-foot">
           <div className="crm-side-user">
             <Avatar name={admin.name} email={admin.email} size="sm" />
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <div className="crm-side-user-n">{admin.name || admin.email.split('@')[0]} · Founder</div>
-              <div className="dim sm">{admin.email}</div>
+              <div className="dim sm" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{admin.email}</div>
             </div>
+            <button
+              className="crm-btn icon"
+              onClick={onSignOut}
+              disabled={signingOut}
+              title="Sign out"
+              aria-label="Sign out"
+            >
+              <CrmIcon name="external-link" size={14} />
+            </button>
           </div>
         </div>
       </aside>
