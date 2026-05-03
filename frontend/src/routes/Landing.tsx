@@ -6,11 +6,15 @@ import { Globe } from '../components/Globe'
 import { useCatalog } from '../hooks/useCatalog'
 import {
   COUNTRIES,
+  REGIONAL_PLANS_META,
   REVIEWS,
   fromPrice,
   priceDollars,
   type CountryMeta,
+  type RegionalMeta,
 } from '../data/catalog'
+
+type FeatTab = 'local' | 'regional'
 
 export default function Landing() {
   const { plans } = useCatalog()
@@ -24,6 +28,7 @@ export default function Landing() {
   }, [q])
 
   const popularCountries = COUNTRIES.filter((c) => c.popular)
+  const [featTab, setFeatTab] = useState<FeatTab>('local')
 
   const goTo = (code: string) => navigate(`/destinations/${code.toLowerCase()}`)
   const priceFor = (code: string) => (plans ? fromPrice(plans, code) : null)
@@ -166,16 +171,49 @@ export default function Landing() {
             </button>
           </div>
 
-          <div className="feat-grid">
-            {popularCountries.map((c) => (
-              <FeatCard
-                key={c.code}
-                country={c}
-                fromCents={priceFor(c.code)}
-                onClick={() => goTo(c.code)}
-              />
-            ))}
+          {/* Tabs — Local (single-country plans) vs Regional (multi-country packs).
+              Reuses the .plan-tabs pill segmented control from DestinationDetail
+              so the visual language matches across the site. */}
+          <div className="plan-tabs" style={{ marginBottom: 28 }}>
+            <button
+              className={featTab === 'local' ? 'active' : ''}
+              onClick={() => setFeatTab('local')}
+            >
+              <span className="dot"></span> Local
+            </button>
+            <button
+              className={featTab === 'regional' ? 'active' : ''}
+              onClick={() => setFeatTab('regional')}
+            >
+              <span className="dot"></span> Regional
+            </button>
           </div>
+
+          {featTab === 'local' && (
+            <div className="feat-grid">
+              {popularCountries.map((c) => (
+                <FeatCard
+                  key={c.code}
+                  country={c}
+                  fromCents={priceFor(c.code)}
+                  onClick={() => goTo(c.code)}
+                />
+              ))}
+            </div>
+          )}
+
+          {featTab === 'regional' && (
+            <div className="feat-grid feat-grid--3">
+              {REGIONAL_PLANS_META.map((r) => (
+                <RegionalCard
+                  key={r.code}
+                  region={r}
+                  fromCents={priceFor(r.code)}
+                  onClick={() => goTo(r.code)}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -465,6 +503,51 @@ function FeatCard({
         <div>
           <span className="name">{country.name}</span>
           <span className="sub">{country.networks.split(',')[0]}</span>
+        </div>
+        <div className="price">
+          from
+          <br />
+          <b>{fromCents !== null ? `$${priceDollars(fromCents)}` : '—'}</b>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Same shape as FeatCard but pulls from RegionalMeta — region name in the
+// title, scope (e.g. "36 countries") in the sub line, and the data-c attr
+// drives the gradient via .feat-card[data-c="EU"|"AP"|"CHM"] in design.css.
+function RegionalCard({
+  region,
+  fromCents,
+  onClick,
+}: {
+  region: RegionalMeta
+  fromCents: number | null
+  onClick: () => void
+}) {
+  return (
+    <div
+      className="feat-card"
+      data-c={region.code}
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onClick()
+        }
+      }}
+    >
+      <div className="img" />
+      <div className="flag-chip">
+        {region.icon} {region.code}
+      </div>
+      <div className="body">
+        <div>
+          <span className="name">{region.name}</span>
+          <span className="sub">{region.scope}</span>
         </div>
         <div className="price">
           from

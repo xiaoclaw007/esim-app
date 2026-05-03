@@ -509,6 +509,14 @@ input, select, textarea { font: inherit; color: inherit; }
 .feat-card[data-c="TR"] .img { background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,.55)), linear-gradient(180deg, #B83A3A 0%, #5A1818 100%); }
 .feat-card[data-c="MX"] .img { background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,.55)), linear-gradient(180deg, #D98E3B 0%, #6E3D12 100%); }
 
+/* Regional pack gradients — match the destination detail hero treatments. */
+.feat-card[data-c="EU"]  .img { background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,.55)), linear-gradient(180deg, #2B4A82 0%, #0E1F46 100%); }
+.feat-card[data-c="AP"]  .img { background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,.55)), linear-gradient(180deg, #4A9E8A 0%, #1E4D44 100%); }
+.feat-card[data-c="CHM"] .img { background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,.55)), linear-gradient(180deg, #C4333A 0%, #6A1820 100%); }
+
+/* 3-column variant for the Regional tab (only 3 regional packs today). */
+.feat-grid--3 { grid-template-columns: repeat(3, 1fr); }
+
 .feat-card .body {
   position: absolute;
   inset: auto 0 0 0;
@@ -1301,6 +1309,7 @@ img, svg { max-width: 100%; }
   .hero-grid, .detail-hero-inner, .checkout { grid-template-columns: 1fr; }
   .checkout-right { border-left: 0; border-top: 1px solid var(--line); }
   .feat-grid { grid-template-columns: repeat(2, 1fr); }
+  .feat-grid--3 { grid-template-columns: repeat(2, 1fr); }
   .how, .reviews, .plans-grid, .regional-banner { grid-template-columns: 1fr; }
   .country-grid { grid-template-columns: repeat(2, 1fr); }
   .detail-info { grid-template-columns: 1fr; }
@@ -1346,6 +1355,7 @@ img, svg { max-width: 100%; }
   .section-head { flex-direction: column; align-items: flex-start; margin-bottom: 28px; }
   .section-head .btn.ghost { align-self: flex-start; }
   .feat-grid { grid-template-columns: 1fr; gap: 14px; }
+  .feat-grid--3 { grid-template-columns: 1fr; gap: 14px; }
   .feat-card { aspect-ratio: 16/10; } /* portrait 3/4 wastes vertical space on phones */
   .footer { padding: 48px 20px 32px; }
   .footer-inner { grid-template-columns: 1fr; gap: 32px; }
