@@ -159,8 +159,6 @@ body { margin: 0; padding: 40px 24px; background: #F1EFE6; font-family: -apple-s
 .stamp { position: absolute; top: 30px; right: 30px; width: 92px; height: 116px; background: #FBFAF5; border: 2px dashed #16382A; padding: 6px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: space-between; transform: rotate(3deg); z-index: 2; }
 .stamp .crest { width: 52px; height: 52px; border-radius: 50%; background: #C4633A; display: flex; align-items: center; justify-content: center; color: #FBFAF5; font-family: Georgia, serif; font-style: italic; font-size: 22px; font-weight: 700; }
 .stamp .denom { font-family: ui-monospace, Menlo, monospace; font-size: 9px; letter-spacing: 0.15em; color: #16382A; text-transform: uppercase; text-align: center; line-height: 1.3; }
-.postmark { position: absolute; top: 140px; right: 40px; width: 130px; height: 130px; border: 2px solid #16382A; border-radius: 50%; opacity: .35; display: flex; flex-direction: column; align-items: center; justify-content: center; transform: rotate(-12deg); font-family: ui-monospace, Menlo, monospace; text-transform: uppercase; font-size: 9px; letter-spacing: 0.2em; color: #16382A; z-index: 1; text-align: center; line-height: 1.4; }
-.postmark::before { content: ''; position: absolute; inset: 8px; border: 1px dashed #16382A; border-radius: 50%; }
 .inner { padding: 56px 54px; position: relative; z-index: 0; }
 .eyebrow { font-family: ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: #7B8E82; margin-bottom: 28px; }
 h1 { font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif; font-style: italic; font-weight: 400; font-size: 56px; line-height: 1.02; letter-spacing: -0.02em; margin: 0 0 18px 0; color: #16382A; max-width: 12ch; }
@@ -170,12 +168,26 @@ h1 { font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif; font-s
 .divider { display: flex; align-items: center; gap: 14px; margin: 36px 0; }
 .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #D9D6C6; }
 .divider span { font-family: ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: #7B8E82; }
-.qr-line { display: flex; gap: 28px; align-items: center; background: #F1EFE6; padding: 26px; border-radius: 6px; border: 1px solid #D9D6C6; }
-.qr-box { width: 140px; height: 140px; background: #FBFAF5; padding: 10px; box-sizing: border-box; border: 1px solid #D9D6C6; flex-shrink: 0; }
-.qr-box img { width: 120px; height: 120px; display: block; }
-.qr-copy h4 { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 22px; margin: 0 0 8px 0; color: #16382A; }
-.qr-copy p { margin: 0; font-size: 14px; color: #375948; line-height: 1.5; }
-.chip { display: inline-block; margin-top: 12px; margin-right: 8px; padding: 8px 12px; background: #16382A; color: #F1EFE6; font-family: ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; border-radius: 2px; text-decoration: none; }
+/* QR card — vertical stack: QR centered on top, caption below.
+   Table-based to survive Outlook + narrow mobile clients without flex. */
+.qr-card { background: #F1EFE6; padding: 28px 24px; border-radius: 6px; border: 1px solid #D9D6C6; text-align: center; }
+.qr-box { display: inline-block; width: 160px; height: 160px; background: #FBFAF5; padding: 10px; box-sizing: border-box; border: 1px solid #D9D6C6; }
+.qr-box img { width: 140px; height: 140px; display: block; }
+.qr-h4 { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 22px; margin: 18px 0 6px 0; color: #16382A; }
+.qr-p { margin: 0 auto; max-width: 36ch; font-size: 14px; color: #375948; line-height: 1.55; }
+
+/* One-tap install — sibling to the QR, positioned as the alternative
+   path for newer iOS / Android. Two side-by-side buttons via a 2-cell
+   table (works in MSO + mobile clients). */
+.tap-section { margin-top: 24px; padding: 22px 24px 24px; background: #FBFAF5; border: 1px solid #D9D6C6; border-radius: 6px; }
+.tap-eyebrow { font-family: ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: #7B8E82; text-align: center; margin: 0 0 6px 0; }
+.tap-h4 { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 22px; color: #16382A; text-align: center; margin: 0 0 6px 0; }
+.tap-sub { text-align: center; font-size: 13px; color: #7B8E82; margin: 0 auto 18px; max-width: 38ch; line-height: 1.5; }
+.tap-tbl { width: 100%; border-collapse: separate; border-spacing: 8px 0; }
+.tap-tbl td { width: 50%; padding: 0; }
+.tap-btn { display: block; padding: 14px 12px; background: #16382A; color: #F1EFE6; font-family: ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; text-decoration: none; text-align: center; border-radius: 3px; }
+.tap-btn .arr { margin-left: 4px; }
+.tap-fine { text-align: center; font-size: 11px; color: #9BABA0; margin: 14px 0 0; font-family: ui-monospace, Menlo, monospace; letter-spacing: 0.06em; }
 .meta-tbl { width: 100%; border-collapse: separate; border-spacing: 1px; background: #D9D6C6; margin-top: 32px; border: 1px solid #D9D6C6; }
 .meta-tbl td { background: #FBFAF5; padding: 14px 12px; vertical-align: top; width: 25%; }
 .meta-tbl small { font-family: ui-monospace, Menlo, monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #7B8E82; display: block; margin-bottom: 4px; }
@@ -191,7 +203,6 @@ h1 { font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif; font-s
       <div class="crest">N</div>
       <div class="denom">Nimvoy · {{ stamp_iso3 }}<br>{{ stamp_year }}</div>
     </div>
-    <div class="postmark">{{ postmark_city }}<br>✦<br>{{ postmark_date }}</div>
 
     <div class="inner">
       <div class="eyebrow">A postcard from Nimvoy — order {{ reference }}</div>
@@ -212,21 +223,30 @@ h1 { font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif; font-s
 
       <div class="divider"><span>Affix here</span></div>
 
-      <div class="qr-line">
+      <div class="qr-card">
         <div class="qr-box">
           <img src="cid:qrcode" alt="eSIM activation QR" />
         </div>
-        <div class="qr-copy">
-          <h4>The square in question</h4>
-          <p>Open your camera. Point it here. Tap the prompt. Your phone does the rest — no account, no app.</p>
+        <h4 class="qr-h4">The square in question</h4>
+        <p class="qr-p">Open your camera. Point it here. Tap the prompt. Your phone does the rest — no account, no app.</p>
+      </div>
+
+      {% if apple_install_url or android_install_url %}
+      <div class="tap-section">
+        <p class="tap-eyebrow">Or skip the scan</p>
+        <h4 class="tap-h4">One-tap install</h4>
+        <p class="tap-sub">Reading this on the phone you'll use? Tap below — your system pops the eSIM setup straight away.</p>
+        <table class="tap-tbl" role="presentation" cellpadding="0" cellspacing="0"><tr>
           {% if apple_install_url %}
-          <a class="chip" href="{{ apple_install_url }}">Install on iPhone →</a>
+          <td><a class="tap-btn" href="{{ apple_install_url }}">Install on iPhone <span class="arr">→</span></a></td>
           {% endif %}
           {% if android_install_url %}
-          <a class="chip" href="{{ android_install_url }}">Install on Android →</a>
+          <td><a class="tap-btn" href="{{ android_install_url }}">Install on Android <span class="arr">→</span></a></td>
           {% endif %}
-        </div>
+        </tr></table>
+        <p class="tap-fine">iOS 17.4+ · Android 10+ with recent Google Play Services</p>
       </div>
+      {% endif %}
 
       <table class="meta-tbl" role="presentation" cellpadding="0" cellspacing="0">
         <tr>
@@ -448,8 +468,6 @@ def send_esim_email(
             speed_label="5G",  # JoyTel doesn't surface per-plan speed; default
             stamp_iso3=meta["iso3"],
             stamp_year=now.year,
-            postmark_city=meta["city"].upper(),
-            postmark_date=now.strftime("%b %d").upper(),
             amount_display=f"{amount_cents / 100:.2f}" if amount_cents else "—",
             apple_install_url=apple_install_url,
             android_install_url=android_install_url,
