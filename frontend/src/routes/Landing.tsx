@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { Stars } from '../components/Stars'
@@ -33,6 +33,13 @@ export default function Landing() {
   // the WorldMap's active arc cycle so they describe the same connection
   // the map is animating, not hardcoded fakes.
   const [activeArc, setActiveArc] = useState<{ a: MapCity; b: MapCity } | null>(null)
+  // MUST be useCallback — a fresh function every render would be a new
+  // prop into WorldMap, fire its useEffect, and create an infinite render
+  // loop (which previously blocked route transitions on this page).
+  const handleActiveArcChange = useCallback(
+    (a: MapCity, b: MapCity) => setActiveArc({ a, b }),
+    [],
+  )
 
   const goTo = (code: string) => navigate(`/destinations/${code.toLowerCase()}`)
   const priceFor = (code: string) => (plans ? fromPrice(plans, code) : null)
@@ -138,7 +145,7 @@ export default function Landing() {
             <div className="hero-map-stage">
               <WorldMap
                 onSelectCountry={goTo}
-                onActiveArcChange={(a, b) => setActiveArc({ a, b })}
+                onActiveArcChange={handleActiveArcChange}
                 width="100%"
                 height="100%"
               />

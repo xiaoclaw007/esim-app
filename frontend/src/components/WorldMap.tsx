@@ -12,7 +12,7 @@
 //   * Active city pins: white outer ring + larger solid circle so the
 //     "live pair" reads at a glance.
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { feature } from 'topojson-client'
 import type { GeometryCollection, Topology } from 'topojson-specification'
 import type { FeatureCollection, MultiPolygon, Polygon } from 'geojson'
@@ -147,17 +147,28 @@ export function WorldMap({
     return () => clearInterval(id)
   }, [])
 
-  // Fire onActiveArcChange on initial render and every cycle so parents
-  // can sync overlays (e.g. the floating info pills) — including the
-  // pin's pre-projected viewBox position, which the parent uses to place
-  // the card next to the active pin.
+  // Stash the callback in a ref so the effect below only depends on
+  // arcIdx — without this, parents passing an inline function (a new
+  // ref every render) would create an infinite render loop:
+  //   parent renders → new callback prop → effect fires → effect calls
+  //   callback → setState in parent → parent re-renders → new callback…
+  const onActiveArcChangeRef = useRef(onActiveArcChange)
   useEffect(() => {
-    if (!onActiveArcChange) return
+    onActiveArcChangeRef.current = onActiveArcChange
+  }, [onActiveArcChange])
+
+  // Fire on initial render and every cycle so parents can sync overlays
+  // (e.g. the floating info pills) — including the pin's pre-projected
+  // viewBox position, which the parent uses to place the card next to
+  // the active pin.
+  useEffect(() => {
+    const cb = onActiveArcChangeRef.current
+    if (!cb) return
     const [aCode, bCode] = ARC_PAIRS[arcIdx]
     const a = CITIES_PROJECTED.find((c) => c.code === aCode)!
     const b = CITIES_PROJECTED.find((c) => c.code === bCode)!
-    onActiveArcChange(a, b)
-  }, [arcIdx, onActiveArcChange])
+    cb(a, b)
+  }, [arcIdx])
 
   // 2.4° dot grid clipped to land. ~5k visible dots — dense enough to
   // texture but cheap to render.
