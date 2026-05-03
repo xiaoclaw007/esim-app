@@ -447,6 +447,13 @@ input, select, textarea { font: inherit; color: inherit; }
   85%  { opacity: 1; }
   100% { stroke-dashoffset: 0;   opacity: 0; }
 }
+/* Companion fade for the "City → City" label on each arc cycle. */
+@keyframes worldmap-label-fade {
+  0%   { opacity: 0; }
+  20%  { opacity: 0.85; }
+  80%  { opacity: 0.85; }
+  100% { opacity: 0; }
+}
 
 /* globe info card floating */
 .globe-card {
