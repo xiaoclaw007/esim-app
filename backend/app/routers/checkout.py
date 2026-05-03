@@ -125,26 +125,36 @@ def validate_coupon_endpoint(
     )
 
 
-@router.post("/payment-intent", response_model=Union[PaymentIntentResponse, FreeOrderResponse])
-def create_payment_intent_endpoint(
+@router.post("/orders", response_model=Union[PaymentIntentResponse, FreeOrderResponse])
+def create_order_endpoint(
     request: CheckoutRequest,
     background: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_optional_user),
 ) -> Any:
-    """Create an Order + Stripe PaymentIntent (or skip Stripe entirely for a
-    100%-off coupon) for the on-site Payment Element.
+    """Create an Order at the moment the customer clicks Pay.
 
-    Flow:
-      1. Validate the plan (active, exists).
-      2. If a coupon code was supplied, re-validate it (race-safe; we run
-         the same check the frontend ran).
-      3. If the discount makes the order $0: bypass Stripe — create the
-         Order in "paid" state, redeem the coupon (atomic), submit to JoyTel
-         in the background, return FreeOrderResponse.
-      4. Otherwise: create the Order in "created" state, create a Stripe
-         PaymentIntent for the discounted amount, return client_secret.
-         Coupon usage is consumed by the Stripe webhook on success.
+    Two distinct paths:
+
+      Standard (Stripe-paid order):
+        1. Validate plan + coupon.
+        2. Create Order row with status='created' — meaning "Pay was clicked,
+           Stripe is processing." This is a real intent-to-pay signal, not a
+           browse signal — the FE only POSTs here when the customer hits Pay
+           and the card form has client-side-validated.
+        3. Create the Stripe PaymentIntent for the discounted amount.
+        4. Return client_secret + order_reference. The frontend then calls
+           stripe.confirmPayment with the client_secret. The webhook
+           (payment_intent.succeeded / payment_intent.payment_failed)
+           transitions the existing row instead of creating a new one.
+
+      Free-coupon (100% off, Stripe bypassed):
+        1. Same validation.
+        2. Create Order with status='payment_received' (no Stripe involved).
+        3. Atomically redeem the coupon.
+        4. Submit to JoyTel in background → status='ordering'.
+        5. Return FreeOrderResponse so the FE skips Stripe and navigates
+           straight to /order/<reference>.
     """
     email = request.email
     if not email and current_user:
@@ -156,8 +166,9 @@ def create_payment_intent_endpoint(
     if not plan:
         raise HTTPException(status_code=404, detail="Plan not found")
 
-    # Coupon evaluation (optional). Re-runs at PaymentIntent time defends
-    # against a coupon that expired between Apply and Pay.
+    # Coupon evaluation (optional). Re-runs server-side regardless of what
+    # the frontend's apply step computed — defends against expiry / cap-hit
+    # races between Apply and Pay.
     discount_cents = 0
     final_cents = plan.price_cents
     coupon_id: Optional[str] = None
@@ -174,7 +185,7 @@ def create_payment_intent_endpoint(
         coupon_code = ev.coupon.code if ev.coupon else None
         is_free = ev.free
 
-    # ----- 100%-off bypass: Stripe rejects $0 PaymentIntents anyway -----
+    # ===== Free-coupon (100% off) bypass — Stripe rejects $0 PaymentIntents =====
     if is_free:
         if not coupon_id:
             raise HTTPException(status_code=400, detail="Free orders require a coupon")
@@ -184,7 +195,7 @@ def create_payment_intent_endpoint(
             plan_id=plan.id,
             amount_cents=0,
             currency=plan.currency,
-            status="paid",  # no Stripe step needed
+            status="payment_received",  # no Stripe involved; payment is implicit via coupon
             user_id=current_user.id if current_user else None,
             coupon_id=coupon_id,
             coupon_code=coupon_code,
@@ -194,21 +205,19 @@ def create_payment_intent_endpoint(
         db.commit()
         db.refresh(order)
 
-        # Atomic redemption. If the cap was just hit by a parallel redeem,
-        # roll back the order — refusal is safer than handing out an extra
-        # free eSIM.
+        # Atomic redemption — if the cap was just hit by a parallel redeem,
+        # roll back the order (safer than handing out an extra free eSIM).
         if not coupons_service.redeem(db, coupon_id):
             db.delete(order)
             db.commit()
             raise HTTPException(status_code=400, detail="This coupon has reached its usage limit.")
 
-        # Submit to JoyTel directly — the Stripe webhook would normally do
-        # this, but we don't have one to fire. Run in the background so the
-        # response returns fast; the customer gets the order page status
-        # poller and the eSIM email when it lands.
+        # Submit to JoyTel directly — no Stripe webhook will fire to do it
+        # for us. Background task so the HTTP response returns fast; the
+        # customer's order page polls status from there.
         order_tid = generate_order_tid()
         order.joytel_order_id = order_tid
-        order.status = "joytel_pending"
+        order.status = "ordering"
         db.commit()
 
         async def _submit_free():
@@ -219,16 +228,15 @@ def create_payment_intent_endpoint(
                     email=order.email,
                 )
                 if result.get("code") != 0:
-                    logger.error(
-                        f"Free order {order.reference}: JoyTel rejected: {result}"
-                    )
+                    logger.error(f"Free order {order.reference}: JoyTel rejected: {result}")
             except Exception as e:
                 logger.error(f"Free order {order.reference}: JoyTel submit failed: {e}")
 
         background.add_task(_submit_free)
 
         logger.info(
-            f"Order {order.reference} created free via coupon {coupon_code} (discount {discount_cents}c) — JoyTel submit dispatched"
+            f"Order {order.reference} created free via coupon {coupon_code} "
+            f"(discount {discount_cents}c) — JoyTel submit dispatched"
         )
 
         return FreeOrderResponse(
@@ -237,13 +245,13 @@ def create_payment_intent_endpoint(
             coupon_code=coupon_code or "",
         )
 
-    # ----- Standard Stripe flow -----
+    # ===== Standard Stripe flow =====
     order = Order(
         email=email,
         plan_id=plan.id,
         amount_cents=final_cents,
         currency=plan.currency,
-        status="created",
+        status="created",  # Pay was clicked, Stripe is processing
         user_id=current_user.id if current_user else None,
         coupon_id=coupon_id,
         coupon_code=coupon_code,
@@ -257,13 +265,18 @@ def create_payment_intent_endpoint(
         intent = create_payment_intent(order, plan, override_amount_cents=final_cents)
     except Exception as e:
         logger.error(f"Stripe PaymentIntent creation failed: {e}")
-        order.status = "failed"
+        order.status = "payment_failed"
         order.error_message = f"Stripe error: {e}"
         db.commit()
         raise HTTPException(status_code=500, detail="Failed to create payment intent")
 
     order.stripe_payment_intent = intent.id
     db.commit()
+
+    logger.info(
+        f"Order {order.reference} created (status=created); "
+        f"Stripe PaymentIntent {intent.id} awaiting customer confirmation"
+    )
 
     return PaymentIntentResponse(
         client_secret=intent.client_secret,

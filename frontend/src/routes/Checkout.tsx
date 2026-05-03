@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js'
 import { loadStripe, type Stripe, type StripeElementsOptions } from '@stripe/stripe-js'
@@ -6,7 +6,7 @@ import { Icon } from '../components/Icon'
 import { useAuth } from '../auth/AuthContext'
 import { useCatalog } from '../hooks/useCatalog'
 import {
-  createPaymentIntent,
+  createOrder,
   fetchStripePublishableKey,
   validateCoupon,
   type CouponValidateResponse,
@@ -18,6 +18,11 @@ import {
   priceDollars,
   type Plan,
 } from '../data/catalog'
+
+// Stripe Elements is mounted in "deferred PaymentMethod" mode — we declare
+// just the amount + currency at mount, no clientSecret. The PaymentIntent
+// (and our Order row) is only created when the customer clicks Pay. See
+// project_orders_redesign memory for why.
 
 export default function Checkout() {
   const [params] = useSearchParams()
@@ -56,9 +61,8 @@ export default function Checkout() {
     setCouponError(null)
     try {
       const r = await validateCoupon(couponInput.trim(), plan.id)
-      if (r.valid) {
-        setCoupon(r)
-      } else {
+      if (r.valid) setCoupon(r)
+      else {
         setCoupon(null)
         setCouponError(r.error || 'Invalid code')
       }
@@ -73,57 +77,9 @@ export default function Checkout() {
     setCoupon(null)
     setCouponInput('')
     setCouponError(null)
-    // Reset intent so it gets re-created at full price.
-    setIntent(null)
-    requestedForRef.current = null
   }
 
-  // ---- Stripe PaymentIntent (skip entirely if coupon makes it free) ----
-  const [intent, setIntent] = useState<{
-    clientSecret: string
-    orderReference: string
-    amount: number
-  } | null>(null)
-  const [creatingIntent, setCreatingIntent] = useState(false)
-  const [intentError, setIntentError] = useState<string | null>(null)
-  const requestedForRef = useRef<string | null>(null)
-
-  useEffect(() => {
-    if (!plan) return
-    if (!isValidEmail(email)) return
-    // Free orders use a dedicated "Claim" button — no auto-create.
-    if (isFree) return
-    const fingerprint = `${plan.id}|${email.trim().toLowerCase()}|${coupon?.code || ''}`
-    if (requestedForRef.current === fingerprint) return
-    requestedForRef.current = fingerprint
-    setCreatingIntent(true)
-    setIntentError(null)
-    const t = setTimeout(() => {
-      createPaymentIntent(plan.id, email.trim(), coupon?.code || undefined)
-        .then((res) => {
-          if (!res.client_secret) {
-            // Backend decided to short-circuit (e.g., coupon now makes it free
-            // — race between Apply and Pay). Fall through to free flow on next
-            // render.
-            return
-          }
-          setIntent({
-            clientSecret: res.client_secret,
-            orderReference: res.order_reference,
-            amount: res.amount_cents,
-          })
-        })
-        .catch((err: Error) => {
-          setIntent(null)
-          setIntentError(err.message || 'Failed to create payment')
-          requestedForRef.current = null
-        })
-        .finally(() => setCreatingIntent(false))
-    }, 350)
-    return () => clearTimeout(t)
-  }, [email, plan, coupon, isFree])
-
-  // ---- Free-order claim ----
+  // ---- Free-order claim (100%-off coupon, no Stripe involved) ----
   const [claiming, setClaiming] = useState(false)
   const [claimError, setClaimError] = useState<string | null>(null)
   async function onClaimFree() {
@@ -135,7 +91,7 @@ export default function Checkout() {
     setClaiming(true)
     setClaimError(null)
     try {
-      const res = await createPaymentIntent(plan.id, email.trim(), coupon.code)
+      const res = await createOrder(plan.id, email.trim(), coupon.code)
       if (!res.free || !res.order_reference) {
         throw new Error("Couldn't claim free order — please try again")
       }
@@ -176,24 +132,26 @@ export default function Checkout() {
   const discount = coupon?.valid ? coupon.discount_cents : 0
   const total = Math.max(0, subtotal - discount)
 
-  const elementsOptions: StripeElementsOptions | null = intent
-    ? {
-        clientSecret: intent.clientSecret,
-        appearance: {
-          theme: 'flat',
-          variables: {
-            colorPrimary: '#0B1F3A',
-            colorBackground: '#FFFFFF',
-            colorText: '#0B1F3A',
-            colorTextSecondary: '#6B7A8E',
-            colorDanger: '#E85D3C',
-            fontFamily: 'Geist, -apple-system, sans-serif',
-            borderRadius: '10px',
-            spacingUnit: '4px',
-          },
-        },
-      }
-    : null
+  // Deferred Elements options. Amount is initial-only; PaymentForm calls
+  // elements.update({ amount }) when the coupon changes.
+  const elementsOptions: StripeElementsOptions = {
+    mode: 'payment',
+    amount: Math.max(50, total), // Stripe requires >= 50 cents at mount; if free we never call confirmPayment
+    currency: plan.currency,
+    appearance: {
+      theme: 'flat',
+      variables: {
+        colorPrimary: '#0B1F3A',
+        colorBackground: '#FFFFFF',
+        colorText: '#0B1F3A',
+        colorTextSecondary: '#6B7A8E',
+        colorDanger: '#E85D3C',
+        fontFamily: 'Geist, -apple-system, sans-serif',
+        borderRadius: '10px',
+        spacingUnit: '4px',
+      },
+    },
+  }
 
   return (
     <div className="checkout">
@@ -239,7 +197,7 @@ export default function Checkout() {
           <PromptBox>Enter your email above to continue.</PromptBox>
         )}
 
-        {/* Free-order branch: skip Stripe entirely. */}
+        {/* Free-order branch: no Stripe needed */}
         {isValidEmail(email) && isFree && (
           <div
             style={{
@@ -266,29 +224,21 @@ export default function Checkout() {
           </div>
         )}
 
-        {/* Standard Stripe Elements branch */}
-        {isValidEmail(email) && !isFree && intentError && (
-          <div
-            style={{
-              padding: 16,
-              background: '#FFECE7',
-              color: 'var(--pop)',
-              borderRadius: 10,
-              fontSize: 14,
-            }}
-          >
-            {intentError}
-          </div>
-        )}
-
-        {isValidEmail(email) && !isFree && !intentError && (creatingIntent || !intent || !stripePromise) && (
-          <PromptBox>Preparing secure payment form…</PromptBox>
-        )}
-
-        {!isFree && stripePromise && elementsOptions && intent && (
+        {/* Standard Stripe Elements branch — deferred mode */}
+        {isValidEmail(email) && !isFree && stripePromise && (
           <Elements stripe={stripePromise} options={elementsOptions}>
-            <PaymentForm amountCents={intent.amount} orderReference={intent.orderReference} />
+            <PaymentForm
+              planId={plan.id}
+              email={email.trim()}
+              couponCode={coupon?.code || undefined}
+              totalCents={total}
+              currency={plan.currency}
+            />
           </Elements>
+        )}
+
+        {isValidEmail(email) && !isFree && !stripePromise && (
+          <PromptBox>Loading payment form…</PromptBox>
         )}
       </div>
 
@@ -358,6 +308,125 @@ export default function Checkout() {
   )
 }
 
+// PaymentForm is rendered inside <Elements>. Calls elements.update({ amount })
+// when the coupon-adjusted total changes; on Pay click it submits the form,
+// creates the Order via /api/orders (which also creates the PaymentIntent),
+// then calls stripe.confirmPayment with the returned client_secret.
+function PaymentForm({
+  planId,
+  email,
+  couponCode,
+  totalCents,
+  currency,
+}: {
+  planId: string
+  email: string
+  couponCode?: string
+  totalCents: number
+  currency: string
+}) {
+  const stripe = useStripe()
+  const elements = useElements()
+  const navigate = useNavigate()
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // When the coupon is applied/removed, push the new amount to Elements so
+  // the wallet buttons (Apple Pay etc.) display the right total.
+  useEffect(() => {
+    if (!elements) return
+    elements.update({ amount: Math.max(50, totalCents), currency })
+  }, [elements, totalCents, currency])
+
+  async function onPay() {
+    if (!stripe || !elements) return
+    setSubmitting(true)
+    setError(null)
+
+    // 1. Client-side validate the form (formats, required fields, etc.)
+    const { error: submitError } = await elements.submit()
+    if (submitError) {
+      setError(submitError.message ?? 'Please check your card details')
+      setSubmitting(false)
+      return
+    }
+
+    // 2. Create the Order + PaymentIntent on our backend.
+    let orderResp
+    try {
+      orderResp = await createOrder(planId, email, couponCode)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not start payment')
+      setSubmitting(false)
+      return
+    }
+
+    // Free-order shouldn't reach here (handled by separate "Claim free" button),
+    // but guard anyway so a race doesn't drop the user.
+    if (orderResp.free) {
+      navigate(`/order/${encodeURIComponent(orderResp.order_reference)}`)
+      return
+    }
+
+    if (!orderResp.client_secret) {
+      setError('Payment system returned an unexpected response')
+      setSubmitting(false)
+      return
+    }
+
+    // 3. Confirm payment with Stripe. Stripe redirects to return_url on success
+    //    (or surfaces an error here on synchronous failure like a hard decline).
+    const returnUrl = `${window.location.origin}/order/${encodeURIComponent(orderResp.order_reference)}`
+    const { error: stripeError } = await stripe.confirmPayment({
+      elements,
+      clientSecret: orderResp.client_secret,
+      confirmParams: { return_url: returnUrl },
+    })
+
+    if (stripeError) {
+      setError(stripeError.message ?? 'Payment failed. Please try again.')
+      setSubmitting(false)
+      // Note: the Order row is now in 'created' state. Stripe will fire
+      // payment_intent.payment_failed shortly after, which our webhook
+      // catches and transitions the row to 'payment_failed'. The user
+      // can retry — that creates a fresh Order + PaymentIntent.
+    }
+  }
+
+  return (
+    <>
+      <PaymentElement />
+      {error && (
+        <div
+          style={{
+            marginTop: 12,
+            padding: 12,
+            background: '#FFECE7',
+            color: 'var(--pop)',
+            borderRadius: 8,
+            fontSize: 13,
+          }}
+        >
+          {error}
+        </div>
+      )}
+      <div style={{ marginTop: 24 }}>
+        <button
+          className="btn primary lg block"
+          disabled={!stripe || !elements || submitting}
+          onClick={onPay}
+        >
+          <Icon name="lock" size={14} />
+          {submitting ? 'Processing…' : `Pay $${priceDollars(totalCents)} — Get my eSIM`}
+        </button>
+        <div className="secure-badge">
+          <Icon name="lock" size={12} /> SECURED BY STRIPE · PCI-DSS · 256-BIT TLS
+        </div>
+      </div>
+    </>
+  )
+}
+
 function PromptBox({ children }: { children: React.ReactNode }) {
   return (
     <div
@@ -394,8 +463,6 @@ function CouponRow({
 }) {
   const [expanded, setExpanded] = useState(false)
   const applied = coupon?.valid
-
-  // Auto-expand if there's already a coupon applied or an error to surface.
   const open = expanded || applied || !!error
 
   return (
@@ -480,63 +547,6 @@ function CouponRow({
         </div>
       )}
     </div>
-  )
-}
-
-function PaymentForm({ amountCents, orderReference }: { amountCents: number; orderReference: string }) {
-  const stripe = useStripe()
-  const elements = useElements()
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  async function onPay() {
-    if (!stripe || !elements) return
-    setSubmitting(true)
-    setError(null)
-
-    const returnUrl = `${window.location.origin}/order/${encodeURIComponent(orderReference)}`
-    const { error: stripeError } = await stripe.confirmPayment({
-      elements,
-      confirmParams: { return_url: returnUrl },
-    })
-
-    if (stripeError) {
-      setError(stripeError.message ?? 'Payment failed. Please try again.')
-      setSubmitting(false)
-    }
-  }
-
-  return (
-    <>
-      <PaymentElement />
-      {error && (
-        <div
-          style={{
-            marginTop: 12,
-            padding: 12,
-            background: '#FFECE7',
-            color: 'var(--pop)',
-            borderRadius: 8,
-            fontSize: 13,
-          }}
-        >
-          {error}
-        </div>
-      )}
-      <div style={{ marginTop: 24 }}>
-        <button
-          className="btn primary lg block"
-          disabled={!stripe || !elements || submitting}
-          onClick={onPay}
-        >
-          <Icon name="lock" size={14} />
-          {submitting ? 'Processing…' : `Pay $${priceDollars(amountCents)} — Get my eSIM`}
-        </button>
-        <div className="secure-badge">
-          <Icon name="lock" size={12} /> SECURED BY STRIPE · PCI-DSS · 256-BIT TLS
-        </div>
-      </div>
-    </>
   )
 }
 

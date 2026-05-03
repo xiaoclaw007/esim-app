@@ -20,7 +20,7 @@ function buildTimeline(o: AdminOrderDetail): { label: string; when: string | nul
   if (o.joytel_order_id) steps.push({ label: `Submitted to JoyTel · ${o.joytel_order_id}`, when: null, ok: true })
   if (o.sn_pin) steps.push({ label: 'JoyTel returned snPin', when: null, ok: true })
   if (o.qr_code_data || o.qr_code_url) steps.push({ label: 'QR code delivered', when: null, ok: true })
-  if (o.status === 'completed') steps.push({ label: 'Order complete', when: o.updated_at, ok: true })
+  if (o.status === 'delivered') steps.push({ label: 'Order complete', when: o.updated_at, ok: true })
   if (o.status === 'refunded') steps.push({ label: `Refunded · ${o.stripe_refund_id || '—'}`, when: o.updated_at, ok: true })
   if (o.status === 'failed') steps.push({ label: o.error_message || 'Failed', when: o.updated_at, err: true })
   return steps

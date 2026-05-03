@@ -59,7 +59,7 @@ export default function Account() {
   if (authLoading) return <div className="page-stub">Loading…</div>
   if (!user) return <Navigate to="/login" state={{ from: '/account' }} replace />
 
-  const activeOrders = orders?.filter((o) => o.status === 'completed') ?? []
+  const activeOrders = orders?.filter((o) => o.status === 'delivered') ?? []
 
   return (
     <div className="account">
@@ -183,7 +183,7 @@ function EsimListTab({
               {new Date(o.created_at).toLocaleDateString()}
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
-              {o.status === 'completed' ? (
+              {o.status === 'delivered' ? (
                 <button className="btn subtle sm" onClick={() => onInstall(o.reference)}>
                   View QR
                 </button>
@@ -253,7 +253,7 @@ function OrdersTab({
               ${priceDollars(o.amount_cents)}
             </div>
             <div>
-              <span className={`badge ${o.status === 'completed' ? 'ok' : o.status === 'failed' ? 'pop' : ''}`}>
+              <span className={`badge ${o.status === 'delivered' ? 'ok' : o.status === 'failed' ? 'pop' : ''}`}>
                 {badgeLabel(o.status)}
               </span>
             </div>
@@ -317,35 +317,37 @@ function SupportTab() {
 }
 
 function uiStatusClass(status: string): 'active' | 'inactive' | 'expired' {
-  if (status === 'completed') return 'active'
-  if (status === 'failed') return 'expired'
+  if (status === 'delivered') return 'active'
+  if (status === 'failed' || status === 'payment_failed') return 'expired'
   return 'inactive'
 }
 
 function humanStatus(status: string): string {
+  // Same collapse-to-Processing rule as the customer order page.
   switch (status) {
-    case 'completed':
+    case 'delivered':
       return 'Ready to install'
     case 'failed':
       return 'Failed'
+    case 'payment_failed':
+      return 'Payment failed'
     case 'refunded':
       return 'Refunded'
     case 'created':
       return 'Awaiting payment'
-    case 'paid':
-      return 'Payment received'
-    case 'joytel_pending':
-      return 'Provisioning'
-    case 'snpin_received':
-      return 'Generating QR'
+    case 'payment_received':
+    case 'ordering':
+    case 'qr_pending':
+      return 'Processing'
     default:
       return status
   }
 }
 
 function badgeLabel(status: string): string {
-  if (status === 'completed') return 'PAID'
+  if (status === 'delivered') return 'PAID'
   if (status === 'failed') return 'FAILED'
+  if (status === 'payment_failed') return 'PAYMENT FAILED'
   if (status === 'refunded') return 'REFUNDED'
   return status.toUpperCase()
 }

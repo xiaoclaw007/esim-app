@@ -359,7 +359,7 @@ def admin_list_plans(
         for pid, n in (
             db.query(Order.plan_id, func.count(Order.id))
             .filter(Order.plan_id.in_(plan_ids), Order.created_at >= cutoff)
-            .filter(Order.status.in_(("paid", "joytel_pending", "snpin_received", "completed")))
+            .filter(Order.status.in_(("payment_received", "ordering", "qr_pending", "delivered")))
             .group_by(Order.plan_id)
             .all()
         ):
@@ -400,7 +400,7 @@ class AdminKpiResponse(BaseModel):
 
 
 # Statuses that count as "real revenue" (paid and not refunded back).
-_REVENUE_STATUSES = ("paid", "joytel_pending", "snpin_received", "completed")
+_REVENUE_STATUSES = ("payment_received", "ordering", "qr_pending", "delivered")
 
 
 @router.get("/kpis", response_model=AdminKpiResponse)
@@ -430,7 +430,7 @@ def admin_kpis(
     orders_30d, revenue_30d = _bucket_total(cutoff_30, now)
     orders_prev, revenue_prev = _bucket_total(cutoff_60, cutoff_30)
 
-    completed = db.query(func.count(Order.id)).filter(Order.status == "completed").scalar() or 0
+    completed = db.query(func.count(Order.id)).filter(Order.status == "delivered").scalar() or 0
     failed = (
         db.query(func.count(Order.id))
         .filter(Order.status == "failed", Order.created_at >= cutoff_30)

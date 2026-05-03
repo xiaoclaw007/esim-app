@@ -35,16 +35,18 @@ async def stripe_webhook(
     stripe_signature: str = Header(alias="Stripe-Signature"),
     db: Session = Depends(get_db),
 ):
-    """Handle Stripe payment confirmation (both hosted Checkout and on-site
-    Payment Element flows).
+    """Handle Stripe lifecycle events for an existing Order.
 
-    checkout.session.completed — fired by the legacy hosted flow. We pull
-    the order_id out of session.metadata and the payment intent id off
-    session.payment_intent.
+    Under the redesign, the Order row is created at click-Pay time by
+    POST /api/orders (status='created' with stripe_payment_intent set),
+    so this webhook only TRANSITIONS that row — never creates one.
 
-    payment_intent.succeeded — fired by the React Payment Element flow. The
-    PaymentIntent object has metadata.order_id on it directly, and its own
-    id is the payment_intent.
+    Handled events:
+      payment_intent.succeeded     — created → payment_received → ordering
+      payment_intent.payment_failed — created → payment_failed
+      checkout.session.completed   — legacy hosted flow (kept for the old
+                                     /api/checkout endpoint that may still
+                                     have in-flight sessions)
     """
     payload = await request.body()
 
@@ -57,39 +59,93 @@ async def stripe_webhook(
     event_type = event["type"]
     obj = event["data"]["object"]
 
-    if event_type == "checkout.session.completed":
+    # ----- Resolve payment intent + look up the existing Order row -----
+    if event_type == "payment_intent.succeeded":
+        payment_intent_id = obj.get("id")
+    elif event_type == "payment_intent.payment_failed":
+        payment_intent_id = obj.get("id")
+        return _handle_payment_failed(db, obj, payment_intent_id)
+    elif event_type == "checkout.session.completed":
+        # Legacy hosted-checkout path: order_id comes from metadata, not PI lookup.
         order_id = (obj.get("metadata") or {}).get("order_id")
         payment_intent_id = obj.get("payment_intent")
-    elif event_type == "payment_intent.succeeded":
-        order_id = (obj.get("metadata") or {}).get("order_id")
-        payment_intent_id = obj.get("id")
+        order = db.query(Order).filter(Order.id == order_id).first() if order_id else None
+        if not order:
+            logger.error(f"Stripe checkout.session.completed: order {order_id} not found")
+            raise HTTPException(status_code=404, detail="Order not found")
+        return await _process_paid_order(db, order, payment_intent_id, event_type)
     else:
         return {"status": "ignored"}
 
-    if not order_id:
-        logger.error(f"Stripe {event_type}: missing metadata.order_id on {obj.get('id')}")
+    if not payment_intent_id:
+        logger.error(f"Stripe {event_type}: missing payment_intent id on {obj.get('id')}")
         return {"status": "ignored"}
 
-    order = db.query(Order).filter(Order.id == order_id).first()
+    order = db.query(Order).filter(Order.stripe_payment_intent == payment_intent_id).first()
     if not order:
-        logger.error(f"Stripe webhook: order {order_id} not found")
-        raise HTTPException(status_code=404, detail="Order not found")
+        # Defense-in-depth: under the new design we create the Order at
+        # click-Pay before the PaymentIntent is confirmed, so this lookup
+        # should always succeed. If it doesn't, log loudly — could be a
+        # webhook firing for an intent we never tracked, or a race where
+        # the row write hasn't committed yet (unlikely given the order of
+        # operations in /api/orders).
+        logger.error(
+            f"Stripe webhook {event_type}: no Order found for PaymentIntent {payment_intent_id}"
+        )
+        return {"status": "ignored"}
 
-    # Idempotency guard — Stripe retries deliveries; a second identical event
-    # shouldn't re-submit the order to JoyTel.
+    return await _process_paid_order(db, order, payment_intent_id, event_type)
+
+
+def _handle_payment_failed(db: Session, obj: dict, payment_intent_id: str | None) -> dict:
+    """payment_intent.payment_failed: card declined, 3DS abandoned, etc.
+    Transition the existing Order from 'created' to 'payment_failed' so
+    the CRM can surface decline visibility.
+    """
+    if not payment_intent_id:
+        return {"status": "ignored"}
+    order = db.query(Order).filter(Order.stripe_payment_intent == payment_intent_id).first()
+    if not order:
+        logger.warning(f"payment_failed: no Order found for PaymentIntent {payment_intent_id}")
+        return {"status": "ignored"}
+    if order.status != "created":
+        # Already terminal (rare race). Don't override.
+        logger.info(
+            f"Order {order.reference} payment_failed received but already in {order.status}; ignoring"
+        )
+        return {"status": "ok"}
+    order.status = "payment_failed"
+    err = (obj.get("last_payment_error") or {}).get("message") or "Payment declined"
+    order.error_message = err[:500]
+    db.commit()
+    logger.info(f"Order {order.reference}: payment_failed — {err}")
+    return {"status": "ok"}
+
+
+async def _process_paid_order(
+    db: Session,
+    order: Order,
+    payment_intent_id: str | None,
+    event_type: str,
+) -> dict:
+    """Shared post-payment pipeline. Idempotent: re-runs of the same event
+    against an already-advanced order are ignored."""
+    # Idempotency: only process if still at 'created' (or legacy 'failed' for
+    # retry recovery from the old code path).
     if order.status not in ("created", "failed"):
-        logger.info(f"Order {order.reference} already in status {order.status}; ignoring {event_type}")
+        logger.info(
+            f"Order {order.reference} already in status {order.status}; ignoring {event_type}"
+        )
         return {"status": "ok"}
 
-    order.status = "paid"
-    if payment_intent_id:
+    order.status = "payment_received"
+    if payment_intent_id and not order.stripe_payment_intent:
         order.stripe_payment_intent = payment_intent_id
     db.commit()
 
     # Consume the coupon use now that Stripe has actually charged the card.
-    # Ignore failure — at this point the order is paid; the coupon-cap
-    # accounting being slightly off is a much smaller problem than refusing
-    # a successful payment.
+    # Ignore failure — order is paid; coupon-cap accounting being slightly off
+    # is a much smaller problem than refusing a successful payment.
     if order.coupon_id:
         if coupons_service.redeem(db, order.coupon_id):
             logger.info(f"Order {order.reference}: redeemed coupon {order.coupon_code}")
@@ -124,7 +180,7 @@ async def stripe_webhook(
         if result.get("code") != 0:
             raise RuntimeError(f"JoyTel rejected order: {result}")
 
-        order.status = "joytel_pending"
+        order.status = "ordering"
         db.commit()
 
         logger.info(f"Order {order.reference} submitted to JoyTel: {result}")
@@ -134,8 +190,8 @@ async def stripe_webhook(
         order.error_message = f"JoyTel order failed: {str(e)}"
 
         # Automatic refund: customer was charged but we can't fulfill. Reverse
-        # the Stripe charge so they don't have to chase support. If the refund
-        # itself fails, keep the order at `failed` for manual intervention.
+        # the Stripe charge so they don't chase support. If the refund itself
+        # fails, keep the order at 'failed' for manual intervention.
         if order.stripe_payment_intent and not order.stripe_refund_id:
             try:
                 refund = refund_payment_intent(
@@ -146,7 +202,8 @@ async def stripe_webhook(
                 order.status = "refunded"
                 db.commit()
                 logger.info(
-                    f"Order {order.reference}: auto-refunded Stripe payment {order.stripe_payment_intent} → {refund.id}"
+                    f"Order {order.reference}: auto-refunded Stripe payment "
+                    f"{order.stripe_payment_intent} → {refund.id}"
                 )
 
                 plan_for_email = plan or db.query(Plan).filter(Plan.id == order.plan_id).first()
@@ -161,13 +218,9 @@ async def stripe_webhook(
                     f"Order {order.reference}: Stripe refund FAILED — manual refund needed: {refund_err}"
                 )
                 order.status = "failed"
-                order.error_message = (
-                    f"{order.error_message} | refund failed: {refund_err}"
-                )
+                order.error_message = f"{order.error_message} | refund failed: {refund_err}"
                 db.commit()
         else:
-            # No PaymentIntent recorded (shouldn't happen in M3 flow) OR
-            # already refunded. Mark failed and move on.
             order.status = "failed"
             db.commit()
 
@@ -214,7 +267,7 @@ async def joytel_order_callback(
         return {"status": "ok"}
 
     order.sn_pin = sn_pin
-    order.status = "snpin_received"
+    order.status = "qr_pending"
     db.commit()
 
     logger.info(f"Order {order.reference} got snPin — requesting QR code from RSP+")
@@ -280,7 +333,7 @@ async def joytel_qrcode_callback(
         order.qr_code_url = qrcode
     else:
         order.qr_code_data = qrcode
-    order.status = "completed"
+    order.status = "delivered"
     db.commit()
 
     logger.info(f"Order {order.reference} completed — sending email to {order.email}")

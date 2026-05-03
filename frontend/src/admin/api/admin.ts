@@ -14,12 +14,13 @@ export interface AdminUser {
 }
 
 export type OrderStatus =
-  | 'created'
-  | 'paid'
-  | 'joytel_pending'
-  | 'snpin_received'
-  | 'completed'
-  | 'failed'
+  | 'created'         // Pay clicked, Stripe processing
+  | 'payment_received' // Stripe confirmed
+  | 'ordering'        // Submitted to JoyTel, awaiting their callback
+  | 'qr_pending'      // snPin received, awaiting RSP+ QR callback
+  | 'delivered'       // QR delivered + email sent
+  | 'payment_failed'  // Stripe declined / 3DS abandoned
+  | 'failed'          // Post-payment failure (e.g., JoyTel rejected)
   | 'refunded'
 
 export type AuthKind = 'google' | 'password' | 'guest'

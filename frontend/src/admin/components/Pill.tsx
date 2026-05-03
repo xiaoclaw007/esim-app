@@ -1,12 +1,21 @@
 import type { AuthKind, OrderStatus } from '../api/admin'
 
 const STATUS_PILL: Record<OrderStatus, { label: string; cls: string }> = {
-  created: { label: 'Pending', cls: 'warn' },
-  paid: { label: 'Pending', cls: 'warn' },
-  joytel_pending: { label: 'Pending', cls: 'warn' },
-  snpin_received: { label: 'Pending', cls: 'warn' },
-  completed: { label: 'Delivered', cls: 'ok' },
+  // Brief transient state — Pay was clicked, Stripe is still processing.
+  created: { label: 'Awaiting payment', cls: 'warn' },
+  // Stripe confirmed; webhook just landed.
+  payment_received: { label: 'Processing', cls: 'warn' },
+  // Submitted to JoyTel; awaiting their snPin callback.
+  ordering: { label: 'Processing', cls: 'warn' },
+  // snPin in hand; requested QR from RSP+; awaiting QR callback.
+  qr_pending: { label: 'Processing', cls: 'warn' },
+  // Done — QR delivered, email sent.
+  delivered: { label: 'Delivered', cls: 'ok' },
+  // Card declined / 3DS abandoned at Stripe.
+  payment_failed: { label: 'Payment failed', cls: 'danger' },
+  // Post-payment failure (e.g., JoyTel rejected) requiring manual review.
   failed: { label: 'Failed', cls: 'danger' },
+  // Money returned (auto-refunded after JoyTel failure, or manual).
   refunded: { label: 'Refunded', cls: 'muted' },
 }
 

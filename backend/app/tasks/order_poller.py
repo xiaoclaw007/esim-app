@@ -28,10 +28,9 @@ STALE_THRESHOLD = timedelta(minutes=5)
 
 
 async def poll_pending_orders():
-    """Check for orders stuck in intermediate states and retry.
-
-    Looks for orders that have been in 'joytel_pending' or 'snpin_received'
-    for too long and attempts to recover them.
+    """Check for orders stuck in 'ordering' or 'qr_pending' for too long
+    and try to recover them by polling JoyTel directly. Catches missed
+    callbacks (e.g. our server was briefly down when JoyTel called).
     """
     while True:
         try:
@@ -39,11 +38,10 @@ async def poll_pending_orders():
             now = datetime.now(timezone.utc)
             cutoff = now - STALE_THRESHOLD
 
-            # Find stale orders
             stale_orders = (
                 db.query(Order)
                 .filter(
-                    Order.status.in_(["joytel_pending", "snpin_received"]),
+                    Order.status.in_(["ordering", "qr_pending"]),
                     Order.updated_at < cutoff,
                 )
                 .all()
@@ -53,19 +51,30 @@ async def poll_pending_orders():
                 logger.info(f"Polling stale order {order.reference} (status: {order.status})")
 
                 try:
-                    if order.status == "joytel_pending":
-                        # Check if JoyTel has processed the order
-                        result = await get_order_status(order.id)
-                        sn_pin = result.get("snPin")
+                    if order.status == "ordering":
+                        # JoyTel hasn't called back with the snPin yet — query
+                        # them by the orderTid we sent. Was a 1-line bug here
+                        # (passed order.id instead of order.joytel_order_id);
+                        # fixed during the redesign.
+                        if not order.joytel_order_id:
+                            continue
+                        result = await get_order_status(order.joytel_order_id)
+                        sn_pin = None
+                        for item in (result.get("data") or {}).get("itemList") or []:
+                            for sn in item.get("snList") or []:
+                                if sn.get("snPin"):
+                                    sn_pin = sn["snPin"]
+                                    break
+                            if sn_pin:
+                                break
                         if sn_pin:
                             order.sn_pin = sn_pin
-                            order.status = "snpin_received"
+                            order.status = "qr_pending"
                             db.commit()
-                            # Proceed to redeem
                             await redeem_coupon(sn_pin=sn_pin)
 
-                    elif order.status == "snpin_received" and order.sn_pin:
-                        # Retry RSP+ redemption
+                    elif order.status == "qr_pending" and order.sn_pin:
+                        # snPin in hand but RSP+ never called back — re-redeem.
                         await redeem_coupon(sn_pin=order.sn_pin)
 
                 except Exception as e:

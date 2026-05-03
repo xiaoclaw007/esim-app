@@ -43,7 +43,13 @@ export default function OrderConfirmation() {
         if (cancelled) return
         setOrder(o)
         setPollError(null)
-        if (o.status === 'completed' || o.status === 'failed') return
+        if (
+          o.status === 'delivered' ||
+          o.status === 'failed' ||
+          o.status === 'refunded' ||
+          o.status === 'payment_failed'
+        )
+          return
       } catch (e) {
         if (!cancelled) setPollError(e instanceof Error ? e.message : String(e))
       }
@@ -153,7 +159,7 @@ export default function OrderConfirmation() {
   }
 
   const qrValue = order.qr_code_data || order.qr_code_url || null
-  const finishing = order.status !== 'completed'
+  const finishing = order.status !== 'delivered'
 
   const iosSteps = [
     'Open Settings → Cellular → Add eSIM',
@@ -296,17 +302,20 @@ function OrderDetail({ k, v, mono }: { k: string; v: string; mono?: boolean }) {
 }
 
 function humanStatus(status: string): string {
+  // Customer-facing labels collapse the three in-flight states (payment_received
+  // / ordering / qr_pending) into one "Processing" label — they're typically
+  // <60s combined and exposing each stage adds questions without helping.
   switch (status) {
     case 'created':
-      return 'Waiting for payment'
-    case 'paid':
-      return 'Payment received'
-    case 'joytel_pending':
-      return 'Provisioning'
-    case 'snpin_received':
-      return 'Generating QR'
-    case 'completed':
+      return 'Awaiting payment'
+    case 'payment_received':
+    case 'ordering':
+    case 'qr_pending':
+      return 'Processing'
+    case 'delivered':
       return 'Ready to install'
+    case 'payment_failed':
+      return 'Payment failed'
     case 'failed':
       return 'Failed'
     case 'refunded':

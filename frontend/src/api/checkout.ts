@@ -36,12 +36,16 @@ export async function fetchStripePublishableKey(): Promise<string> {
   return cfg.publishable_key
 }
 
-export async function createPaymentIntent(
+/** Create an Order at click-Pay time. Returns either:
+ *  - PaymentIntentResponse (free=false) → frontend continues with stripe.confirmPayment
+ *  - FreeOrderResponse (free=true) → frontend navigates straight to /order/<ref>
+ */
+export async function createOrder(
   plan_id: string,
   email: string,
   coupon_code?: string,
 ): Promise<PaymentIntentResponse> {
-  return apiFetch<PaymentIntentResponse>('/api/payment-intent', {
+  return apiFetch<PaymentIntentResponse>('/api/orders', {
     method: 'POST',
     body: JSON.stringify(coupon_code ? { plan_id, email, coupon_code } : { plan_id, email }),
   })

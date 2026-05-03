@@ -10,8 +10,9 @@ const dollars = (cents: number) => `$${(cents / 100).toFixed(2)}`
 
 const FILTERS: { id: string | undefined; label: string }[] = [
   { id: undefined, label: 'All' },
-  { id: 'completed', label: 'Delivered' },
-  { id: 'paid', label: 'Pending' },
+  { id: 'delivered', label: 'Delivered' },
+  { id: 'payment_received', label: 'Processing' },
+  { id: 'payment_failed', label: 'Payment failed' },
   { id: 'failed', label: 'Failed' },
   { id: 'refunded', label: 'Refunded' },
 ]
