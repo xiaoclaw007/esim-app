@@ -206,11 +206,29 @@ export function WorldMap({
             animation: `worldmap-arc-draw ${ARC_DURATION_MS}ms cubic-bezier(.4,.05,.2,1) forwards`,
           }}
         />
-        {/* Travelling dot riding the arc — glow filter makes it visible
-            against the dot mask without requiring a huge solid disc. */}
-        <circle r="7.5" fill="var(--pop)" filter="url(#worldmap-traveler-glow)">
-          <animateMotion dur={`${ARC_DURATION_MS}ms`} repeatCount="1" path={arcD} keyPoints="0;1" keyTimes="0;1" />
-          <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.85;1" dur={`${ARC_DURATION_MS}ms`} repeatCount="1" />
+        {/* Travelling dot riding the arc. Glow filter makes it visible
+            against the dot mask without needing a huge solid disc.
+            opacity="0" + fill="freeze" on both animations prevents the
+            dot from reappearing at (0,0) of the SVG between cycles —
+            without freeze, SMIL reverts to attribute defaults when the
+            animation ends. */}
+        <circle r="7.5" fill="var(--pop)" opacity="0" filter="url(#worldmap-traveler-glow)">
+          <animateMotion
+            dur={`${ARC_DURATION_MS}ms`}
+            repeatCount="1"
+            path={arcD}
+            keyPoints="0;1"
+            keyTimes="0;1"
+            fill="freeze"
+          />
+          <animate
+            attributeName="opacity"
+            values="0;1;1;0"
+            keyTimes="0;0.1;0.85;1"
+            dur={`${ARC_DURATION_MS}ms`}
+            repeatCount="1"
+            fill="freeze"
+          />
         </circle>
         {/* "City → City" label that fades in/out with the arc */}
         <text
