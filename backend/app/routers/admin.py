@@ -939,10 +939,12 @@ def analytics_top_destinations(
     else:
         country_expr = func.json_extract(Event.event_metadata, "$.country")
 
+    # IMPORTANT: pass the expression itself to group_by/order_by — Postgres
+    # rejects SELECT aliases there for JSONB expressions.
     rows = (
         db.query(country_expr.label("country"), func.count(Event.id))
         .filter(Event.created_at >= start, Event.type == "destination_view")
-        .group_by("country")
+        .group_by(country_expr)
         .order_by(func.count(Event.id).desc())
         .limit(limit)
         .all()
@@ -1116,11 +1118,12 @@ def analytics_coupon_impact(
     else:
         code_expr = func.json_extract(Event.event_metadata, "$.code")
 
-    # Applications per coupon code.
+    # Applications per coupon code. Pass the expression to group_by — same
+    # gotcha as analytics_top_destinations above.
     apps = (
         db.query(code_expr.label("code"), func.count(Event.id))
         .filter(Event.created_at >= start, Event.type == "coupon_applied")
-        .group_by("code")
+        .group_by(code_expr)
         .all()
     )
     apps_by_code: dict[str, int] = {row[0]: int(row[1]) for row in apps if row[0]}
