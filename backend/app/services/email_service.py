@@ -61,9 +61,6 @@ body { margin: 0; padding: 40px 24px; background: #F1EFE6; font-family: -apple-s
 .wrap { max-width: 620px; margin: 0 auto; }
 .card { background: #FBFAF5; border: 1px solid #D9D6C6; box-shadow: 0 20px 60px rgba(22,56,42,.14); overflow: hidden; border-radius: 4px; position: relative; }
 .card::before { content: ''; position: absolute; inset: 6px; border: 1px solid #D9D6C6; pointer-events: none; border-radius: 2px; }
-.stamp { position: absolute; top: 30px; right: 30px; width: 92px; height: 116px; background: #FBFAF5; border: 2px dashed #16382A; padding: 6px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: space-between; transform: rotate(3deg); z-index: 2; }
-.stamp .crest { width: 52px; height: 52px; border-radius: 50%; background: #C4633A; display: flex; align-items: center; justify-content: center; color: #FBFAF5; font-family: Georgia, serif; font-style: italic; font-size: 22px; font-weight: 700; }
-.stamp .denom { font-family: ui-monospace, Menlo, monospace; font-size: 9px; letter-spacing: 0.15em; color: #16382A; text-transform: uppercase; text-align: center; line-height: 1.3; }
 .inner { padding: 56px 54px; position: relative; z-index: 0; }
 .eyebrow { font-family: ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: #7B8E82; margin-bottom: 28px; }
 h1 { font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif; font-style: italic; font-weight: 400; font-size: 56px; line-height: 1.02; letter-spacing: -0.02em; margin: 0 0 18px 0; color: #16382A; max-width: 14ch; }
@@ -89,11 +86,6 @@ h1 { font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif; font-s
 <body>
 <div class="wrap">
   <div class="card">
-    <div class="stamp">
-      <div class="crest">N</div>
-      <div class="denom">Nimvoy · {{ stamp_iso3 }}<br>{{ stamp_year }}</div>
-    </div>
-
     <div class="inner">
       <div class="eyebrow">A receipt from Nimvoy — order {{ reference }}</div>
 
@@ -171,8 +163,6 @@ def send_payment_confirmation_email(
         html_body = PAYMENT_CONFIRMATION_TEMPLATE.render(
             reference=reference,
             country_name=country_name,
-            stamp_iso3=meta["iso3"],
-            stamp_year=now.year,
             plan_short=plan_short,
             validity_days=validity_days if validity_days is not None else "—",
             amount_display=f"{amount_cents / 100:.2f}",
@@ -223,9 +213,6 @@ body { margin: 0; padding: 40px 24px; background: #F1EFE6; font-family: -apple-s
 .wrap { max-width: 620px; margin: 0 auto; }
 .card { background: #FBFAF5; border: 1px solid #D9D6C6; box-shadow: 0 20px 60px rgba(22,56,42,.14); overflow: hidden; border-radius: 4px; position: relative; }
 .card::before { content: ''; position: absolute; inset: 6px; border: 1px solid #D9D6C6; pointer-events: none; border-radius: 2px; }
-.stamp { position: absolute; top: 30px; right: 30px; width: 92px; height: 116px; background: #FBFAF5; border: 2px dashed #16382A; padding: 6px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: space-between; transform: rotate(3deg); z-index: 2; }
-.stamp .crest { width: 52px; height: 52px; border-radius: 50%; background: #C4633A; display: flex; align-items: center; justify-content: center; color: #FBFAF5; font-family: Georgia, serif; font-style: italic; font-size: 22px; font-weight: 700; }
-.stamp .denom { font-family: ui-monospace, Menlo, monospace; font-size: 9px; letter-spacing: 0.15em; color: #16382A; text-transform: uppercase; text-align: center; line-height: 1.3; }
 .inner { padding: 56px 54px; position: relative; z-index: 0; }
 .eyebrow { font-family: ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: #7B8E82; margin-bottom: 28px; }
 h1 { font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif; font-style: italic; font-weight: 400; font-size: 56px; line-height: 1.02; letter-spacing: -0.02em; margin: 0 0 18px 0; color: #16382A; max-width: 12ch; }
@@ -261,11 +248,6 @@ h1 { font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif; font-s
 <body>
 <div class="wrap">
   <div class="card">
-    <div class="stamp">
-      <div class="crest">N</div>
-      <div class="denom">Nimvoy · {{ stamp_iso3 }}<br>{{ stamp_year }}</div>
-    </div>
-
     <div class="inner">
       <div class="eyebrow">A postcard from Nimvoy — order {{ reference }}</div>
 
@@ -527,8 +509,6 @@ def send_esim_email(
             country_name=country_name,
             networks=meta["networks"],
             speed_label="5G",  # JoyTel doesn't surface per-plan speed; default
-            stamp_iso3=meta["iso3"],
-            stamp_year=now.year,
             amount_display=f"{amount_cents / 100:.2f}" if amount_cents else "—",
             apple_install_url=apple_install_url,
             android_install_url=android_install_url,
