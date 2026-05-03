@@ -168,26 +168,24 @@ h1 { font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif; font-s
 .divider { display: flex; align-items: center; gap: 14px; margin: 36px 0; }
 .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #D9D6C6; }
 .divider span { font-family: ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: #7B8E82; }
-/* QR card — vertical stack: QR centered on top, caption below.
-   Table-based to survive Outlook + narrow mobile clients without flex. */
-.qr-card { background: #F1EFE6; padding: 28px 24px; border-radius: 6px; border: 1px solid #D9D6C6; text-align: center; }
-.qr-box { display: inline-block; width: 160px; height: 160px; background: #FBFAF5; padding: 10px; box-sizing: border-box; border: 1px solid #D9D6C6; }
-.qr-box img { width: 140px; height: 140px; display: block; }
-.qr-h4 { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 22px; margin: 18px 0 6px 0; color: #16382A; }
-.qr-p { margin: 0 auto; max-width: 36ch; font-size: 14px; color: #375948; line-height: 1.55; }
-
-/* One-tap install — sibling to the QR, positioned as the alternative
-   path for newer iOS / Android. Two side-by-side buttons via a 2-cell
-   table (works in MSO + mobile clients). */
-.tap-section { margin-top: 24px; padding: 22px 24px 24px; background: #FBFAF5; border: 1px solid #D9D6C6; border-radius: 6px; }
+/* One-tap install — primary path, sits above the QR card. Buttons stack
+   vertically so each is full-width and visually identical (no wrap-shape
+   mismatch between IPHONE / ANDROID). */
+.tap-section { padding: 22px 24px 24px; background: #FBFAF5; border: 1px solid #D9D6C6; border-radius: 6px; }
 .tap-eyebrow { font-family: ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: #7B8E82; text-align: center; margin: 0 0 6px 0; }
 .tap-h4 { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 22px; color: #16382A; text-align: center; margin: 0 0 6px 0; }
 .tap-sub { text-align: center; font-size: 13px; color: #7B8E82; margin: 0 auto 18px; max-width: 38ch; line-height: 1.5; }
-.tap-tbl { width: 100%; border-collapse: separate; border-spacing: 8px 0; }
-.tap-tbl td { width: 50%; padding: 0; }
-.tap-btn { display: block; padding: 14px 12px; background: #16382A; color: #F1EFE6; font-family: ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; text-decoration: none; text-align: center; border-radius: 3px; }
-.tap-btn .arr { margin-left: 4px; }
+.tap-btn { display: block; padding: 14px 16px; margin-top: 10px; background: #16382A; color: #F1EFE6; font-family: ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; text-decoration: none; text-align: center; border-radius: 3px; white-space: nowrap; }
+.tap-btn:first-of-type { margin-top: 0; }
+.tap-btn .arr { margin-left: 6px; }
 .tap-fine { text-align: center; font-size: 11px; color: #9BABA0; margin: 14px 0 0; font-family: ui-monospace, Menlo, monospace; letter-spacing: 0.06em; }
+
+/* QR card — secondary/fallback path, positioned below one-tap. */
+.qr-card { margin-top: 18px; background: #F1EFE6; padding: 26px 24px 28px; border-radius: 6px; border: 1px solid #D9D6C6; text-align: center; }
+.qr-card .tap-eyebrow { margin-bottom: 18px; }
+.qr-box { display: inline-block; width: 160px; height: 160px; background: #FBFAF5; padding: 10px; box-sizing: border-box; border: 1px solid #D9D6C6; }
+.qr-box img { width: 140px; height: 140px; display: block; }
+.qr-p { margin: 14px auto 0; max-width: 36ch; font-size: 14px; color: #375948; line-height: 1.55; }
 .meta-tbl { width: 100%; border-collapse: separate; border-spacing: 1px; background: #D9D6C6; margin-top: 32px; border: 1px solid #D9D6C6; }
 .meta-tbl td { background: #FBFAF5; padding: 14px 12px; vertical-align: top; width: 25%; }
 .meta-tbl small { font-family: ui-monospace, Menlo, monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #7B8E82; display: block; margin-bottom: 4px; }
@@ -223,30 +221,28 @@ h1 { font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif; font-s
 
       <div class="divider"><span>Affix here</span></div>
 
-      <div class="qr-card">
-        <div class="qr-box">
-          <img src="cid:qrcode" alt="eSIM activation QR" />
-        </div>
-        <h4 class="qr-h4">The square in question</h4>
-        <p class="qr-p">Open your camera. Point it here. Tap the prompt. Your phone does the rest — no account, no app.</p>
-      </div>
-
       {% if apple_install_url or android_install_url %}
       <div class="tap-section">
-        <p class="tap-eyebrow">Or skip the scan</p>
+        <p class="tap-eyebrow">Tap to install</p>
         <h4 class="tap-h4">One-tap install</h4>
         <p class="tap-sub">Reading this on the phone you'll use? Tap below — your system pops the eSIM setup straight away.</p>
-        <table class="tap-tbl" role="presentation" cellpadding="0" cellspacing="0"><tr>
-          {% if apple_install_url %}
-          <td><a class="tap-btn" href="{{ apple_install_url }}">Install on iPhone <span class="arr">→</span></a></td>
-          {% endif %}
-          {% if android_install_url %}
-          <td><a class="tap-btn" href="{{ android_install_url }}">Install on Android <span class="arr">→</span></a></td>
-          {% endif %}
-        </tr></table>
+        {% if apple_install_url %}
+        <a class="tap-btn" href="{{ apple_install_url }}">Install on iPhone <span class="arr">→</span></a>
+        {% endif %}
+        {% if android_install_url %}
+        <a class="tap-btn" href="{{ android_install_url }}">Install on Android <span class="arr">→</span></a>
+        {% endif %}
         <p class="tap-fine">iOS 17.4+ · Android 10+ with recent Google Play Services</p>
       </div>
       {% endif %}
+
+      <div class="qr-card">
+        <p class="tap-eyebrow">Phone not supported? Scan instead</p>
+        <div class="qr-box">
+          <img src="cid:qrcode" alt="eSIM activation QR" />
+        </div>
+        <p class="qr-p">Open your camera. Point it here. Tap the prompt. Your phone does the rest — no account, no app.</p>
+      </div>
 
       <table class="meta-tbl" role="presentation" cellpadding="0" cellspacing="0">
         <tr>
