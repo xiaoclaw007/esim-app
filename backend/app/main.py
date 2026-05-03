@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import Base, engine
-from app.routers import admin, auth, checkout, orders, plans, users, webhooks
+from app.routers import admin, auth, checkout, orders, plans, track, users, webhooks
 from app.tasks.order_poller import poll_pending_orders
 
 # Configure logging
@@ -52,6 +52,7 @@ app.include_router(orders.router)
 app.include_router(webhooks.router)
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(track.router)
 app.include_router(admin.router)
 
 

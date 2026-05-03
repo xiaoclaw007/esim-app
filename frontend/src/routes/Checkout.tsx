@@ -11,6 +11,7 @@ import {
   validateCoupon,
   type CouponValidateResponse,
 } from '../api/checkout'
+import { track } from '../api/track'
 import {
   COUNTRIES,
   REGIONAL_PLANS_META,
@@ -33,6 +34,11 @@ export default function Checkout() {
 
   const plan = useMemo(() => plans?.find((p) => p.id === planId) ?? null, [plans, planId])
   const meta = useMemo(() => (plan ? resolveMeta(plan) : null), [plan])
+
+  // Funnel ping: customer reached the checkout page with a real plan.
+  useEffect(() => {
+    if (plan) track('checkout_started', { plan_id: plan.id, price_cents: plan.price_cents })
+  }, [plan?.id])
 
   // Stripe.js loaded lazily once we have the publishable key.
   const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null)
@@ -61,8 +67,15 @@ export default function Checkout() {
     setCouponError(null)
     try {
       const r = await validateCoupon(couponInput.trim(), plan.id)
-      if (r.valid) setCoupon(r)
-      else {
+      if (r.valid) {
+        setCoupon(r)
+        track('coupon_applied', {
+          code: r.code,
+          plan_id: plan.id,
+          discount_cents: r.discount_cents,
+          free: r.free,
+        })
+      } else {
         setCoupon(null)
         setCouponError(r.error || 'Invalid code')
       }
@@ -342,6 +355,12 @@ function PaymentForm({
     if (!stripe || !elements) return
     setSubmitting(true)
     setError(null)
+
+    track('payment_attempted', {
+      plan_id: planId,
+      total_cents: totalCents,
+      coupon_code: couponCode ?? null,
+    })
 
     // 1. Client-side validate the form (formats, required fields, etc.)
     const { error: submitError } = await elements.submit()

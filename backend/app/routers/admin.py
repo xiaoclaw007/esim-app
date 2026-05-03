@@ -18,9 +18,10 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.middleware.auth import get_admin_user
-from app.models import Coupon, Order, Plan, User
+from app.models import Coupon, Event, Order, Plan, User
 from app.schemas import UserResponse
 from app.services import coupons as coupons_service
+from app.services.analytics import referrer_source
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/admin", tags=["admin"])
@@ -706,4 +707,453 @@ def admin_revenue_series(
         d = (start + timedelta(days=i)).date().isoformat()
         n, rev = by_day.get(d, (0, 0))
         out.append({"date": d, "orders": n, "revenue_cents": rev})
+    return out
+
+
+# ---- Website analytics (events table) -------------------------------------
+#
+# All endpoints below are powered by the events table populated by /api/track.
+# They share a `days` query param (7|30|90|365) and a common helper for the
+# `(start, prev_start)` window so we can show period-over-period deltas.
+
+
+def _window(days: int) -> tuple[datetime, datetime, datetime]:
+    """Return (start, prev_start, now) covering the last `days` days and the
+    previous comparable window. All UTC, day-aligned."""
+    now = datetime.now(timezone.utc)
+    start = (now - timedelta(days=days)).replace(hour=0, minute=0, second=0, microsecond=0)
+    prev_start = start - timedelta(days=days)
+    return start, prev_start, now
+
+
+def _safe_pct_change(curr: int, prev: int) -> Optional[float]:
+    if prev == 0:
+        return None
+    return ((curr - prev) / prev) * 100.0
+
+
+class AnalyticsSummary(BaseModel):
+    visitors: int
+    visitors_prev: int
+    page_views: int
+    page_views_prev: int
+    conversion_rate: float  # paid_sessions / visitor_sessions, 0..1
+    conversion_rate_prev: float
+    decline_rate: float  # payment_failed / payment_attempted, 0..1
+    decline_rate_prev: float
+
+
+@router.get("/analytics/summary", response_model=AnalyticsSummary)
+def analytics_summary(
+    days: int = Query(default=30, ge=1, le=365),
+    db: Session = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+) -> AnalyticsSummary:
+    """Top-line KPI numbers: unique visitors (distinct session_ids), page
+    views, conversion rate, decline rate. Both this period and the previous
+    comparable period for delta arrows."""
+    start, prev_start, _ = _window(days)
+
+    def _bucket(s: datetime, e: datetime) -> tuple[int, int, float, float]:
+        # Visitors: distinct session_ids that fired ANY event.
+        visitors = (
+            db.query(func.count(func.distinct(Event.session_id)))
+            .filter(Event.created_at >= s, Event.created_at < e, Event.session_id.isnot(None))
+            .scalar()
+            or 0
+        )
+        # Page views: count of page_view events.
+        page_views = (
+            db.query(func.count(Event.id))
+            .filter(Event.created_at >= s, Event.created_at < e, Event.type == "page_view")
+            .scalar()
+            or 0
+        )
+        # Conversion: distinct sessions with payment_succeeded / distinct sessions with any event.
+        paid_sessions = (
+            db.query(func.count(func.distinct(Event.session_id)))
+            .filter(
+                Event.created_at >= s,
+                Event.created_at < e,
+                Event.type == "payment_succeeded",
+                Event.session_id.isnot(None),
+            )
+            .scalar()
+            or 0
+        )
+        conv = (paid_sessions / visitors) if visitors else 0.0
+        # Decline rate: payment_failed events / payment_attempted events.
+        attempted = (
+            db.query(func.count(Event.id))
+            .filter(Event.created_at >= s, Event.created_at < e, Event.type == "payment_attempted")
+            .scalar()
+            or 0
+        )
+        failed = (
+            db.query(func.count(Event.id))
+            .filter(Event.created_at >= s, Event.created_at < e, Event.type == "payment_failed")
+            .scalar()
+            or 0
+        )
+        decline = (failed / attempted) if attempted else 0.0
+        return int(visitors), int(page_views), float(conv), float(decline)
+
+    visitors, page_views, conv, decline = _bucket(start, datetime.now(timezone.utc))
+    visitors_prev, page_views_prev, conv_prev, decline_prev = _bucket(prev_start, start)
+
+    return AnalyticsSummary(
+        visitors=visitors,
+        visitors_prev=visitors_prev,
+        page_views=page_views,
+        page_views_prev=page_views_prev,
+        conversion_rate=conv,
+        conversion_rate_prev=conv_prev,
+        decline_rate=decline,
+        decline_rate_prev=decline_prev,
+    )
+
+
+class TimeseriesPoint(BaseModel):
+    date: str
+    visitors: int
+    page_views: int
+
+
+@router.get("/analytics/timeseries", response_model=list[TimeseriesPoint])
+def analytics_timeseries(
+    days: int = Query(default=30, ge=7, le=365),
+    db: Session = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+) -> list[TimeseriesPoint]:
+    """Daily traffic — visitors (distinct session_ids) and page views.
+    Returns one row per day in the window, oldest first, zero-filled.
+    """
+    start, _, now = _window(days)
+
+    # Page views per day.
+    pv_rows = (
+        db.query(
+            func.date_trunc("day", Event.created_at).label("day"),
+            func.count(Event.id),
+        )
+        .filter(Event.created_at >= start, Event.type == "page_view")
+        .group_by("day")
+        .all()
+    )
+    pv_by_day = {row[0].date().isoformat(): int(row[1]) for row in pv_rows}
+
+    # Visitors per day = distinct session_id.
+    v_rows = (
+        db.query(
+            func.date_trunc("day", Event.created_at).label("day"),
+            func.count(func.distinct(Event.session_id)),
+        )
+        .filter(Event.created_at >= start, Event.session_id.isnot(None))
+        .group_by("day")
+        .all()
+    )
+    v_by_day = {row[0].date().isoformat(): int(row[1]) for row in v_rows}
+
+    out: list[TimeseriesPoint] = []
+    for i in range(days):
+        d = (start + timedelta(days=i)).date().isoformat()
+        out.append(
+            TimeseriesPoint(
+                date=d,
+                visitors=v_by_day.get(d, 0),
+                page_views=pv_by_day.get(d, 0),
+            )
+        )
+    return out
+
+
+class FunnelStep(BaseModel):
+    label: str
+    type: str
+    sessions: int
+
+
+@router.get("/analytics/funnel", response_model=list[FunnelStep])
+def analytics_funnel(
+    days: int = Query(default=30, ge=1, le=365),
+    db: Session = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+) -> list[FunnelStep]:
+    """Six-step conversion funnel — count of distinct sessions that reached
+    each step in the window. Steps are deliberately ordered by user
+    progression; a session counts toward every step it reached, so each
+    bar is monotonically <= the previous.
+    """
+    start, _, _ = _window(days)
+
+    def _sessions_with(types: tuple[str, ...]) -> int:
+        return (
+            db.query(func.count(func.distinct(Event.session_id)))
+            .filter(
+                Event.created_at >= start,
+                Event.session_id.isnot(None),
+                Event.type.in_(types),
+            )
+            .scalar()
+            or 0
+        )
+
+    steps = [
+        ("Visited site", ("page_view",)),
+        ("Viewed destination", ("destination_view",)),
+        ("Clicked plan", ("plan_clicked",)),
+        ("Started checkout", ("checkout_started",)),
+        ("Attempted payment", ("payment_attempted",)),
+        ("Succeeded", ("payment_succeeded",)),
+    ]
+    return [FunnelStep(label=label, type=t[0], sessions=int(_sessions_with(t))) for label, t in steps]
+
+
+class TopDestinationRow(BaseModel):
+    code: str
+    name: str
+    flag: str
+    views: int
+
+
+@router.get("/analytics/destinations", response_model=list[TopDestinationRow])
+def analytics_top_destinations(
+    days: int = Query(default=30, ge=1, le=365),
+    limit: int = Query(default=10, ge=1, le=50),
+    db: Session = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+) -> list[TopDestinationRow]:
+    """Most-viewed destinations in the window. Reads destination_view events
+    and counts by metadata->>'country' (frontend sends country code with each
+    DestinationDetail page-load).
+    """
+    start, _, _ = _window(days)
+
+    # JSON metadata access differs per dialect. Postgres: metadata->>'country';
+    # SQLite: json_extract(metadata, '$.country'). func.json_extract works on
+    # Postgres too (since PG13). We use json_extract for portability with
+    # SQLAlchemy's func, falling back to a text cast.
+    is_pg = db.bind.dialect.name == "postgresql"
+    if is_pg:
+        country_expr = Event.event_metadata["country"].astext
+    else:
+        country_expr = func.json_extract(Event.event_metadata, "$.country")
+
+    rows = (
+        db.query(country_expr.label("country"), func.count(Event.id))
+        .filter(Event.created_at >= start, Event.type == "destination_view")
+        .group_by("country")
+        .order_by(func.count(Event.id).desc())
+        .limit(limit)
+        .all()
+    )
+    out: list[TopDestinationRow] = []
+    for code, n in rows:
+        if not code:
+            continue
+        name, flag = _COUNTRY_META.get(code, (code, "🌐"))
+        out.append(TopDestinationRow(code=code, name=name, flag=flag, views=int(n)))
+    return out
+
+
+class TrafficSourceRow(BaseModel):
+    source: str
+    sessions: int
+
+
+@router.get("/analytics/sources", response_model=list[TrafficSourceRow])
+def analytics_traffic_sources(
+    days: int = Query(default=30, ge=1, le=365),
+    db: Session = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+) -> list[TrafficSourceRow]:
+    """Where visitors came from. Bucketed Python-side via referrer_source so
+    we don't have to maintain CASE WHEN ladders in SQL.
+
+    Methodology: take the FIRST page_view per session (ordered by created_at
+    ASC) and read its referrer. That's the entry referrer for the session.
+    """
+    start, _, _ = _window(days)
+
+    # First page_view per session within the window.
+    sub = (
+        db.query(
+            Event.session_id,
+            func.min(Event.created_at).label("first_at"),
+        )
+        .filter(
+            Event.created_at >= start,
+            Event.type == "page_view",
+            Event.session_id.isnot(None),
+        )
+        .group_by(Event.session_id)
+        .subquery()
+    )
+
+    rows = (
+        db.query(Event.referrer)
+        .join(
+            sub,
+            (Event.session_id == sub.c.session_id) & (Event.created_at == sub.c.first_at),
+        )
+        .filter(Event.type == "page_view")
+        .all()
+    )
+
+    counts: dict[str, int] = defaultdict(int)
+    for (ref,) in rows:
+        counts[referrer_source(ref)] += 1
+    return [
+        TrafficSourceRow(source=src, sessions=n)
+        for src, n in sorted(counts.items(), key=lambda x: x[1], reverse=True)
+    ]
+
+
+class DeviceRow(BaseModel):
+    device: str
+    sessions: int
+
+
+@router.get("/analytics/devices", response_model=list[DeviceRow])
+def analytics_devices(
+    days: int = Query(default=30, ge=1, le=365),
+    db: Session = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+) -> list[DeviceRow]:
+    """Distinct sessions per device class. A session keeps the device of its
+    first event (devices don't change mid-session in practice)."""
+    start, _, _ = _window(days)
+
+    rows = (
+        db.query(
+            Event.device,
+            func.count(func.distinct(Event.session_id)),
+        )
+        .filter(Event.created_at >= start, Event.session_id.isnot(None))
+        .group_by(Event.device)
+        .all()
+    )
+    return sorted(
+        [DeviceRow(device=d or "unknown", sessions=int(n)) for d, n in rows],
+        key=lambda r: r.sessions,
+        reverse=True,
+    )
+
+
+class CountryRow(BaseModel):
+    code: str
+    name: str
+    flag: str
+    sessions: int
+
+
+@router.get("/analytics/countries", response_model=list[CountryRow])
+def analytics_countries(
+    days: int = Query(default=30, ge=1, le=365),
+    limit: int = Query(default=20, ge=1, le=200),
+    db: Session = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+) -> list[CountryRow]:
+    """Distinct sessions per country (from GeoIP enrichment). Sessions that
+    only ever fired events from private IPs (local dev) bucket as
+    'Unknown'."""
+    start, _, _ = _window(days)
+
+    rows = (
+        db.query(
+            Event.country,
+            func.count(func.distinct(Event.session_id)),
+        )
+        .filter(Event.created_at >= start, Event.session_id.isnot(None))
+        .group_by(Event.country)
+        .order_by(func.count(func.distinct(Event.session_id)).desc())
+        .limit(limit)
+        .all()
+    )
+    out: list[CountryRow] = []
+    for code, n in rows:
+        if not code:
+            out.append(CountryRow(code="—", name="Unknown", flag="🌐", sessions=int(n)))
+            continue
+        # Fall back to ISO code if not in our hand-curated meta table.
+        name, flag = _COUNTRY_META.get(code, (code, _flag_emoji_from_iso2(code)))
+        out.append(CountryRow(code=code, name=name, flag=flag, sessions=int(n)))
+    return out
+
+
+def _flag_emoji_from_iso2(code: str) -> str:
+    """Best-effort flag emoji for any ISO-2 code (combining regional indicator
+    symbols). Falls through to globe for invalid input."""
+    if not code or len(code) != 2 or not code.isalpha():
+        return "🌐"
+    return "".join(chr(0x1F1E6 + ord(c.upper()) - ord("A")) for c in code)
+
+
+class CouponImpactRow(BaseModel):
+    code: str
+    applications: int
+    redemptions: int  # actual orders that used this coupon
+    revenue_cents: int
+
+
+@router.get("/analytics/coupons", response_model=list[CouponImpactRow])
+def analytics_coupon_impact(
+    days: int = Query(default=30, ge=1, le=365),
+    db: Session = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+) -> list[CouponImpactRow]:
+    """Per-coupon: how many times applied at checkout vs how many converted
+    into a redeemed order, and the revenue (post-discount) from those orders.
+    Pulls applications from coupon_applied events; redemptions and revenue
+    from the orders table (joined on coupon_code so we capture both
+    Stripe-paid and free-coupon paths).
+    """
+    start, _, _ = _window(days)
+
+    is_pg = db.bind.dialect.name == "postgresql"
+    if is_pg:
+        code_expr = Event.event_metadata["code"].astext
+    else:
+        code_expr = func.json_extract(Event.event_metadata, "$.code")
+
+    # Applications per coupon code.
+    apps = (
+        db.query(code_expr.label("code"), func.count(Event.id))
+        .filter(Event.created_at >= start, Event.type == "coupon_applied")
+        .group_by("code")
+        .all()
+    )
+    apps_by_code: dict[str, int] = {row[0]: int(row[1]) for row in apps if row[0]}
+
+    # Redemptions + revenue from the orders table.
+    redemptions = (
+        db.query(
+            Order.coupon_code,
+            func.count(Order.id),
+            func.coalesce(func.sum(Order.amount_cents), 0),
+        )
+        .filter(
+            Order.created_at >= start,
+            Order.coupon_code.isnot(None),
+            Order.status.in_(_REVENUE_STATUSES),
+        )
+        .group_by(Order.coupon_code)
+        .all()
+    )
+    redemptions_by_code = {row[0]: (int(row[1]), int(row[2])) for row in redemptions}
+
+    all_codes = set(apps_by_code) | set(redemptions_by_code)
+    out: list[CouponImpactRow] = []
+    for code in all_codes:
+        apps_n = apps_by_code.get(code, 0)
+        red_n, rev = redemptions_by_code.get(code, (0, 0))
+        out.append(
+            CouponImpactRow(
+                code=code,
+                applications=apps_n,
+                redemptions=red_n,
+                revenue_cents=rev,
+            )
+        )
+    out.sort(key=lambda r: (r.redemptions, r.applications), reverse=True)
     return out

@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { QrCode } from '../components/QrCode'
 import { fetchOrderStatus, type OrderStatus } from '../api/checkout'
+import { track } from '../api/track'
 import { useCatalog } from '../hooks/useCatalog'
 import {
   COUNTRIES,
@@ -25,6 +26,28 @@ export default function OrderConfirmation() {
   const [pollError, setPollError] = useState<string | null>(null)
   const [tab, setTab] = useState<Tab>('ios')
 
+  // Fire payment_succeeded / payment_failed exactly once per page-view —
+  // both Stripe's redirect_status and our own status poll can settle the
+  // outcome, and we don't want to double-count if the user refreshes mid-poll.
+  const outcomeRef = useRef<'succeeded' | 'failed' | null>(null)
+  function recordOutcome(outcome: 'succeeded' | 'failed', extra: Record<string, unknown> = {}) {
+    if (outcomeRef.current) return
+    outcomeRef.current = outcome
+    track(outcome === 'succeeded' ? 'payment_succeeded' : 'payment_failed', {
+      reference: id ?? null,
+      ...extra,
+    })
+  }
+
+  // Stripe's redirect_status is the earliest signal — if it's not 'succeeded',
+  // a payment has already failed (declined, 3DS abandoned, etc.).
+  useEffect(() => {
+    if (redirectStatus && redirectStatus !== 'succeeded') {
+      recordOutcome('failed', { source: 'stripe_redirect', redirect_status: redirectStatus })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Poll /api/orders/:ref/status until we hit a terminal state. Gentle
   // backoff from 2s → 5s once we're past the first minute — JoyTel
   // fulfillment is typically ~10s but has been seen to take longer under
@@ -43,13 +66,18 @@ export default function OrderConfirmation() {
         if (cancelled) return
         setOrder(o)
         setPollError(null)
+        if (o.status === 'delivered') {
+          recordOutcome('succeeded', { source: 'order_status', amount_cents: o.amount_cents })
+          return
+        }
         if (
-          o.status === 'delivered' ||
           o.status === 'failed' ||
           o.status === 'refunded' ||
           o.status === 'payment_failed'
-        )
+        ) {
+          recordOutcome('failed', { source: 'order_status', status: o.status })
           return
+        }
       } catch (e) {
         if (!cancelled) setPollError(e instanceof Error ? e.message : String(e))
       }

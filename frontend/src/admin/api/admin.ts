@@ -175,6 +175,62 @@ export interface AdminCouponRedemption {
   status: string
 }
 
+// ---- Website analytics ----
+
+export interface AnalyticsSummary {
+  visitors: number
+  visitors_prev: number
+  page_views: number
+  page_views_prev: number
+  conversion_rate: number
+  conversion_rate_prev: number
+  decline_rate: number
+  decline_rate_prev: number
+}
+
+export interface AnalyticsTimeseriesPoint {
+  date: string
+  visitors: number
+  page_views: number
+}
+
+export interface AnalyticsFunnelStep {
+  label: string
+  type: string
+  sessions: number
+}
+
+export interface AnalyticsTopDestination {
+  code: string
+  name: string
+  flag: string
+  views: number
+}
+
+export interface AnalyticsTrafficSource {
+  source: string
+  sessions: number
+}
+
+export interface AnalyticsDeviceRow {
+  device: string
+  sessions: number
+}
+
+export interface AnalyticsCountryRow {
+  code: string
+  name: string
+  flag: string
+  sessions: number
+}
+
+export interface AnalyticsCouponImpactRow {
+  code: string
+  applications: number
+  redemptions: number
+  revenue_cents: number
+}
+
 export const adminApi = {
   me: () => apiFetch<AdminUser>('/api/admin/me'),
   listOrders: (params: { q?: string; status?: string; page?: number; per_page?: number } = {}) => {
@@ -210,4 +266,21 @@ export const adminApi = {
     }),
   couponRedemptions: (id: string) =>
     apiFetch<AdminCouponRedemption[]>(`/api/admin/coupons/${encodeURIComponent(id)}/redemptions`),
+  // Website analytics
+  analyticsSummary: (days = 30) =>
+    apiFetch<AnalyticsSummary>(`/api/admin/analytics/summary?days=${days}`),
+  analyticsTimeseries: (days = 30) =>
+    apiFetch<AnalyticsTimeseriesPoint[]>(`/api/admin/analytics/timeseries?days=${days}`),
+  analyticsFunnel: (days = 30) =>
+    apiFetch<AnalyticsFunnelStep[]>(`/api/admin/analytics/funnel?days=${days}`),
+  analyticsTopDestinations: (days = 30, limit = 10) =>
+    apiFetch<AnalyticsTopDestination[]>(`/api/admin/analytics/destinations?days=${days}&limit=${limit}`),
+  analyticsSources: (days = 30) =>
+    apiFetch<AnalyticsTrafficSource[]>(`/api/admin/analytics/sources?days=${days}`),
+  analyticsDevices: (days = 30) =>
+    apiFetch<AnalyticsDeviceRow[]>(`/api/admin/analytics/devices?days=${days}`),
+  analyticsCountries: (days = 30, limit = 20) =>
+    apiFetch<AnalyticsCountryRow[]>(`/api/admin/analytics/countries?days=${days}&limit=${limit}`),
+  analyticsCoupons: (days = 30) =>
+    apiFetch<AnalyticsCouponImpactRow[]>(`/api/admin/analytics/coupons?days=${days}`),
 }

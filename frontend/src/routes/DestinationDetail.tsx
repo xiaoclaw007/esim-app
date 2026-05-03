@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { useCatalog } from '../hooks/useCatalog'
+import { track } from '../api/track'
 import {
   COUNTRIES,
   REGIONAL_PLANS_META,
@@ -59,6 +60,11 @@ export default function DestinationDetail() {
 
   const meta = resolveMeta(codeParam)
 
+  // One destination_view ping per visit to a destination page.
+  useEffect(() => {
+    if (meta) track('destination_view', { country: meta.code, name: meta.name })
+  }, [meta?.code])
+
   const allPlans = useMemo(() => (plans && meta ? plansForCountry(plans, meta.code) : []), [plans, meta])
   const regularPlans = useMemo(() => allPlans.filter((p) => !isUnlimited(p)), [allPlans])
   const unlimitedPlans = useMemo(() => allPlans.filter(isUnlimited), [allPlans])
@@ -106,6 +112,12 @@ export default function DestinationDetail() {
   }
 
   const goCheckout = (planId: string) => {
+    const p = visible.find((x) => x.id === planId)
+    track('plan_clicked', {
+      plan_id: planId,
+      country: meta?.code,
+      price_cents: p?.price_cents ?? null,
+    })
     navigate(`/checkout?plan=${encodeURIComponent(planId)}`)
   }
 

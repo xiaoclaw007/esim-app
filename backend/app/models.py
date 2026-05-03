@@ -8,10 +8,15 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional, List
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+
+
+# Postgres-native JSONB in prod; falls back to JSON on SQLite for local dev.
+JsonCol = JSONB().with_variant(JSON(), "sqlite")
 
 
 def generate_uuid() -> str:
@@ -160,6 +165,43 @@ class Coupon(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
     )
+
+
+class Event(Base):
+    """Single-table analytics. Every interesting customer action — page views,
+    destination views, plan clicks, checkout starts, payment outcomes — lands
+    here as one row. The admin /analytics page slices/dices via SQL.
+
+    The frontend POSTs to /api/track with type + optional metadata; the
+    backend enriches with IP→country (GeoIP) and UA→device, then inserts.
+    """
+
+    __tablename__ = "events"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    # Free-form short string ("page_view", "checkout_started"). Not enum'd
+    # so we can ship a new event with just a frontend ping + a chart query.
+    type: Mapped[str] = mapped_column(String(40), nullable=False)
+    # Frontend-issued opaque id stored in sessionStorage. Lets us count
+    # unique visitors and walk a single session through the funnel without
+    # requiring login.
+    session_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
+    user_id: Mapped[Optional[str]] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    path: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    referrer: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    # ISO-2 country code derived from request IP via GeoLite2.
+    country: Mapped[Optional[str]] = mapped_column(String(2), nullable=True)
+    # "mobile" | "tablet" | "desktop" — derived from User-Agent, never stored
+    # raw on read paths.
+    device: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    user_agent: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    # Per-event payload (plan_id on a destination_view, decline_code on a
+    # payment_failed, etc.). Column named event_metadata because SQLAlchemy
+    # reserves "metadata" on its declarative base.
+    event_metadata: Mapped[Optional[dict]] = mapped_column(JsonCol, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 class Plan(Base):

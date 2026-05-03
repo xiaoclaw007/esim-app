@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { Nav } from './components/Nav'
 import { Footer } from './components/Footer'
+import { usePageView } from './hooks/usePageView'
 import Landing from './routes/Landing'
 import Destinations from './routes/Destinations'
 import DestinationDetail from './routes/DestinationDetail'
@@ -35,6 +36,7 @@ function Shell() {
 }
 
 export default function App() {
+  usePageView()
   return (
     <Routes>
       <Route element={<Shell />}>
