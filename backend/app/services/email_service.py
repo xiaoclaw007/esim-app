@@ -24,6 +24,23 @@ def _apple_install_url(lpa: str) -> str:
     """
     return f"https://esimsetup.apple.com/esim_qrcode_provisioning?carddata={_url_quote(lpa, safe='')}"
 
+
+def _android_install_url(lpa: str) -> str:
+    """Build Android's universal eSIM install link from an LPA activation string.
+
+    Mirrors Apple's format with a different host. Works on Android 10+ with
+    a recent Google Play Services / GMS — the system "SIM Manager" intercepts
+    the URL and opens the Add eSIM flow with the activation code prefilled.
+    Confirmed clean on Pixel/Samsung/OPPO; flakier on Xiaomi/Vivo. Triggering
+    from inside WhatsApp may not work — we still show the QR as a fallback.
+
+    Note: there is no official Google documentation for this URL; the format
+    is a de-facto industry standard adopted by major eSIM resellers (eSIM Go,
+    eSIM Access, Roamic, etc.). If Google ever publishes its own scheme, this
+    one-liner is where it gets updated.
+    """
+    return f"https://esimsetup.android.com/esim_qrcode_provisioning?carddata={_url_quote(lpa, safe='')}"
+
 logger = logging.getLogger(__name__)
 
 
@@ -158,7 +175,7 @@ h1 { font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif; font-s
 .qr-box img { width: 120px; height: 120px; display: block; }
 .qr-copy h4 { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 22px; margin: 0 0 8px 0; color: #16382A; }
 .qr-copy p { margin: 0; font-size: 14px; color: #375948; line-height: 1.5; }
-.chip { display: inline-block; margin-top: 12px; padding: 8px 12px; background: #16382A; color: #F1EFE6; font-family: ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; border-radius: 2px; text-decoration: none; }
+.chip { display: inline-block; margin-top: 12px; margin-right: 8px; padding: 8px 12px; background: #16382A; color: #F1EFE6; font-family: ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; border-radius: 2px; text-decoration: none; }
 .meta-tbl { width: 100%; border-collapse: separate; border-spacing: 1px; background: #D9D6C6; margin-top: 32px; border: 1px solid #D9D6C6; }
 .meta-tbl td { background: #FBFAF5; padding: 14px 12px; vertical-align: top; width: 25%; }
 .meta-tbl small { font-family: ui-monospace, Menlo, monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #7B8E82; display: block; margin-bottom: 4px; }
@@ -204,6 +221,9 @@ h1 { font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif; font-s
           <p>Open your camera. Point it here. Tap the prompt. Your phone does the rest — no account, no app.</p>
           {% if apple_install_url %}
           <a class="chip" href="{{ apple_install_url }}">Install on iPhone →</a>
+          {% endif %}
+          {% if android_install_url %}
+          <a class="chip" href="{{ android_install_url }}">Install on Android →</a>
           {% endif %}
         </div>
       </div>
@@ -409,13 +429,13 @@ def send_esim_email(
         msg["From"] = f"Nimvoy <{settings.aws_ses_from_email}>"
         msg["To"] = to_email
 
-        # Apple universal install link works for any LPA-prefixed activation
-        # string (iOS 17.4+ one-tap). Skip if the qr_code_data isn't an LPA
-        # string — JoyTel sometimes returns a hosted image URL instead, which
-        # iOS can't consume directly.
-        apple_install_url = (
-            _apple_install_url(qr_code_data) if qr_code_data.startswith("LPA:") else None
-        )
+        # One-tap install links for iOS and Android. Both require an LPA-
+        # prefixed activation string (iOS 17.4+ / Android 10+). Skip if
+        # qr_code_data isn't an LPA string — JoyTel sometimes returns a
+        # hosted image URL instead, which neither OS can consume directly.
+        is_lpa = qr_code_data.startswith("LPA:")
+        apple_install_url = _apple_install_url(qr_code_data) if is_lpa else None
+        android_install_url = _android_install_url(qr_code_data) if is_lpa else None
 
         # Render HTML body using the postcard template.
         html_body = EMAIL_TEMPLATE.render(
@@ -432,6 +452,7 @@ def send_esim_email(
             postmark_date=now.strftime("%b %d").upper(),
             amount_display=f"{amount_cents / 100:.2f}" if amount_cents else "—",
             apple_install_url=apple_install_url,
+            android_install_url=android_install_url,
         )
         msg.attach(MIMEText(html_body, "html"))
 
