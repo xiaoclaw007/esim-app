@@ -6,12 +6,23 @@ import logging
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from urllib.parse import quote as _url_quote
 
 import boto3
 import qrcode
 from jinja2 import Template
 
 from app.config import settings
+
+
+def _apple_install_url(lpa: str) -> str:
+    """Build Apple's universal eSIM install link from an LPA activation string.
+
+    On iOS 17.4+ / iPadOS 17.4+, tapping this URL opens Settings → Add eSIM
+    with the activation code prefilled. On older iOS it opens a Safari
+    helper page; on Android it fails through silently (we still show the QR).
+    """
+    return f"https://esimsetup.apple.com/esim_qrcode_provisioning?carddata={_url_quote(lpa, safe='')}"
 
 logger = logging.getLogger(__name__)
 
@@ -107,64 +118,113 @@ def send_payment_confirmation_email(
         logger.error(f"Failed to send payment confirmation to {to_email}: {e}")
         return False
 
-# HTML email template for QR code delivery
+# HTML email template for QR code delivery (Nimvoy navy palette to match the SPA)
 EMAIL_TEMPLATE = Template("""
 <!DOCTYPE html>
 <html>
 <head>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Geist', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #0B1F3A; background: #F6F4EE; }
         .header { text-align: center; padding: 20px 0; }
-        .header h1 { color: #2563eb; margin: 0; }
-        .qr-container { text-align: center; padding: 30px; background: #f8fafc; border-radius: 12px; margin: 20px 0; }
-        .qr-container img { width: 250px; height: 250px; }
-        .details { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 20px 0; }
-        .details h3 { margin-top: 0; color: #1e40af; }
-        .details p { margin: 8px 0; }
-        .steps { background: #eff6ff; border-radius: 8px; padding: 20px; margin: 20px 0; }
-        .steps h3 { margin-top: 0; color: #1e40af; }
-        .steps ol { padding-left: 20px; }
-        .steps li { margin: 8px 0; }
-        .footer { text-align: center; color: #94a3b8; font-size: 12px; padding: 20px 0; }
-        .ref { color: #64748b; font-size: 14px; }
+        .header h1 { color: #0B1F3A; margin: 0; font-size: 26px; font-weight: 500; letter-spacing: -0.02em; }
+        .ios-cta { text-align: center; margin: 24px 0; }
+        .ios-cta a { display: inline-block; background: #0B1F3A; color: #F6F4EE; padding: 14px 28px; border-radius: 999px; text-decoration: none; font-weight: 500; font-size: 15px; }
+        .ios-cta .hint { display: block; margin-top: 8px; font-size: 12px; color: #6B7A8E; font-family: 'Geist Mono', ui-monospace, monospace; letter-spacing: 0.04em; }
+        .qr-container { text-align: center; padding: 28px; background: #FFFFFF; border: 1px solid #E2DED2; border-radius: 14px; margin: 20px 0; }
+        .qr-container .label { font-size: 12px; font-family: 'Geist Mono', ui-monospace, monospace; color: #6B7A8E; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px; display: block; }
+        .qr-container img { width: 240px; height: 240px; }
+        .details { background: #FFFFFF; border: 1px solid #E2DED2; border-radius: 12px; padding: 22px; margin: 20px 0; }
+        .details h3 { margin: 0 0 14px; color: #0B1F3A; font-size: 16px; font-weight: 500; }
+        .details p { margin: 8px 0; font-size: 14.5px; color: #324961; }
+        .details strong { color: #0B1F3A; font-weight: 500; }
+        .steps { background: #FFFFFF; border: 1px solid #E2DED2; border-radius: 12px; padding: 22px; margin: 20px 0; }
+        .steps h3 { margin: 0 0 8px; color: #0B1F3A; font-size: 16px; font-weight: 500; }
+        .steps .platform { font-size: 11px; font-family: 'Geist Mono', ui-monospace, monospace; color: #6B7A8E; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 16px; margin-bottom: 8px; }
+        .steps ol { padding-left: 22px; margin: 8px 0; color: #324961; }
+        .steps li { margin: 6px 0; font-size: 14px; }
+        .warn { background: #FFF5EE; border-radius: 8px; padding: 12px 14px; margin-top: 16px; font-size: 13px; color: #324961; border: 1px solid #F2D9C6; }
+        .footer { text-align: center; color: #6B7A8E; font-size: 12px; padding: 24px 0 8px; font-family: 'Geist Mono', ui-monospace, monospace; letter-spacing: 0.04em; }
+        .footer a { color: #0B1F3A; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>Your eSIM is ready! 🌐</h1>
+        <h1>Your eSIM is ready 🌐</h1>
     </div>
 
+    {% if apple_install_url %}
+    <div class="ios-cta">
+        <a href="{{ apple_install_url }}">Install on iPhone</a>
+        <span class="hint">iOS 17.4+ · One-tap activation</span>
+    </div>
+    {% endif %}
+
     <div class="qr-container">
-        <p style="font-weight: bold; margin-bottom: 15px;">Scan this QR code to install your eSIM:</p>
+        <span class="label">Or scan this QR with any phone</span>
         <img src="cid:qrcode" alt="eSIM QR Code" />
     </div>
 
     <div class="details">
-        <h3>Order Details</h3>
-        <p><strong>Order Reference:</strong> {{ reference }}</p>
+        <h3>Order details</h3>
+        <p><strong>Reference:</strong> {{ reference }}</p>
         <p><strong>Plan:</strong> {{ plan_name }}</p>
-        <p><strong>Data:</strong> {{ data_gb }}GB</p>
+        <p><strong>Data:</strong> {{ data_display }}</p>
         <p><strong>Validity:</strong> {{ validity_days }} days</p>
     </div>
 
     <div class="steps">
-        <h3>Setup Instructions</h3>
+        <h3>Setup instructions</h3>
+
+        <div class="platform">iPhone / iPad</div>
         <ol>
-            <li>Open <strong>Settings → Cellular → Add eSIM</strong> on your phone</li>
-            <li>Choose <strong>"Use QR Code"</strong> and scan the code above</li>
-            <li>Label it something helpful (e.g., "Travel {{ country }}")</li>
-            <li>When asked, you can set it as your data line</li>
+            <li>Tap <strong>"Install on iPhone"</strong> above (iOS 17.4+) — or <strong>Settings → Cellular → Add eSIM → Use QR Code</strong> and scan</li>
+            <li>Label the line "Nimvoy {{ country_label }}"</li>
+            <li>When you land, enable Data Roaming for this line</li>
         </ol>
-        <p>⚠️ <strong>Important:</strong> Don't activate until you arrive at your destination — your plan starts when you first connect to a network.</p>
+
+        <div class="platform">Android</div>
+        <ol>
+            <li>Open <strong>Settings → Network & Internet → SIMs → Add eSIM</strong></li>
+            <li>Choose <strong>"Scan QR code"</strong> and scan the code above</li>
+            <li>Confirm the carrier profile and toggle the line on when you arrive</li>
+        </ol>
+
+        <div class="warn">
+            ⚠️ Don't activate until you arrive — your plan timer starts the moment you first connect to a network.
+        </div>
     </div>
 
     <div class="footer">
-        <p class="ref">Order Reference: {{ reference }}</p>
-        <p>If you have any issues, reply to this email.</p>
+        Order {{ reference }} · <a href="https://www.nimvoy.com/order/{{ reference }}">view in browser</a><br/>
+        Need help? Email <a href="mailto:support@nimvoy.com">support@nimvoy.com</a>
     </div>
 </body>
 </html>
 """)
+
+
+def _format_data_amount(data_gb: int) -> str:
+    """Render the data allowance for display ("Unlimited" instead of 999GB)."""
+    return "Unlimited" if data_gb >= 999 else f"{data_gb} GB"
+
+
+# Country-name lookup for the install instructions. Mirrors the country list
+# that ships in src/data/catalog.ts on the frontend; expand as the catalog
+# grows.
+_COUNTRY_NAMES = {
+    "US": "USA",
+    "JP": "Japan",
+    "KR": "Korea",
+    "CN": "China",
+    "EU": "Europe",
+    "AP": "Asia-Pacific",
+    "CHM": "China + HK + Macau",
+}
+
+
+def _country_label(country_code: str) -> str:
+    """Friendly country label for the email body."""
+    return _COUNTRY_NAMES.get(country_code.upper(), country_code or "eSIM")
 
 
 def generate_qr_image(data: str) -> bytes:
@@ -303,13 +363,22 @@ def send_esim_email(
         msg["From"] = settings.aws_ses_from_email
         msg["To"] = to_email
 
+        # Apple universal install link works for any LPA-prefixed activation
+        # string (iOS 17.4+ one-tap). Skip if the qr_code_data isn't an LPA
+        # string — JoyTel sometimes returns a hosted image URL instead, which
+        # iOS can't consume directly.
+        apple_install_url = (
+            _apple_install_url(qr_code_data) if qr_code_data.startswith("LPA:") else None
+        )
+
         # Render HTML body
         html_body = EMAIL_TEMPLATE.render(
             reference=reference,
             plan_name=plan_name,
-            data_gb=data_gb,
+            data_display=_format_data_amount(data_gb),
             validity_days=validity_days,
-            country=country,
+            country_label=_country_label(country),
+            apple_install_url=apple_install_url,
         )
         msg.attach(MIMEText(html_body, "html"))
 
