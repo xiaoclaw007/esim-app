@@ -162,6 +162,9 @@ async def _process_paid_order(
         reference=order.reference,
         plan_name=plan.name if plan else order.plan_id,
         amount_cents=order.amount_cents,
+        country=plan.country if plan else "",
+        data_gb=plan.data_gb if plan else None,
+        validity_days=plan.validity_days if plan else None,
     )
 
     logger.info(f"Order {order.reference} — submitting to JoyTel")

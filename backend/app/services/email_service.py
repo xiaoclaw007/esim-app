@@ -45,49 +45,93 @@ logger = logging.getLogger(__name__)
 
 
 # --- Payment Confirmation Email ---
+# Same postcard aesthetic as the QR delivery email — stamp, italic
+# Instrument Serif headline, hand-signed sign-off, monospace meta strip.
+# Distinct beat though: this lands seconds after the customer hits Pay,
+# BEFORE the QR is provisioned. Tone is "we got it, eSIM is brewing."
 
 PAYMENT_CONFIRMATION_TEMPLATE = Template("""
 <!DOCTYPE html>
 <html>
 <head>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333; }
-        .header { text-align: center; padding: 20px 0; }
-        .header h1 { color: #2563eb; margin: 0; }
-        .icon { text-align: center; font-size: 48px; margin: 20px 0; }
-        .details { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 20px 0; }
-        .details h3 { margin-top: 0; color: #1e40af; }
-        .details p { margin: 8px 0; }
-        .status-box { background: #fef3c7; border-radius: 8px; padding: 16px; margin: 20px 0; text-align: center; }
-        .status-box p { color: #92400e; font-weight: 600; margin: 0; }
-        .footer { text-align: center; color: #94a3b8; font-size: 12px; padding: 20px 0; }
-    </style>
+<meta charset="utf-8">
+<title>Payment received — your {{ country_name }} eSIM is provisioning</title>
+<style>
+body { margin: 0; padding: 40px 24px; background: #F1EFE6; font-family: -apple-system, BlinkMacSystemFont, Georgia, serif; color: #16382A; }
+.wrap { max-width: 620px; margin: 0 auto; }
+.card { background: #FBFAF5; border: 1px solid #D9D6C6; box-shadow: 0 20px 60px rgba(22,56,42,.14); overflow: hidden; border-radius: 4px; position: relative; }
+.card::before { content: ''; position: absolute; inset: 6px; border: 1px solid #D9D6C6; pointer-events: none; border-radius: 2px; }
+.stamp { position: absolute; top: 30px; right: 30px; width: 92px; height: 116px; background: #FBFAF5; border: 2px dashed #16382A; padding: 6px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: space-between; transform: rotate(3deg); z-index: 2; }
+.stamp .crest { width: 52px; height: 52px; border-radius: 50%; background: #C4633A; display: flex; align-items: center; justify-content: center; color: #FBFAF5; font-family: Georgia, serif; font-style: italic; font-size: 22px; font-weight: 700; }
+.stamp .denom { font-family: ui-monospace, Menlo, monospace; font-size: 9px; letter-spacing: 0.15em; color: #16382A; text-transform: uppercase; text-align: center; line-height: 1.3; }
+.inner { padding: 56px 54px; position: relative; z-index: 0; }
+.eyebrow { font-family: ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: #7B8E82; margin-bottom: 28px; }
+h1 { font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif; font-style: italic; font-weight: 400; font-size: 56px; line-height: 1.02; letter-spacing: -0.02em; margin: 0 0 18px 0; color: #16382A; max-width: 14ch; }
+.signature { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: 28px; color: #C4633A; margin-top: 8px; transform: rotate(-2deg); display: inline-block; }
+.letter { font-size: 16px; line-height: 1.65; color: #375948; max-width: 48ch; font-family: Georgia, serif; }
+.letter em { color: #16382A; font-style: italic; }
+/* Status card — equivalent of one-tap card slot in the QR email. Sits
+   between the letter and the receipt strip. */
+.status-section { margin-top: 36px; padding: 22px 24px 24px; background: #FBFAF5; border: 1px solid #D9D6C6; border-radius: 6px; text-align: center; }
+.status-eyebrow { font-family: ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: #7B8E82; margin: 0 0 6px 0; }
+.status-h4 { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 22px; color: #16382A; margin: 0 0 8px 0; }
+.status-sub { text-align: center; font-size: 14px; color: #375948; line-height: 1.55; margin: 0 auto; max-width: 42ch; }
+.status-pulse { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #C4633A; margin-right: 8px; vertical-align: middle; }
+.meta-tbl { width: 100%; border-collapse: separate; border-spacing: 1px; background: #D9D6C6; margin-top: 32px; border: 1px solid #D9D6C6; }
+.meta-tbl td { background: #FBFAF5; padding: 14px 12px; vertical-align: top; width: 25%; }
+.meta-tbl small { font-family: ui-monospace, Menlo, monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #7B8E82; display: block; margin-bottom: 4px; }
+.meta-tbl b { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 22px; color: #16382A; letter-spacing: -0.01em; }
+.meta-tbl .ref { font-family: ui-monospace, Menlo, monospace; font-style: normal; font-size: 12px; letter-spacing: 0.05em; color: #16382A; }
+.footer { text-align: center; padding: 20px 24px; font-family: ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.2em; color: #7B8E82; text-transform: uppercase; }
+.footer a { color: #7B8E82; text-decoration: none; }
+</style>
 </head>
 <body>
-    <div class="header">
-        <h1>Payment Confirmed ✓</h1>
+<div class="wrap">
+  <div class="card">
+    <div class="stamp">
+      <div class="crest">N</div>
+      <div class="denom">Nimvoy · {{ stamp_iso3 }}<br>{{ stamp_year }}</div>
     </div>
 
-    <div class="icon">💳</div>
+    <div class="inner">
+      <div class="eyebrow">A receipt from Nimvoy — order {{ reference }}</div>
 
-    <p>Hi there! We've received your payment. Your eSIM is now being prepared.</p>
+      <h1>Postage paid.<br><span style="font-style:normal;color:#C4633A">eSIM brewing.</span></h1>
 
-    <div class="details">
-        <h3>Order Details</h3>
-        <p><strong>Order Reference:</strong> {{ reference }}</p>
-        <p><strong>Plan:</strong> {{ plan_name }}</p>
-        <p><strong>Amount:</strong> ${{ amount }}</p>
-        <p><strong>Email:</strong> {{ email }}</p>
+      <p class="letter">
+        Your <em>${{ amount_display }}</em> has cleared, and we're now whispering quietly to our
+        network partners to wake up your {{ country_name }} eSIM. The QR lands in your inbox in
+        about a minute — keep an eye out, that's the one you'll scan.
+      </p>
+      <p class="letter" style="margin-top:14px">
+        Nothing for you to do right now. We'll take it from here.
+      </p>
+      <div class="signature">— Nimvoy</div>
+
+      <div class="status-section">
+        <p class="status-eyebrow"><span class="status-pulse"></span>Provisioning</p>
+        <h4 class="status-h4">QR code on the way</h4>
+        <p class="status-sub">Typically lands in under 60 seconds. We'll send a separate email with your QR code and one-tap install links.</p>
+      </div>
+
+      <table class="meta-tbl" role="presentation" cellpadding="0" cellspacing="0">
+        <tr>
+          <td><small>Plan</small><b>{{ plan_short }}</b></td>
+          <td><small>Days</small><b>{{ validity_days }}</b></td>
+          <td><small>Paid</small><b>${{ amount_display }}</b></td>
+          <td><small>Order</small><b class="ref">{{ reference }}</b></td>
+        </tr>
+      </table>
     </div>
+  </div>
 
-    <div class="status-box">
-        <p>⏳ Your eSIM QR code is being generated. You'll receive a second email shortly with your QR code and setup instructions.</p>
-    </div>
-
-    <div class="footer">
-        <p>Order Reference: {{ reference }}</p>
-        <p>If you have any issues, reply to this email.</p>
-    </div>
+  <div class="footer">
+    <a href="https://www.nimvoy.com/order/{{ reference }}">View in browser</a> ·
+    <a href="mailto:support@nimvoy.com">support@nimvoy.com</a><br><br>
+    Nimvoy · Global eSIM
+  </div>
+</div>
 </body>
 </html>
 """)
@@ -98,19 +142,39 @@ def send_payment_confirmation_email(
     reference: str,
     plan_name: str,
     amount_cents: int,
+    country: str = "",
+    data_gb: int | None = None,
+    validity_days: int | None = None,
 ) -> bool:
     """Send a payment confirmation email immediately after Stripe payment.
 
-    This gives the customer immediate reassurance while we process
-    the JoyTel order and QR code generation.
+    This gives the customer immediate reassurance in the seconds between
+    "card charged" and "QR delivery email landing." Same postcard look as
+    the QR email; the country/data/days args drive the stamp + meta strip.
+    All three are optional so older callers don't break — they just get a
+    sparser meta strip.
     """
     try:
-        amount_str = f"{amount_cents / 100:.2f}"
+        from datetime import datetime as _dt
+
+        meta = _country_meta(country)
+        country_name = meta["name"]
+        now = _dt.now()
+
+        # Compact plan label for the meta strip — prefer "5 GB" if we have
+        # the data figure, fall back to the full plan name truncated.
+        plan_short = (
+            _format_data_amount(data_gb) if data_gb is not None else (plan_name or "—")
+        )
+
         html_body = PAYMENT_CONFIRMATION_TEMPLATE.render(
             reference=reference,
-            plan_name=plan_name,
-            amount=amount_str,
-            email=to_email,
+            country_name=country_name,
+            stamp_iso3=meta["iso3"],
+            stamp_year=now.year,
+            plan_short=plan_short,
+            validity_days=validity_days if validity_days is not None else "—",
+            amount_display=f"{amount_cents / 100:.2f}",
         )
 
         ses_client = boto3.client(
@@ -123,7 +187,9 @@ def send_payment_confirmation_email(
             Source=settings.aws_ses_from_email,
             Destination={"ToAddresses": [to_email]},
             Message={
-                "Subject": {"Data": f"Payment Confirmed — {reference}"},
+                "Subject": {
+                    "Data": f"Payment received — your {country_name} eSIM is on the way ✦ {reference}"
+                },
                 "Body": {"Html": {"Data": html_body}},
             },
         )
