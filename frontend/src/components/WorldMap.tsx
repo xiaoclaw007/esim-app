@@ -19,27 +19,34 @@ import type { FeatureCollection, MultiPolygon, Polygon } from 'geojson'
 // Vite handles JSON imports natively. ~55KB raw, ~12KB gzipped.
 import landTopo from 'world-atlas/land-110m.json'
 
-interface WorldMapProps {
-  onSelectCountry?: (code: string) => void
-  width?: number
-  height?: number
-}
-
-interface City {
+export interface MapCity {
   code: string
   name: string
+  flag: string
+  network: string
+  latencyMs: number
   lng: number
   lat: number
 }
 
-const CITIES: City[] = [
-  { code: 'US',  name: 'New York',  lng: -74.0,  lat: 40.7  },
-  { code: 'JP',  name: 'Tokyo',     lng: 139.69, lat: 35.68 },
-  { code: 'KR',  name: 'Seoul',     lng: 126.98, lat: 37.57 },
-  { code: 'CN',  name: 'Beijing',   lng: 116.4,  lat: 39.9  },
-  { code: 'EU',  name: 'Paris',     lng: 2.35,   lat: 48.85 },
-  { code: 'AP',  name: 'Singapore', lng: 103.8,  lat: 1.35  },
-  { code: 'CHM', name: 'Hong Kong', lng: 114.17, lat: 22.32 },
+interface WorldMapProps {
+  onSelectCountry?: (code: string) => void
+  /** Fires whenever the cycling arc transitions. Lets parents wire UI
+   *  (like the floating "Tokyo · 5G live" cards in the hero) to the
+   *  current pair instead of hard-coding it. Fires on initial render too. */
+  onActiveArcChange?: (a: MapCity, b: MapCity) => void
+  width?: number
+  height?: number
+}
+
+const CITIES: MapCity[] = [
+  { code: 'US',  name: 'New York',  flag: '🇺🇸', network: 'T-Mobile',    latencyMs: 142, lng: -74.0,  lat: 40.7  },
+  { code: 'JP',  name: 'Tokyo',     flag: '🇯🇵', network: 'NTT Docomo',  latencyMs: 184, lng: 139.69, lat: 35.68 },
+  { code: 'KR',  name: 'Seoul',     flag: '🇰🇷', network: 'SK Telecom',  latencyMs:  72, lng: 126.98, lat: 37.57 },
+  { code: 'CN',  name: 'Beijing',   flag: '🇨🇳', network: 'China Mobile',latencyMs: 158, lng: 116.4,  lat: 39.9  },
+  { code: 'EU',  name: 'Paris',     flag: '🇫🇷', network: 'Orange',      latencyMs:  64, lng: 2.35,   lat: 48.85 },
+  { code: 'AP',  name: 'Singapore', flag: '🇸🇬', network: 'Singtel',     latencyMs:  91, lng: 103.8,  lat: 1.35  },
+  { code: 'CHM', name: 'Hong Kong', flag: '🇭🇰', network: 'CSL',         latencyMs: 112, lng: 114.17, lat: 22.32 },
 ]
 
 // Mixed long-haul + intra-region pairs so the cycling arcs don't all look
@@ -112,6 +119,7 @@ const ARC_DURATION_MS = 2800
 
 export function WorldMap({
   onSelectCountry,
+  onActiveArcChange,
   width = 600,
   height = 300,
 }: WorldMapProps) {
@@ -123,6 +131,16 @@ export function WorldMap({
     }, ARC_DURATION_MS)
     return () => clearInterval(id)
   }, [])
+
+  // Fire onActiveArcChange on initial render and every cycle so parents
+  // can sync overlays (e.g. the floating Tokyo/Seoul info pills).
+  useEffect(() => {
+    if (!onActiveArcChange) return
+    const [aCode, bCode] = ARC_PAIRS[arcIdx]
+    const a = CITIES.find((c) => c.code === aCode)!
+    const b = CITIES.find((c) => c.code === bCode)!
+    onActiveArcChange(a, b)
+  }, [arcIdx, onActiveArcChange])
 
   // 2.4° dot grid clipped to land. ~5k visible dots — dense enough to
   // texture but cheap to render.

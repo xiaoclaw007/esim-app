@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { Stars } from '../components/Stars'
-import { WorldMap } from '../components/WorldMap'
+import { WorldMap, type MapCity } from '../components/WorldMap'
 import { useCatalog } from '../hooks/useCatalog'
 import {
   COUNTRIES,
@@ -28,6 +28,11 @@ export default function Landing() {
 
   const popularCountries = COUNTRIES.filter((c) => c.popular)
   const [featTab, setFeatTab] = useState<FeatTab>('local')
+
+  // Floating Tokyo/Seoul-style info pills over the WorldMap. Driven by
+  // the WorldMap's active arc cycle so they describe the same connection
+  // the map is animating, not hardcoded fakes.
+  const [activeArc, setActiveArc] = useState<{ a: MapCity; b: MapCity } | null>(null)
 
   const goTo = (code: string) => navigate(`/destinations/${code.toLowerCase()}`)
   const priceFor = (code: string) => (plans ? fromPrice(plans, code) : null)
@@ -128,19 +133,26 @@ export default function Landing() {
           </div>
 
           <div className="hero-globe-wrap">
-            <WorldMap onSelectCountry={goTo} />
+            <WorldMap onSelectCountry={goTo} onActiveArcChange={(a, b) => setActiveArc({ a, b })} />
+            {/* Cards re-key on the active city code so React remounts them
+                and the CSS pulse-in animation replays — gives the swap a
+                subtle "new ping just landed" feel instead of an instant snap. */}
             <div className="globe-card tl">
-              <div className="flag">🇯🇵</div>
-              <div>
-                <strong>Tokyo · 5G live</strong>
-                <div className="muted mono">NTT · 184 ms</div>
+              <div className="flag">{activeArc?.a.flag ?? '🇯🇵'}</div>
+              <div className="globe-card-body" key={activeArc?.a.code ?? 'JP'}>
+                <strong>{activeArc?.a.name ?? 'Tokyo'} · 5G live</strong>
+                <div className="muted mono">
+                  {activeArc?.a.network ?? 'NTT Docomo'} · {activeArc?.a.latencyMs ?? 184} ms
+                </div>
               </div>
             </div>
             <div className="globe-card br">
-              <div className="flag">🇰🇷</div>
-              <div>
-                <strong>Seoul · Connected</strong>
-                <div className="muted mono">SK Telecom · 72 ms</div>
+              <div className="flag">{activeArc?.b.flag ?? '🇰🇷'}</div>
+              <div className="globe-card-body" key={activeArc?.b.code ?? 'KR'}>
+                <strong>{activeArc?.b.name ?? 'Seoul'} · Connected</strong>
+                <div className="muted mono">
+                  {activeArc?.b.network ?? 'SK Telecom'} · {activeArc?.b.latencyMs ?? 72} ms
+                </div>
               </div>
             </div>
           </div>

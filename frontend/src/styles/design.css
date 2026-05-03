@@ -475,6 +475,14 @@ input, select, textarea { font: inherit; color: inherit; }
 .globe-card .flag { width: 32px; height: 32px; border-radius: 8px; overflow: hidden; background: var(--bg-sunk); display: grid; place-items: center; font-size: 18px; }
 .globe-card strong { display: block; font-weight: 500; font-size: 14px; }
 .globe-card .muted { font-size: 12px; }
+/* Pulses in whenever the inner key changes — i.e. on each arc cycle —
+   so the dynamic city/network swap reads as a "new ping arriving"
+   instead of an instant text snap. */
+.globe-card-body { animation: globe-card-pulse 0.45s ease-out; }
+@keyframes globe-card-pulse {
+  0%   { opacity: 0;   transform: translateY(3px); }
+  100% { opacity: 1;   transform: translateY(0); }
+}
 .globe-card.tl { top: 40px; left: 20px; }
 .globe-card.tr { top: 80px; right: 10px; }
 .globe-card.bl { bottom: 80px; left: 0; }
