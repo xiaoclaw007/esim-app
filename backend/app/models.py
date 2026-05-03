@@ -49,6 +49,9 @@ class User(Base):
     )
     referred_by: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Founder/operator flag — gates the /api/admin/* endpoints + /admin SPA
+    # route. Set manually via SQL UPDATE; no UI to grant for now.
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow

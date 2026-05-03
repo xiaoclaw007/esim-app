@@ -90,6 +90,7 @@ class UserResponse(BaseModel):
     name: Optional[str] = None
     avatar_url: Optional[str] = None
     referral_code: str
+    is_admin: bool = False
     created_at: datetime
 
     model_config = {"from_attributes": True}
