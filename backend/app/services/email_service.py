@@ -165,13 +165,10 @@ h1 { font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif; font-s
 .signature { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: 28px; color: #C4633A; margin-top: 8px; transform: rotate(-2deg); display: inline-block; }
 .letter { font-size: 16px; line-height: 1.65; color: #375948; max-width: 48ch; font-family: Georgia, serif; }
 .letter em { color: #16382A; font-style: italic; }
-.divider { display: flex; align-items: center; gap: 14px; margin: 36px 0; }
-.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #D9D6C6; }
-.divider span { font-family: ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: #7B8E82; }
 /* One-tap install — primary path, sits above the QR card. Buttons stack
    vertically so each is full-width and visually identical (no wrap-shape
    mismatch between IPHONE / ANDROID). */
-.tap-section { padding: 22px 24px 24px; background: #FBFAF5; border: 1px solid #D9D6C6; border-radius: 6px; }
+.tap-section { margin-top: 36px; padding: 22px 24px 24px; background: #FBFAF5; border: 1px solid #D9D6C6; border-radius: 6px; }
 .tap-eyebrow { font-family: ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: #7B8E82; text-align: center; margin: 0 0 6px 0; }
 .tap-h4 { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 22px; color: #16382A; text-align: center; margin: 0 0 6px 0; }
 .tap-sub { text-align: center; font-size: 13px; color: #7B8E82; margin: 0 auto 18px; max-width: 38ch; line-height: 1.5; }
@@ -218,8 +215,6 @@ h1 { font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif; font-s
         Scan it while you're still on home Wi-Fi. It's a 60-second thing.
       </p>
       <div class="signature">— Nimvoy</div>
-
-      <div class="divider"><span>Affix here</span></div>
 
       {% if apple_install_url or android_install_url %}
       <div class="tap-section">
