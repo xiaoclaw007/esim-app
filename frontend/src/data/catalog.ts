@@ -22,6 +22,11 @@ export interface CountryMeta {
   region: string
   networks: string
   popular?: boolean
+  // Hero photo URL for the destination detail page. Optional — when absent,
+  // the page renders the existing CSS-gradient art card. Today we point to
+  // Unsplash CDN URLs (free, commercial-use, no attribution required under
+  // the Unsplash License). Swap to your own hosted image any time.
+  image?: string
 }
 
 export interface RegionalMeta {
@@ -34,6 +39,8 @@ export interface RegionalMeta {
   icon: string // emoji for banner card
   desc: string
   featured?: boolean
+  // See CountryMeta.image. Same fallback semantics.
+  image?: string
 }
 
 export interface Review {
@@ -89,11 +96,15 @@ export const PLANS: Plan[] = [
 ]
 
 // ---- Country metadata (only countries with plans) ----
+// Image URLs: Unsplash CDN, free under the Unsplash License. Sized w=1600
+// q=80 — large enough for retina hero treatment without bloating the page.
+const _UNSPLASH = (id: string) => `https://images.unsplash.com/${id}?w=1600&q=80&auto=format&fit=crop`
+
 export const COUNTRIES: CountryMeta[] = [
-  { code: 'US', name: 'United States', flag: '🇺🇸', region: 'americas', networks: 'T-Mobile, AT&T',        popular: true },
-  { code: 'JP', name: 'Japan',         flag: '🇯🇵', region: 'asia',     networks: 'NTT Docomo, SoftBank', popular: true },
-  { code: 'KR', name: 'South Korea',   flag: '🇰🇷', region: 'asia',     networks: 'SK Telecom, KT',       popular: true },
-  { code: 'CN', name: 'China',         flag: '🇨🇳', region: 'asia',     networks: 'China Mobile, Unicom', popular: true },
+  { code: 'US', name: 'United States', flag: '🇺🇸', region: 'americas', networks: 'T-Mobile, AT&T',        popular: true, image: _UNSPLASH('photo-1750074543601-72f7972d5a8b') },
+  { code: 'JP', name: 'Japan',         flag: '🇯🇵', region: 'asia',     networks: 'NTT Docomo, SoftBank', popular: true, image: _UNSPLASH('photo-1528164344705-47542687000d') },
+  { code: 'KR', name: 'South Korea',   flag: '🇰🇷', region: 'asia',     networks: 'SK Telecom, KT',       popular: true, image: _UNSPLASH('photo-1762267616547-6d6cd4adabc3') },
+  { code: 'CN', name: 'China',         flag: '🇨🇳', region: 'asia',     networks: 'China Mobile, Unicom', popular: true, image: _UNSPLASH('photo-1508804185872-d7badad00f7d') },
 ]
 
 export const REGIONAL_PLANS_META: RegionalMeta[] = [
@@ -106,6 +117,7 @@ export const REGIONAL_PLANS_META: RegionalMeta[] = [
     scope: '3 regions',
     icon: '🇨🇳',
     desc: 'Seamless coverage across mainland China, Hong Kong, and Macau — no VPN required for common apps.',
+    image: _UNSPLASH('photo-1741135742394-97c2a5b61080'),
   },
   {
     code: 'EU',
@@ -117,6 +129,7 @@ export const REGIONAL_PLANS_META: RegionalMeta[] = [
     icon: '🌍',
     desc: 'Covers the EU, UK, Switzerland & Balkans with a single eSIM.',
     featured: true,
+    image: _UNSPLASH('photo-1518057509104-47943ca12e4f'),
   },
   {
     code: 'AP',
@@ -127,6 +140,7 @@ export const REGIONAL_PLANS_META: RegionalMeta[] = [
     scope: '21 countries',
     icon: '🌏',
     desc: 'From Tokyo to Bali on one plan — great for multi-stop itineraries.',
+    image: _UNSPLASH('photo-1523482580672-f109ba8cb9be'),
   },
 ]
 

@@ -21,6 +21,7 @@ interface DestinationMeta {
   isRegional: boolean
   scope?: string
   desc?: string
+  image?: string
 }
 
 function resolveMeta(codeParam: string | undefined): DestinationMeta | null {
@@ -34,6 +35,7 @@ function resolveMeta(codeParam: string | undefined): DestinationMeta | null {
       flag: country.flag,
       networks: country.networks,
       isRegional: false,
+      image: country.image,
     }
   }
   const regional = REGIONAL_PLANS_META.find((r) => r.code === upper)
@@ -46,6 +48,7 @@ function resolveMeta(codeParam: string | undefined): DestinationMeta | null {
       isRegional: true,
       scope: regional.scope,
       desc: regional.desc,
+      image: regional.image,
     }
   }
   return null
@@ -174,24 +177,35 @@ export default function DestinationDetail() {
             </div>
           </div>
 
+          {/* Hero art card. Shows the destination photo when meta.image is set,
+              with a dark gradient overlay so the corner label stays legible.
+              Falls back to a per-country CSS gradient when no image is configured. */}
           <div
             className="detail-artcard"
-            style={{
-              background:
-                meta.code === 'JP'
-                  ? 'radial-gradient(circle at 30% 40%, #E85D3C 0 18%, transparent 19%), linear-gradient(180deg, #2C3E63 0%, #0B1F3A 100%)'
-                  : meta.code === 'US'
-                    ? 'linear-gradient(180deg, #3A5FAD 0%, #1E3566 100%)'
-                    : meta.code === 'KR'
-                      ? 'linear-gradient(180deg, #5068A8 0%, #1F2D5C 100%)'
-                      : meta.code === 'CN' || meta.code === 'CHM'
-                        ? 'linear-gradient(180deg, #C4333A 0%, #6A1820 100%)'
-                        : meta.code === 'EU'
-                          ? 'linear-gradient(180deg, #2B4A82 0%, #0E1F46 100%)'
-                          : meta.code === 'AP'
-                            ? 'linear-gradient(180deg, #4A9E8A 0%, #1E4D44 100%)'
-                            : 'linear-gradient(180deg, #2C3E63 0%, #0B1F3A 100%)',
-            }}
+            style={
+              meta.image
+                ? {
+                    backgroundImage: `linear-gradient(180deg, transparent 50%, rgba(11,31,58,.55) 100%), url(${meta.image})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }
+                : {
+                    background:
+                      meta.code === 'JP'
+                        ? 'radial-gradient(circle at 30% 40%, #E85D3C 0 18%, transparent 19%), linear-gradient(180deg, #2C3E63 0%, #0B1F3A 100%)'
+                        : meta.code === 'US'
+                          ? 'linear-gradient(180deg, #3A5FAD 0%, #1E3566 100%)'
+                          : meta.code === 'KR'
+                            ? 'linear-gradient(180deg, #5068A8 0%, #1F2D5C 100%)'
+                            : meta.code === 'CN' || meta.code === 'CHM'
+                              ? 'linear-gradient(180deg, #C4333A 0%, #6A1820 100%)'
+                              : meta.code === 'EU'
+                                ? 'linear-gradient(180deg, #2B4A82 0%, #0E1F46 100%)'
+                                : meta.code === 'AP'
+                                  ? 'linear-gradient(180deg, #4A9E8A 0%, #1E4D44 100%)'
+                                  : 'linear-gradient(180deg, #2C3E63 0%, #0B1F3A 100%)',
+                  }
+            }
           >
             <div className="lbl">
               <span>NIMVOY · {meta.code}</span>
