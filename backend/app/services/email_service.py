@@ -118,86 +118,113 @@ def send_payment_confirmation_email(
         logger.error(f"Failed to send payment confirmation to {to_email}: {e}")
         return False
 
-# HTML email template for QR code delivery (Nimvoy navy palette to match the SPA)
+# HTML email template for QR code delivery — "Postcard" direction.
+# Visual reference: design_handoff_activation_email/postcard.html
+#
+# Email-client notes from the handoff README:
+#   - Apple Mail / iOS Mail / modern Gmail / Outlook 365 web all render this
+#     accurately.
+#   - Outlook Desktop (Windows MSO) won't honor CSS transforms, so the stamp,
+#     postmark, and signature lose their rotation. The postcard still reads.
+#   - We use a <table> for the meta strip below so MSO doesn't break the grid.
+#   - QR is a CID-attached PNG (Gmail strips inline SVG).
 EMAIL_TEMPLATE = Template("""
 <!DOCTYPE html>
 <html>
 <head>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Geist', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #0B1F3A; background: #F6F4EE; }
-        .header { text-align: center; padding: 20px 0; }
-        .header h1 { color: #0B1F3A; margin: 0; font-size: 26px; font-weight: 500; letter-spacing: -0.02em; }
-        .ios-cta { text-align: center; margin: 24px 0; }
-        .ios-cta a { display: inline-block; background: #0B1F3A; color: #F6F4EE; padding: 14px 28px; border-radius: 999px; text-decoration: none; font-weight: 500; font-size: 15px; }
-        .ios-cta .hint { display: block; margin-top: 8px; font-size: 12px; color: #6B7A8E; font-family: 'Geist Mono', ui-monospace, monospace; letter-spacing: 0.04em; }
-        .qr-container { text-align: center; padding: 28px; background: #FFFFFF; border: 1px solid #E2DED2; border-radius: 14px; margin: 20px 0; }
-        .qr-container .label { font-size: 12px; font-family: 'Geist Mono', ui-monospace, monospace; color: #6B7A8E; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px; display: block; }
-        .qr-container img { width: 240px; height: 240px; }
-        .details { background: #FFFFFF; border: 1px solid #E2DED2; border-radius: 12px; padding: 22px; margin: 20px 0; }
-        .details h3 { margin: 0 0 14px; color: #0B1F3A; font-size: 16px; font-weight: 500; }
-        .details p { margin: 8px 0; font-size: 14.5px; color: #324961; }
-        .details strong { color: #0B1F3A; font-weight: 500; }
-        .steps { background: #FFFFFF; border: 1px solid #E2DED2; border-radius: 12px; padding: 22px; margin: 20px 0; }
-        .steps h3 { margin: 0 0 8px; color: #0B1F3A; font-size: 16px; font-weight: 500; }
-        .steps .platform { font-size: 11px; font-family: 'Geist Mono', ui-monospace, monospace; color: #6B7A8E; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 16px; margin-bottom: 8px; }
-        .steps ol { padding-left: 22px; margin: 8px 0; color: #324961; }
-        .steps li { margin: 6px 0; font-size: 14px; }
-        .warn { background: #FFF5EE; border-radius: 8px; padding: 12px 14px; margin-top: 16px; font-size: 13px; color: #324961; border: 1px solid #F2D9C6; }
-        .footer { text-align: center; color: #6B7A8E; font-size: 12px; padding: 24px 0 8px; font-family: 'Geist Mono', ui-monospace, monospace; letter-spacing: 0.04em; }
-        .footer a { color: #0B1F3A; }
-    </style>
+<meta charset="utf-8">
+<title>{{ country_name }} is calling — your Nimvoy eSIM is ready</title>
+<style>
+body { margin: 0; padding: 40px 24px; background: #F1EFE6; font-family: -apple-system, BlinkMacSystemFont, Georgia, serif; color: #16382A; }
+.wrap { max-width: 620px; margin: 0 auto; }
+.card { background: #FBFAF5; border: 1px solid #D9D6C6; box-shadow: 0 20px 60px rgba(22,56,42,.14); overflow: hidden; border-radius: 4px; position: relative; }
+.card::before { content: ''; position: absolute; inset: 6px; border: 1px solid #D9D6C6; pointer-events: none; border-radius: 2px; }
+.stamp { position: absolute; top: 30px; right: 30px; width: 92px; height: 116px; background: #FBFAF5; border: 2px dashed #16382A; padding: 6px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: space-between; transform: rotate(3deg); z-index: 2; }
+.stamp .crest { width: 52px; height: 52px; border-radius: 50%; background: #C4633A; display: flex; align-items: center; justify-content: center; color: #FBFAF5; font-family: Georgia, serif; font-style: italic; font-size: 22px; font-weight: 700; }
+.stamp .denom { font-family: ui-monospace, Menlo, monospace; font-size: 9px; letter-spacing: 0.15em; color: #16382A; text-transform: uppercase; text-align: center; line-height: 1.3; }
+.postmark { position: absolute; top: 140px; right: 40px; width: 130px; height: 130px; border: 2px solid #16382A; border-radius: 50%; opacity: .35; display: flex; flex-direction: column; align-items: center; justify-content: center; transform: rotate(-12deg); font-family: ui-monospace, Menlo, monospace; text-transform: uppercase; font-size: 9px; letter-spacing: 0.2em; color: #16382A; z-index: 1; text-align: center; line-height: 1.4; }
+.postmark::before { content: ''; position: absolute; inset: 8px; border: 1px dashed #16382A; border-radius: 50%; }
+.inner { padding: 56px 54px; position: relative; z-index: 0; }
+.eyebrow { font-family: ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: #7B8E82; margin-bottom: 28px; }
+h1 { font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif; font-style: italic; font-weight: 400; font-size: 56px; line-height: 1.02; letter-spacing: -0.02em; margin: 0 0 18px 0; color: #16382A; max-width: 12ch; }
+.signature { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: 28px; color: #C4633A; margin-top: 8px; transform: rotate(-2deg); display: inline-block; }
+.letter { font-size: 16px; line-height: 1.65; color: #375948; max-width: 48ch; font-family: Georgia, serif; }
+.letter em { color: #16382A; font-style: italic; }
+.divider { display: flex; align-items: center; gap: 14px; margin: 36px 0; }
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #D9D6C6; }
+.divider span { font-family: ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: #7B8E82; }
+.qr-line { display: flex; gap: 28px; align-items: center; background: #F1EFE6; padding: 26px; border-radius: 6px; border: 1px solid #D9D6C6; }
+.qr-box { width: 140px; height: 140px; background: #FBFAF5; padding: 10px; box-sizing: border-box; border: 1px solid #D9D6C6; flex-shrink: 0; }
+.qr-box img { width: 120px; height: 120px; display: block; }
+.qr-copy h4 { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 22px; margin: 0 0 8px 0; color: #16382A; }
+.qr-copy p { margin: 0; font-size: 14px; color: #375948; line-height: 1.5; }
+.chip { display: inline-block; margin-top: 12px; padding: 8px 12px; background: #16382A; color: #F1EFE6; font-family: ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; border-radius: 2px; text-decoration: none; }
+.meta-tbl { width: 100%; border-collapse: separate; border-spacing: 1px; background: #D9D6C6; margin-top: 32px; border: 1px solid #D9D6C6; }
+.meta-tbl td { background: #FBFAF5; padding: 14px 12px; vertical-align: top; width: 25%; }
+.meta-tbl small { font-family: ui-monospace, Menlo, monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #7B8E82; display: block; margin-bottom: 4px; }
+.meta-tbl b { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 22px; color: #16382A; letter-spacing: -0.01em; }
+.footer { text-align: center; padding: 20px 24px; font-family: ui-monospace, Menlo, monospace; font-size: 10px; letter-spacing: 0.2em; color: #7B8E82; text-transform: uppercase; }
+.footer a { color: #7B8E82; text-decoration: none; }
+</style>
 </head>
 <body>
-    <div class="header">
-        <h1>Your eSIM is ready 🌐</h1>
+<div class="wrap">
+  <div class="card">
+    <div class="stamp">
+      <div class="crest">N</div>
+      <div class="denom">Nimvoy · {{ stamp_iso3 }}<br>{{ stamp_year }}</div>
     </div>
+    <div class="postmark">{{ postmark_city }}<br>✦<br>{{ postmark_date }}</div>
 
-    {% if apple_install_url %}
-    <div class="ios-cta">
-        <a href="{{ apple_install_url }}">Install on iPhone</a>
-        <span class="hint">iOS 17.4+ · One-tap activation</span>
-    </div>
-    {% endif %}
+    <div class="inner">
+      <div class="eyebrow">A postcard from Nimvoy — order {{ reference }}</div>
 
-    <div class="qr-container">
-        <span class="label">Or scan this QR with any phone</span>
-        <img src="cid:qrcode" alt="eSIM QR Code" />
-    </div>
+      <h1>{{ country_name }} is calling.<br><span style="font-style:normal;color:#C4633A">You'll answer.</span></h1>
 
-    <div class="details">
-        <h3>Order details</h3>
-        <p><strong>Reference:</strong> {{ reference }}</p>
-        <p><strong>Plan:</strong> {{ plan_name }}</p>
-        <p><strong>Data:</strong> {{ data_display }}</p>
-        <p><strong>Validity:</strong> {{ validity_days }} days</p>
-    </div>
+      <p class="letter">
+        Your eSIM for {{ country_name }} is on its way — well, <em>it's already here.</em>
+        Below is a little square of pixels that holds {{ data_display }} of {{ speed_label }} data,
+        {{ validity_days }}&nbsp;day{{ "" if validity_days == 1 else "s" }} of roaming across {{ networks }}, and a quiet
+        promise: the moment you land, you're online. Maps, messages, a video home. No more airport
+        Wi-Fi dances.
+      </p>
+      <p class="letter" style="margin-top:14px">
+        Scan it while you're still on home Wi-Fi. It's a 60-second thing.
+      </p>
+      <div class="signature">— Nimvoy</div>
 
-    <div class="steps">
-        <h3>Setup instructions</h3>
+      <div class="divider"><span>Affix here</span></div>
 
-        <div class="platform">iPhone / iPad</div>
-        <ol>
-            <li>Tap <strong>"Install on iPhone"</strong> above (iOS 17.4+) — or <strong>Settings → Cellular → Add eSIM → Use QR Code</strong> and scan</li>
-            <li>Label the line "Nimvoy {{ country_label }}"</li>
-            <li>When you land, enable Data Roaming for this line</li>
-        </ol>
-
-        <div class="platform">Android</div>
-        <ol>
-            <li>Open <strong>Settings → Network & Internet → SIMs → Add eSIM</strong></li>
-            <li>Choose <strong>"Scan QR code"</strong> and scan the code above</li>
-            <li>Confirm the carrier profile and toggle the line on when you arrive</li>
-        </ol>
-
-        <div class="warn">
-            ⚠️ Don't activate until you arrive — your plan timer starts the moment you first connect to a network.
+      <div class="qr-line">
+        <div class="qr-box">
+          <img src="cid:qrcode" alt="eSIM activation QR" />
         </div>
-    </div>
+        <div class="qr-copy">
+          <h4>The square in question</h4>
+          <p>Open your camera. Point it here. Tap the prompt. Your phone does the rest — no account, no app.</p>
+          {% if apple_install_url %}
+          <a class="chip" href="{{ apple_install_url }}">Install on iPhone →</a>
+          {% endif %}
+        </div>
+      </div>
 
-    <div class="footer">
-        Order {{ reference }} · <a href="https://www.nimvoy.com/order/{{ reference }}">view in browser</a><br/>
-        Need help? Email <a href="mailto:support@nimvoy.com">support@nimvoy.com</a>
+      <table class="meta-tbl" role="presentation" cellpadding="0" cellspacing="0">
+        <tr>
+          <td><small>Data</small><b>{{ data_display }}</b></td>
+          <td><small>Days</small><b>{{ validity_days }}</b></td>
+          <td><small>Speed</small><b>{{ speed_label }}</b></td>
+          <td><small>Paid</small><b>${{ amount_display }}</b></td>
+        </tr>
+      </table>
     </div>
+  </div>
+
+  <div class="footer">
+    <a href="https://www.nimvoy.com/order/{{ reference }}">View in browser</a> ·
+    <a href="mailto:support@nimvoy.com">support@nimvoy.com</a><br><br>
+    Nimvoy · Global eSIM
+  </div>
+</div>
 </body>
 </html>
 """)
@@ -208,23 +235,35 @@ def _format_data_amount(data_gb: int) -> str:
     return "Unlimited" if data_gb >= 999 else f"{data_gb} GB"
 
 
-# Country-name lookup for the install instructions. Mirrors the country list
-# that ships in src/data/catalog.ts on the frontend; expand as the catalog
-# grows.
-_COUNTRY_NAMES = {
-    "US": "USA",
-    "JP": "Japan",
-    "KR": "Korea",
-    "CN": "China",
-    "EU": "Europe",
-    "AP": "Asia-Pacific",
-    "CHM": "China + HK + Macau",
+# Country metadata used by the postcard email template. Keys match the
+# `country` column on Plan rows (ISO-2 for single-country plans, bespoke
+# codes for regional bundles). Expand as the catalog grows.
+#
+# Each entry: name, ISO-3 (postcard stamp caption), capital/largest city
+# (postmark caption), local network names (woven into the letter body).
+_COUNTRY_META = {
+    "US":  {"name": "USA",                "iso3": "USA",  "city": "New York", "networks": "T-Mobile and AT&T"},
+    "JP":  {"name": "Japan",              "iso3": "JPN",  "city": "Tokyo",    "networks": "Docomo and SoftBank"},
+    "KR":  {"name": "Korea",              "iso3": "KOR",  "city": "Seoul",    "networks": "SK Telecom and KT"},
+    "CN":  {"name": "China",              "iso3": "CHN",  "city": "Beijing",  "networks": "China Mobile and Unicom"},
+    "EU":  {"name": "Europe",             "iso3": "EUR",  "city": "Madrid",   "networks": "Orange, Vodafone, and local partners"},
+    "AP":  {"name": "Asia-Pacific",       "iso3": "APAC", "city": "Singapore","networks": "Singtel, AIS, and regional partners"},
+    "CHM": {"name": "China + HK + Macau", "iso3": "CHN",  "city": "Hong Kong","networks": "China Mobile, CSL, and CTM"},
 }
 
 
+def _country_meta(country_code: str) -> dict:
+    """Look up metadata for a country code, falling back to safe defaults."""
+    code = (country_code or "").upper()
+    return _COUNTRY_META.get(
+        code,
+        {"name": code or "your destination", "iso3": code[:3] or "INT", "city": "There", "networks": "local partners"},
+    )
+
+
 def _country_label(country_code: str) -> str:
-    """Friendly country label for the email body."""
-    return _COUNTRY_NAMES.get(country_code.upper(), country_code or "eSIM")
+    """Friendly country label (kept for callers that still use this name)."""
+    return _country_meta(country_code)["name"]
 
 
 def generate_qr_image(data: str) -> bytes:
@@ -338,6 +377,7 @@ def send_esim_email(
     validity_days: int,
     country: str,
     qr_code_data: str,
+    amount_cents: int = 0,
 ) -> bool:
     """Send the eSIM QR code email to the customer.
 
@@ -354,13 +394,19 @@ def send_esim_email(
         True if email sent successfully, False otherwise
     """
     try:
+        from datetime import datetime as _dt
+
         # Generate QR code image
         qr_image_bytes = generate_qr_image(qr_code_data)
 
+        meta = _country_meta(country)
+        country_name = meta["name"]
+        now = _dt.now()
+
         # Build email
         msg = MIMEMultipart("related")
-        msg["Subject"] = f"Your eSIM is ready! 🌐 — {reference}"
-        msg["From"] = settings.aws_ses_from_email
+        msg["Subject"] = f"{country_name} is calling — your Nimvoy eSIM is ready ✦ {reference}"
+        msg["From"] = f"Nimvoy <{settings.aws_ses_from_email}>"
         msg["To"] = to_email
 
         # Apple universal install link works for any LPA-prefixed activation
@@ -371,13 +417,20 @@ def send_esim_email(
             _apple_install_url(qr_code_data) if qr_code_data.startswith("LPA:") else None
         )
 
-        # Render HTML body
+        # Render HTML body using the postcard template.
         html_body = EMAIL_TEMPLATE.render(
             reference=reference,
             plan_name=plan_name,
             data_display=_format_data_amount(data_gb),
             validity_days=validity_days,
-            country_label=_country_label(country),
+            country_name=country_name,
+            networks=meta["networks"],
+            speed_label="5G",  # JoyTel doesn't surface per-plan speed; default
+            stamp_iso3=meta["iso3"],
+            stamp_year=now.year,
+            postmark_city=meta["city"].upper(),
+            postmark_date=now.strftime("%b %d").upper(),
+            amount_display=f"{amount_cents / 100:.2f}" if amount_cents else "—",
             apple_install_url=apple_install_url,
         )
         msg.attach(MIMEText(html_body, "html"))

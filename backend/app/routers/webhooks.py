@@ -283,6 +283,7 @@ async def joytel_qrcode_callback(
             validity_days=plan.validity_days if plan else 0,
             country=plan.country if plan else "",
             qr_code_data=qrcode,
+            amount_cents=order.amount_cents,
         )
     except Exception as e:
         logger.error(f"Email delivery failed for {order.reference}: {e}")
