@@ -402,9 +402,27 @@ function CouponRow({
     <div style={{ marginTop: 16, marginBottom: 8 }}>
       {!open && (
         <button
-          className="btn ghost sm"
           onClick={() => setExpanded(true)}
-          style={{ padding: '6px 0', color: 'var(--ink-2)' }}
+          style={{
+            background: 'transparent',
+            border: 0,
+            padding: 0,
+            color: 'var(--ink-2)',
+            fontSize: 14,
+            fontWeight: 500,
+            cursor: 'pointer',
+            textDecoration: 'underline',
+            textDecorationColor: 'var(--line-strong)',
+            textUnderlineOffset: 4,
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.color = 'var(--ink)'
+            e.currentTarget.style.textDecorationColor = 'var(--ink)'
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.color = 'var(--ink-2)'
+            e.currentTarget.style.textDecorationColor = 'var(--line-strong)'
+          }}
         >
           + Have a coupon code?
         </button>
