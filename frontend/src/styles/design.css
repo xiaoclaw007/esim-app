@@ -476,76 +476,42 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .section-head .h1 { max-width: 20ch; }
 
-/* featured destinations grid */
-.feat-grid {
+/* Featured destinations — compact horizontal rows. Designed to scale as
+   the catalog grows past four featured items, so the section can hold many
+   product categories without dominating the page. */
+.feat-list {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
 }
-.feat-card {
-  position: relative;
-  aspect-ratio: 3/4;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  cursor: pointer;
-  isolation: isolate;
-  border: 1px solid var(--line);
-  background: var(--bg-sunk);
-}
-.feat-card .img {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(180deg, transparent 40%, rgba(0,0,0,.55) 100%),
-    repeating-linear-gradient(135deg, var(--line) 0 1px, transparent 1px 18px),
-    var(--bg-sunk);
-}
-.feat-card[data-c="JP"] .img { background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,.55)), radial-gradient(circle at 30% 40%, #E85D3C 0 18%, transparent 19%), linear-gradient(180deg, #2C3E63 0%, #0B1F3A 100%); }
-.feat-card[data-c="ES"] .img { background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,.55)), linear-gradient(180deg, #E8A544 0%, #C4611A 50%, #7A2D13 100%); }
-.feat-card[data-c="US"] .img { background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,.55)), linear-gradient(180deg, #3A5FAD 0%, #1E3566 100%); }
-.feat-card[data-c="TH"] .img { background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,.55)), linear-gradient(180deg, #4A9E8A 0%, #1E4D44 100%); }
-.feat-card[data-c="IT"] .img { background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,.55)), linear-gradient(180deg, #CC7A4E 0%, #6E3A22 100%); }
-.feat-card[data-c="FR"] .img { background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,.55)), linear-gradient(180deg, #7D8CA3 0%, #3A4659 100%); }
-.feat-card[data-c="TR"] .img { background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,.55)), linear-gradient(180deg, #B83A3A 0%, #5A1818 100%); }
-.feat-card[data-c="MX"] .img { background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,.55)), linear-gradient(180deg, #D98E3B 0%, #6E3D12 100%); }
-
-/* Regional pack gradients — match the destination detail hero treatments. */
-.feat-card[data-c="EU"]  .img { background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,.55)), linear-gradient(180deg, #2B4A82 0%, #0E1F46 100%); }
-.feat-card[data-c="AP"]  .img { background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,.55)), linear-gradient(180deg, #4A9E8A 0%, #1E4D44 100%); }
-.feat-card[data-c="CHM"] .img { background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,.55)), linear-gradient(180deg, #C4333A 0%, #6A1820 100%); }
-
-/* 3-column variant for the Regional tab (only 3 regional packs today). */
-.feat-grid--3 { grid-template-columns: repeat(3, 1fr); }
-
-.feat-card .body {
-  position: absolute;
-  inset: auto 0 0 0;
-  padding: 20px;
-  color: #fff;
-  display: flex;
-  justify-content: space-between;
-  align-items: end;
-}
-.feat-card .name { font-size: 22px; font-weight: 500; letter-spacing: -0.01em; display: block; }
-.feat-card .sub { font-size: 12.5px; opacity: .85; font-family: var(--mono); letter-spacing: 0.04em; }
-.feat-card .price { text-align: right; font-family: var(--mono); font-size: 13px; opacity: .95; }
-.feat-card .price b { display: block; font-size: 18px; font-weight: 500; font-family: var(--font); }
-.feat-card .flag-chip {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  background: rgba(255,255,255,.88);
-  color: var(--ink);
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  display: flex;
+.feat-row {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 14px;
   align-items: center;
-  gap: 6px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg-elev);
+  cursor: pointer;
+  transition: border-color .15s ease, transform .15s ease;
 }
-.feat-card:hover { transform: translateY(-2px); border-color: var(--line-strong); }
+.feat-row:hover { border-color: var(--line-strong); transform: translateY(-1px); }
+.feat-row .flag-tile {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  background: var(--bg-sunk);
+  display: grid; place-items: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.feat-row .info { min-width: 0; }
+.feat-row .info .name { font-weight: 500; font-size: 14.5px; letter-spacing: -0.005em; color: var(--ink); }
+.feat-row .info .sub { font-family: var(--mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.04em; margin-top: 2px; }
+.feat-row .price { text-align: right; font-family: var(--mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.04em; white-space: nowrap; }
+.feat-row .price b { font-family: var(--font); font-size: 16px; font-weight: 500; color: var(--ink); margin: 0 4px; letter-spacing: -0.01em; }
+.feat-row .price .from { text-transform: uppercase; }
+.feat-row .price .ccy { color: var(--ink-3); }
 
 /* how it works */
 .how {
@@ -1308,8 +1274,7 @@ img, svg { max-width: 100%; }
 @media (max-width: 960px) {
   .hero-grid, .detail-hero-inner, .checkout { grid-template-columns: 1fr; }
   .checkout-right { border-left: 0; border-top: 1px solid var(--line); }
-  .feat-grid { grid-template-columns: repeat(2, 1fr); }
-  .feat-grid--3 { grid-template-columns: repeat(2, 1fr); }
+  .feat-list { grid-template-columns: repeat(2, 1fr); }
   .how, .reviews, .plans-grid, .regional-banner { grid-template-columns: 1fr; }
   .country-grid { grid-template-columns: repeat(2, 1fr); }
   .detail-info { grid-template-columns: 1fr; }
@@ -1354,8 +1319,7 @@ img, svg { max-width: 100%; }
   .section { padding: 56px 20px; }
   .section-head { flex-direction: column; align-items: flex-start; margin-bottom: 28px; }
   .section-head .btn.ghost { align-self: flex-start; }
-  .feat-grid { grid-template-columns: 1fr; gap: 14px; }
-  .feat-grid--3 { grid-template-columns: 1fr; gap: 14px; }
+  .feat-list { grid-template-columns: 1fr; gap: 8px; }
   .feat-card { aspect-ratio: 16/10; } /* portrait 3/4 wastes vertical space on phones */
   .footer { padding: 48px 20px 32px; }
   .footer-inner { grid-template-columns: 1fr; gap: 32px; }

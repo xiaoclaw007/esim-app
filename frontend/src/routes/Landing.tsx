@@ -11,7 +11,6 @@ import {
   fromPrice,
   priceDollars,
   type CountryMeta,
-  type RegionalMeta,
 } from '../data/catalog'
 
 type FeatTab = 'local' | 'regional'
@@ -190,11 +189,13 @@ export default function Landing() {
           </div>
 
           {featTab === 'local' && (
-            <div className="feat-grid">
+            <div className="feat-list">
               {popularCountries.map((c) => (
-                <FeatCard
+                <FeatRow
                   key={c.code}
-                  country={c}
+                  flag={c.flag}
+                  name={c.name}
+                  sub={c.networks.split(',')[0]}
                   fromCents={priceFor(c.code)}
                   onClick={() => goTo(c.code)}
                 />
@@ -203,11 +204,13 @@ export default function Landing() {
           )}
 
           {featTab === 'regional' && (
-            <div className="feat-grid feat-grid--3">
+            <div className="feat-list">
               {REGIONAL_PLANS_META.map((r) => (
-                <RegionalCard
+                <FeatRow
                   key={r.code}
-                  region={r}
+                  flag={r.icon}
+                  name={r.name}
+                  sub={r.scope}
                   fromCents={priceFor(r.code)}
                   onClick={() => goTo(r.code)}
                 />
@@ -472,19 +475,26 @@ function SuggestionRow({
   )
 }
 
-function FeatCard({
-  country,
+// Compact row used in the Local / Regional tabs of the landing page's
+// Popular destinations section. Same shape works for both single countries
+// and regional packs — caller supplies flag emoji, display name, sub line,
+// and the cheapest price.
+function FeatRow({
+  flag,
+  name,
+  sub,
   fromCents,
   onClick,
 }: {
-  country: CountryMeta
+  flag: string
+  name: string
+  sub: string
   fromCents: number | null
   onClick: () => void
 }) {
   return (
     <div
-      className="feat-card"
-      data-c={country.code}
+      className="feat-row"
       onClick={onClick}
       role="button"
       tabIndex={0}
@@ -495,65 +505,15 @@ function FeatCard({
         }
       }}
     >
-      <div className="img" />
-      <div className="flag-chip">
-        {country.flag} {country.code}
+      <div className="flag-tile">{flag}</div>
+      <div className="info">
+        <div className="name">{name}</div>
+        <div className="sub">{sub}</div>
       </div>
-      <div className="body">
-        <div>
-          <span className="name">{country.name}</span>
-          <span className="sub">{country.networks.split(',')[0]}</span>
-        </div>
-        <div className="price">
-          from
-          <br />
-          <b>{fromCents !== null ? `$${priceDollars(fromCents)}` : '—'}</b>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// Same shape as FeatCard but pulls from RegionalMeta — region name in the
-// title, scope (e.g. "36 countries") in the sub line, and the data-c attr
-// drives the gradient via .feat-card[data-c="EU"|"AP"|"CHM"] in design.css.
-function RegionalCard({
-  region,
-  fromCents,
-  onClick,
-}: {
-  region: RegionalMeta
-  fromCents: number | null
-  onClick: () => void
-}) {
-  return (
-    <div
-      className="feat-card"
-      data-c={region.code}
-      onClick={onClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          onClick()
-        }
-      }}
-    >
-      <div className="img" />
-      <div className="flag-chip">
-        {region.icon} {region.code}
-      </div>
-      <div className="body">
-        <div>
-          <span className="name">{region.name}</span>
-          <span className="sub">{region.scope}</span>
-        </div>
-        <div className="price">
-          from
-          <br />
-          <b>{fromCents !== null ? `$${priceDollars(fromCents)}` : '—'}</b>
-        </div>
+      <div className="price">
+        <span className="from">from</span>{' '}
+        <b>{fromCents !== null ? `$${priceDollars(fromCents)}` : '—'}</b>{' '}
+        <span className="ccy">USD</span>
       </div>
     </div>
   )
