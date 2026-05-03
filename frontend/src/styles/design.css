@@ -476,7 +476,12 @@ input, select, textarea { font: inherit; color: inherit; }
   padding: 12px 14px;
   box-shadow: var(--shadow-md);
   font-size: 13px;
+  /* Size to the widest content line per card; never wrap mid-pill.
+     Prevents the "Paris · 5G live" → 1 line vs "Hong Kong · Connected"
+     → 2 lines mismatch we saw earlier. */
+  width: max-content;
   min-width: 180px;
+  white-space: nowrap;
   display: flex;
   gap: 10px;
   align-items: center;

@@ -147,12 +147,14 @@ export default function Landing() {
                   driven by the pin's projected coordinates (vbX/vbY) — see
                   positionCardForPin() for the smart edge-flipping. */}
               <CardOverlay
-                city={activeArc?.a}
+                self={activeArc?.a}
+                other={activeArc?.b}
                 fallback={{ flag: '🇯🇵', name: 'Tokyo', network: 'NTT Docomo', latencyMs: 184, code: 'JP' }}
                 label="5G live"
               />
               <CardOverlay
-                city={activeArc?.b}
+                self={activeArc?.b}
+                other={activeArc?.a}
                 fallback={{ flag: '🇰🇷', name: 'Seoul', network: 'SK Telecom', latencyMs: 72, code: 'KR' }}
                 label="Connected"
               />
@@ -494,33 +496,48 @@ function SuggestionRow({
 // and regional packs — caller supplies flag emoji, display name, sub line,
 // and the cheapest price.
 // Floating info card that anchors to one of the active arc's pins.
-// `city` may be undefined on first render (before the WorldMap has fired
-// its first onActiveArcChange) — we render the fallback in that case so
-// the cards don't pop in/out.
+// Position rule: the card is placed in the quadrant *opposite* to where
+// the other pin sits — that way two cards never crowd the same side of
+// the map. Edge-clamp keeps cards on-screen if the chosen quadrant
+// would push them past the map boundary.
+//
+// `self` may be undefined on first render (before the WorldMap fires
+// its first onActiveArcChange); we render the fallback in that case
+// so the cards don't pop in/out.
 function CardOverlay({
-  city,
+  self,
+  other,
   fallback,
   label,
 }: {
-  city: MapCity | undefined
+  self: MapCity | undefined
+  other: MapCity | undefined
   fallback: { flag: string; name: string; network: string; latencyMs: number; code: string }
   label: string
 }) {
-  const flag = city?.flag ?? fallback.flag
-  const name = city?.name ?? fallback.name
-  const network = city?.network ?? fallback.network
-  const latencyMs = city?.latencyMs ?? fallback.latencyMs
-  const code = city?.code ?? fallback.code
-  // For first-render (no city yet) center the card so it doesn't appear
-  // at (0,0). Once we have a city, place it at the pin's vbX/vbY %.
-  const leftPct = city ? (city.vbX / MAP_VB_W) * 100 : 50
-  const topPct = city ? (city.vbY / MAP_VB_H) * 100 : 50
-  // Smart edge-flip: card sits opposite to the closer edge so it doesn't
-  // overflow the map. 16px gap between pin and card.
-  const isRightHalf = (city?.vbX ?? 0) >= MAP_VB_W / 2
-  const isBottomHalf = (city?.vbY ?? 0) >= MAP_VB_H / 2
-  const tx = isRightHalf ? 'calc(-100% - 14px)' : '14px'
-  const ty = isBottomHalf ? 'calc(-100% - 14px)' : '14px'
+  const flag = self?.flag ?? fallback.flag
+  const name = self?.name ?? fallback.name
+  const network = self?.network ?? fallback.network
+  const latencyMs = self?.latencyMs ?? fallback.latencyMs
+  const code = self?.code ?? fallback.code
+  const leftPct = self ? (self.vbX / MAP_VB_W) * 100 : 50
+  const topPct = self ? (self.vbY / MAP_VB_H) * 100 : 50
+
+  // Direction logic: card goes opposite the other pin. Edge-clamp flips
+  // the chosen side if the pin sits too close to that edge.
+  const dx = (other?.vbX ?? MAP_VB_W / 2) - (self?.vbX ?? MAP_VB_W / 2)
+  const dy = (other?.vbY ?? MAP_VB_H / 2) - (self?.vbY ?? MAP_VB_H / 2)
+  let goLeft = dx >= 0           // other is to the right → card on left
+  let goAbove = dy >= 0          // other is below → card above
+  // Edge clamps (% thresholds): if pin is too close to the edge we'd be
+  // sending the card toward, flip to the other side.
+  if (goLeft && leftPct < 28) goLeft = false
+  if (!goLeft && leftPct > 72) goLeft = true
+  if (goAbove && topPct < 32) goAbove = false
+  if (!goAbove && topPct > 68) goAbove = true
+
+  const tx = goLeft ? 'calc(-100% - 14px)' : '14px'
+  const ty = goAbove ? 'calc(-100% - 14px)' : '14px'
   return (
     <div
       className="globe-card"
