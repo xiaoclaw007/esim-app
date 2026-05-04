@@ -10,25 +10,12 @@ interface FooterCol {
 }
 
 const cols: FooterCol[] = [
-  {
-    h: 'Destinations',
-    items: [
-      { label: 'Japan', href: '/destinations/jp' },
-      { label: 'United States', href: '/destinations/us' },
-      { label: 'South Korea', href: '/destinations/kr' },
-      { label: 'China', href: '/destinations/cn' },
-      { label: 'Europe regional', href: '/destinations/eu' },
-      { label: 'Asia-Pacific', href: '/destinations/ap' },
-    ],
-  },
-  { h: 'Company', items: ['About', 'Careers', 'Press', 'Affiliates'] },
+  { h: 'Company', items: [{ label: 'About', href: '/about' }] },
   {
     h: 'Support',
     items: [
       { label: 'FAQ', href: '/faq' },
-      'Compatibility',
       { label: 'Contact us', href: 'mailto:support@nimvoy.com' },
-      'Status',
     ],
   },
 ]

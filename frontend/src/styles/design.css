@@ -658,6 +658,19 @@ input, select, textarea { font: inherit; color: inherit; }
   .faq-a { padding: 0 18px 18px; }
 }
 
+/* About-page section body — same column width and tone as the FAQ
+   answer text. */
+.about-body { font-size: 15.5px; line-height: 1.7; color: var(--ink-2); max-width: 64ch; margin: 0; }
+.about-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; max-width: 64ch; }
+.about-list li { font-size: 15.5px; line-height: 1.6; color: var(--ink-2); padding-left: 22px; position: relative; }
+.about-list li::before {
+  content: '';
+  position: absolute; left: 0; top: 10px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent);
+}
+.about-list strong { color: var(--ink); font-weight: 500; }
+
 /* Honest "want broader coverage?" upsell that lives at the bottom of
    the Coverage card on country detail pages. Only renders when a
    matching regional pack exists. */
