@@ -73,11 +73,10 @@ export default function DestinationDetail() {
   const unlimitedPlans = useMemo(() => allPlans.filter(isUnlimited), [allPlans])
 
   const visible = tab === 'unlimited' ? unlimitedPlans : regularPlans
-  // Mark the middle plan as "Most popular" if we have 3+.
-  const popularIdx = visible.length >= 3 ? Math.floor(visible.length / 2) : -1
-
-  // Default-select the popular plan (or first) when the tab or list changes.
-  const defaultSelectedId = visible[popularIdx]?.id ?? visible[0]?.id ?? null
+  // Default-select the middle plan if we have 3+, else the first one.
+  // (No "Most popular" badge — we don't have real popularity data yet.)
+  const defaultIdx = visible.length >= 3 ? Math.floor(visible.length / 2) : 0
+  const defaultSelectedId = visible[defaultIdx]?.id ?? null
   const effectiveSelected = selectedId && visible.some((p) => p.id === selectedId) ? selectedId : defaultSelectedId
 
   if (!meta) {
@@ -269,9 +268,8 @@ export default function DestinationDetail() {
           )}
 
           <div className="plans-grid">
-            {visible.map((p, i) => {
+            {visible.map((p) => {
               const selected = effectiveSelected === p.id
-              const popular = i === popularIdx
               const perGb = !isUnlimited(p) && p.data_gb > 0 ? p.price_cents / p.data_gb : null
               return (
                 <PlanCard
@@ -279,7 +277,6 @@ export default function DestinationDetail() {
                   plan={p}
                   countryCode={meta.code}
                   selected={selected}
-                  popular={popular}
                   perGb={perGb}
                   onSelect={() => setSelectedId(p.id)}
                   onBuy={() => goCheckout(p.id)}
@@ -330,7 +327,6 @@ function PlanCard({
   plan,
   countryCode,
   selected,
-  popular,
   perGb,
   onSelect,
   onBuy,
@@ -338,7 +334,6 @@ function PlanCard({
   plan: Plan
   countryCode: string
   selected: boolean
-  popular: boolean
   perGb: number | null
   onSelect: () => void
   onBuy: () => void
@@ -356,11 +351,6 @@ function PlanCard({
         }
       }}
     >
-      {popular && (
-        <div className="popular">
-          <span className="badge accent">Most popular</span>
-        </div>
-      )}
       <div className="plan-head">
         <div>
           <div className="data">{formatData(plan.data_gb)}</div>
