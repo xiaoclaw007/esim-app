@@ -11,6 +11,7 @@ export function Nav() {
     { to: '/destinations', label: 'Destinations', end: false },
     { to: '/#how-it-works', label: 'How it works', end: false },
     { to: '/#support', label: 'Support', end: false },
+    { to: '/faq', label: 'FAQ', end: false },
   ]
 
   return (
