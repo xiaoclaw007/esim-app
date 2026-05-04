@@ -337,13 +337,18 @@ export default function Landing() {
             </div>
             <div className="how-step">
               <span className="n">03 — INSTALL</span>
-              <h3>Scan the QR, you're online</h3>
+              <h3>Tap to install, or scan</h3>
               <p>
-                One QR code installs your eSIM. Toggle it on when you land —
-                your phone automatically connects to the best local network.
+                One tap from your activation email opens the eSIM setup on
+                modern phones. Older phones scan the QR instead — both bring
+                you online the moment you land.
               </p>
-              <div className="art">
-                <svg width="72" height="72" viewBox="0 0 72 72" aria-hidden="true">
+              <div className="art art--install">
+                <span className="install-mock-btn">
+                  <Icon name="check" size={11} /> INSTALL ON IPHONE →
+                </span>
+                <span className="install-mock-or">or</span>
+                <svg width="60" height="60" viewBox="0 0 72 72" aria-hidden="true" className="install-mock-qr">
                   {Array.from({ length: 9 }).flatMap((_, y) =>
                     Array.from({ length: 9 }).map((_, x) => {
                       const v = (x * 7 + y * 13 + x * y) % 3

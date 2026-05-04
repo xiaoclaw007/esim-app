@@ -773,9 +773,39 @@ input, select, textarea { font: inherit; color: inherit; }
   display: grid;
   place-items: center;
   position: relative;
-  overflow: hidden;
 }
-
+/* Variant for the Install step — shows both the one-tap mock button
+   and the QR fallback side-by-side, with an "or" between them. */
+.how-step .art--install {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 0 16px;
+}
+.install-mock-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 12px;
+  background: var(--ink);
+  color: var(--bg);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.install-mock-or {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.install-mock-qr { flex-shrink: 0; }
+@media (max-width: 720px) {
+  .how-step .art--install { gap: 10px; padding: 0 10px; }
+  .install-mock-btn { font-size: 9.5px; padding: 7px 10px; }
+}
 /* reviews */
 .reviews {
   display: grid;
