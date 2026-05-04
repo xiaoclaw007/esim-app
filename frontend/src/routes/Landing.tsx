@@ -1,8 +1,9 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { Stars } from '../components/Stars'
 import { WorldMap, MAP_VB_W, MAP_VB_H, type MapCity } from '../components/WorldMap'
+import { checkDevice, detectFromUserAgent, type DeviceCheckResult } from '../data/deviceCheck'
 import { useCatalog } from '../hooks/useCatalog'
 import {
   COUNTRIES,
@@ -40,6 +41,24 @@ export default function Landing() {
     (a: MapCity, b: MapCity) => setActiveArc({ a, b }),
     [],
   )
+
+  // Device-check state. Pre-fill from User-Agent on mount so a visitor
+  // on a Pixel sees "Pixel 8" already in the box; iOS hides the model
+  // so iPhone visitors just see "iPhone" until they refine it.
+  const [deviceQuery, setDeviceQuery] = useState('')
+  const [deviceResult, setDeviceResult] = useState<DeviceCheckResult>({
+    status: 'unknown',
+    notes: [],
+    message: 'Type your phone model to check — e.g. "iPhone 14", "Pixel 8", "Galaxy S23".',
+  })
+  useEffect(() => {
+    const detected = detectFromUserAgent()
+    if (detected) {
+      setDeviceQuery(detected)
+      setDeviceResult(checkDevice(detected))
+    }
+  }, [])
+  const runDeviceCheck = () => setDeviceResult(checkDevice(deviceQuery))
 
   const goTo = (code: string) => navigate(`/destinations/${code.toLowerCase()}`)
   const priceFor = (code: string) => (plans ? fromPrice(plans, code) : null)
@@ -424,42 +443,74 @@ export default function Landing() {
                 2021 are compatible. Check yours in a click.
               </p>
               <div className="compat-check">
-                <input placeholder="iPhone 15 Pro" defaultValue="iPhone 15 Pro" />
+                <input
+                  placeholder='Try "iPhone 14", "Pixel 8", "Galaxy S23"'
+                  value={deviceQuery}
+                  onChange={(e) => setDeviceQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') runDeviceCheck()
+                  }}
+                />
                 <button
                   className="btn primary"
                   style={{ background: 'var(--bg)', color: 'var(--ink)' }}
+                  onClick={runDeviceCheck}
                 >
                   Check
                 </button>
               </div>
             </div>
-            <div className="compat-result">
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  marginBottom: 10,
-                  color: 'var(--ok)',
-                  fontWeight: 500,
-                }}
-              >
-                <Icon name="check" size={16} /> COMPATIBLE
-              </div>
-              <div>
-                iPhone 15 Pro
-                <br />
-                iOS 18.4+ · Dual eSIM
-                <br />
-                Supports: 5G, Hotspot, Calls
-                <br />
-                Carrier lock: unlocked ✓
-              </div>
-            </div>
+            <DeviceResultCard result={deviceResult} />
           </div>
         </div>
       </section>
     </>
+  )
+}
+
+// Live-updates from the parent's deviceResult state. Status drives the
+// header color (green compatible, orange unknown, red incompatible).
+function DeviceResultCard({ result }: { result: DeviceCheckResult }) {
+  const statusColor =
+    result.status === 'compatible'
+      ? 'var(--ok)'
+      : result.status === 'incompatible'
+        ? 'var(--pop)'
+        : 'var(--ink-3)'
+  const statusIcon: 'check' | 'x' | 'arrow' =
+    result.status === 'compatible' ? 'check' : result.status === 'incompatible' ? 'x' : 'arrow'
+  const statusLabel =
+    result.status === 'compatible'
+      ? 'COMPATIBLE'
+      : result.status === 'incompatible'
+        ? 'NOT COMPATIBLE'
+        : 'NOT IN QUICK LOOKUP'
+  return (
+    <div className="compat-result">
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          marginBottom: 10,
+          color: statusColor,
+          fontWeight: 500,
+        }}
+      >
+        <Icon name={statusIcon} size={16} /> {statusLabel}
+      </div>
+      {(result.brand || result.model) && (
+        <div style={{ marginBottom: 6 }}>
+          {result.brand && <span>{result.brand}</span>}
+          {result.brand && result.model ? ' · ' : ''}
+          {result.model && <strong>{result.model}</strong>}
+        </div>
+      )}
+      {result.notes.length > 0 && (
+        <div style={{ marginBottom: 10, opacity: 0.85 }}>{result.notes.join(' · ')}</div>
+      )}
+      <div style={{ opacity: 0.85, fontSize: 13.5, lineHeight: 1.5 }}>{result.message}</div>
+    </div>
   )
 }
 
