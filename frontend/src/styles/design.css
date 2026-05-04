@@ -658,6 +658,24 @@ input, select, textarea { font: inherit; color: inherit; }
   .faq-a { padding: 0 18px 18px; }
 }
 
+/* Honest "want broader coverage?" upsell that lives at the bottom of
+   the Coverage card on country detail pages. Only renders when a
+   matching regional pack exists. */
+.coverage-upsell {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.coverage-upsell p { margin: 0 0 8px; font-size: 13.5px; line-height: 1.5; }
+.coverage-upsell-cta {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13.5px; font-weight: 500;
+  color: var(--ink); text-decoration: none;
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 1px;
+}
+.coverage-upsell-cta:hover { color: var(--pop); border-bottom-color: var(--pop); }
+
 /* sections */
 .section {
   padding: 96px 32px;

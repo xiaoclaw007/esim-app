@@ -97,7 +97,11 @@ export default function DestinationDetail() {
   const longest = allPlans.length ? Math.max(...allPlans.map((p) => p.validity_days)) : null
   const shortest = allPlans.length ? Math.min(...allPlans.map((p) => p.validity_days)) : null
 
-  // Coverage: always the main destination. For countries, add a few same-region siblings.
+  // Coverage: just the main destination. (Earlier we listed same-region
+  // siblings as "Roaming partner · 4G" — but that was misleading. A Japan
+  // eSIM does NOT actually roam onto Korea/China carriers; those are
+  // separate plans. The upsell below points buyers to the right regional
+  // pack if they want broader coverage.)
   const coverage: { flag: string; name: string; net: string }[] = [
     {
       flag: meta.flag,
@@ -105,14 +109,19 @@ export default function DestinationDetail() {
       net: `${meta.networks.split(',')[0].trim()} · 5G`,
     },
   ]
-  if (!meta.isRegional) {
-    const neighbors = COUNTRIES.filter(
-      (c) => c.region === COUNTRIES.find((x) => x.code === meta.code)?.region && c.code !== meta.code,
-    ).slice(0, 4)
-    for (const n of neighbors) {
-      coverage.push({ flag: n.flag, name: n.name, net: 'Roaming partner · 4G' })
-    }
+
+  // Honest upsell — for countries also reachable on a regional pack we sell,
+  // suggest the pack with a one-line pitch. Empty for countries with no
+  // matching regional pack (e.g. US — Americas isn't covered today).
+  const REGIONAL_UPSELL: Record<string, { regionalCode: string; pitch: string }> = {
+    JP: { regionalCode: 'AP', pitch: 'Heading on to Korea, Singapore, or Bali too?' },
+    KR: { regionalCode: 'AP', pitch: 'Continuing to Japan, Singapore, or Bali?' },
+    CN: { regionalCode: 'CHM', pitch: 'Adding Hong Kong or Macau to the trip?' },
   }
+  const upsellEntry = !meta.isRegional ? REGIONAL_UPSELL[meta.code] : undefined
+  const upsellRegional = upsellEntry
+    ? REGIONAL_PLANS_META.find((r) => r.code === upsellEntry.regionalCode)
+    : undefined
 
   const goCheckout = (planId: string) => {
     const p = visible.find((x) => x.id === planId)
@@ -298,6 +307,17 @@ export default function DestinationDetail() {
                   </li>
                 ))}
               </ul>
+              {upsellRegional && (
+                <div className="coverage-upsell">
+                  <p className="muted">{upsellEntry!.pitch}</p>
+                  <Link
+                    to={`/destinations/${upsellRegional.code.toLowerCase()}`}
+                    className="coverage-upsell-cta"
+                  >
+                    Try the {upsellRegional.name} plan <Icon name="arrow" size={12} />
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>
