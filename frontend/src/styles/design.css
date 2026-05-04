@@ -1047,9 +1047,9 @@ input, select, textarea { font: inherit; color: inherit; }
 .plans-section { padding: 72px 32px 96px; }
 .plans-inner { max-width: 1280px; margin: 0 auto; }
 .plans-head { display: flex; align-items: end; justify-content: space-between; margin-bottom: 32px; gap: 20px; }
-/* Used when there's only an eyebrow + tabs (no big headline) — keep the
-   default eyebrow-left / tabs-right split for breathing room. */
-.plans-head--tabs-only { align-items: center; }
+/* Stack the eyebrow on top of the tabs (rather than the default side-by-side
+   layout) when there's no big headline filling the left column. */
+.plans-head--tabs-only { flex-direction: column; align-items: flex-start; gap: 14px; }
 
 .plan-tabs {
   display: inline-flex;
