@@ -1553,8 +1553,12 @@ img, svg { max-width: 100%; }
 
 /* ---- Phone (≤ 640px) — aggressive simplification ---- */
 @media (max-width: 640px) {
-  /* Nav: drop secondary links on phones, keep only logo + CTA cluster. */
-  .nav-inner { padding: 14px 18px; gap: 12px; }
+  /* Nav: drop secondary links on phones, keep only logo + CTA cluster.
+     Horizontal padding lives on .nav (matches the 20px section padding
+     below) — .nav-inner only carries the vertical padding so logo and
+     CTA align with the page content. */
+  .nav { padding: 0 20px; }
+  .nav-inner { padding: 14px 0; gap: 12px; }
   .nav-links { display: none; }
   .nav-right { gap: 8px; }
   .nav-right .btn.sm { padding: 8px 12px; font-size: 12.5px; }
