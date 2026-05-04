@@ -226,10 +226,15 @@ export default function DestinationDetail() {
 
       <section className="plans-section">
         <div className="plans-inner">
-          {/* Tabs only — dropped the "Choose a plan" eyebrow + headline.
-              The page already has a hero for the destination, and the
-              tab pill itself is self-explanatory. */}
+          {/* Eyebrow + tabs — dropped the headline ("Transparent per-GB
+              pricing.") since the destination hero already gives the page
+              its identity. The eyebrow stays for section orientation. */}
           <div className="plans-head plans-head--tabs-only">
+            <div>
+              <div className="eyebrow" style={{ marginBottom: 12 }}>
+                Choose a plan
+              </div>
+            </div>
             <div className="plan-tabs">
               <button
                 className={tab === 'regular' ? 'active' : ''}
