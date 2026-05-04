@@ -88,14 +88,18 @@ export default function Destinations() {
 
       <section className="dest-body">
         <div className="dest-body-inner">
-          {/* Regional plans banner — only show when no search active */}
+          {/* Regional plans — same compact .country-row pattern as the
+              country list below so the page reads as one unified catalog
+              instead of two visually-separate sections fighting for
+              attention. The "REGIONAL" tag in the sub line still flags
+              the difference. */}
           {!q.trim() && (region === 'all' || ['europe', 'asia-pacific', 'china-region'].includes(region)) && (
-            <>
+            <div className="dest-group">
               <div className="dest-group-head">
                 <h2>Regional & global</h2>
                 <span className="count">roaming across borders</span>
               </div>
-              <div className="regional-banner">
+              <div className="country-grid">
                 {REGIONAL_PLANS_META
                   .filter((r) => region === 'all' || r.region === region)
                   .map((r) => {
@@ -103,7 +107,7 @@ export default function Destinations() {
                     return (
                       <div
                         key={r.code}
-                        className={`regional-card ${r.featured ? 'featured' : ''}`}
+                        className="country-row"
                         onClick={() => goToCountry(r.code)}
                         role="button"
                         tabIndex={0}
@@ -114,19 +118,21 @@ export default function Destinations() {
                           }
                         }}
                       >
-                        <div className="eyebrow">{r.scope}</div>
-                        <h3>
-                          {r.icon}&nbsp;&nbsp;{r.name}
-                        </h3>
-                        <p className="desc">{r.desc}</p>
-                        <div className="price">
-                          from <b>{fromCents !== null ? `$${priceDollars(fromCents)}` : '—'}</b>
+                        <div className="flag">{r.icon}</div>
+                        <div className="meta">
+                          <strong>{r.name}</strong>
+                          <span className="sub">
+                            {fromCents !== null ? `from $${priceDollars(fromCents)}` : 'coming soon'} · {r.scope.toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="arr">
+                          <Icon name="chevron" size={16} />
                         </div>
                       </div>
                     )
                   })}
               </div>
-            </>
+            </div>
           )}
 
           {/* Countries grouped by region label */}
