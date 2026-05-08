@@ -222,3 +222,7 @@ class Plan(Base):
     price_cents: Mapped[int] = mapped_column(Integer, nullable=False)
     currency: Mapped[str] = mapped_column(String(3), default="usd")
     active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Internal/test plans don't render on the public site (the public
+    # /api/plans endpoint filters is_test == False). Admin catalog
+    # still shows them so operators can run test purchases.
+    is_test: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

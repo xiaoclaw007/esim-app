@@ -303,6 +303,7 @@ class AdminPlanRow(BaseModel):
     price_cents: int
     currency: str
     active: bool
+    is_test: bool
     sold_30d: int
 
 
@@ -379,6 +380,7 @@ def admin_list_plans(
             price_cents=p.price_cents,
             currency=p.currency,
             active=p.active,
+            is_test=p.is_test,
             sold_30d=sold_30d.get(p.id, 0),
         )
         for p in plans

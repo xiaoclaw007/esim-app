@@ -96,6 +96,7 @@ export interface AdminPlanRow {
   price_cents: number
   currency: string
   active: boolean
+  is_test: boolean
   sold_30d: number
 }
 

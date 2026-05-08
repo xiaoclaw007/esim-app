@@ -98,7 +98,25 @@ export default function CrmCatalog() {
                 {plans.map((p) => (
                   <tr key={p.id} style={{ cursor: 'default' }}>
                     <td>
-                      <div>{p.name}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span>{p.name}</span>
+                        {p.is_test && (
+                          <span
+                            style={{
+                              fontFamily: 'var(--mono)',
+                              fontSize: 10,
+                              letterSpacing: '0.08em',
+                              padding: '2px 6px',
+                              borderRadius: 4,
+                              background: 'var(--accent-soft)',
+                              color: 'var(--accent)',
+                            }}
+                            title="Hidden from the public site"
+                          >
+                            TEST
+                          </span>
+                        )}
+                      </div>
                       <div className="dim sm mono">{p.joytel_sku}</div>
                     </td>
                     <td className="num">{p.data_gb >= 999 ? 'Unlimited' : `${p.data_gb} GB`}</td>
