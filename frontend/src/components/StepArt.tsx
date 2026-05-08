@@ -248,33 +248,40 @@ function QrPattern() {
   )
 }
 
-function CodeFields() {
-  // Two stacked input fields — represents the SM-DP+ address and
-  // activation code from the activation email. Just shapes, no
-  // simulated text bars.
+function EmailWithCodes() {
+  // Envelope at top + two "code-looking" labeled rows below — the
+  // activation email containing the SM-DP+ address and activation code.
   return (
     <g>
-      {/* Field 1 */}
-      <rect x={70} y={70} width={60} height={20} rx="3" fill="none" stroke="var(--ink-2)" strokeWidth="1.4" />
-      {/* Field 2 */}
-      <rect x={70} y={100} width={60} height={20} rx="3" fill="none" stroke="var(--ink-2)" strokeWidth="1.4" />
-      {/* Confirm pill */}
-      <rect x={82} y={134} width={36} height={14} rx="7" fill="var(--accent)" />
+      {/* Envelope */}
+      <rect x={78} y={50} width={44} height={28} rx="2" fill="none" stroke="var(--ink)" strokeWidth="1.4" />
+      <path d="M78 54 L100 68 L122 54" fill="none" stroke="var(--ink)" strokeWidth="1.4" strokeLinejoin="round" />
+      {/* Code row 1 — small label + monospace dashes inside a soft chip */}
+      <rect x={70} y={92} width={60} height={18} rx="2" fill="var(--bg-sunk)" stroke="var(--line)" strokeWidth="1" />
+      <line x1={74} y1={101} x2={84} y2={101} stroke="var(--ink-3)" strokeWidth="1.2" />
+      <line x1={88} y1={101} x2={126} y2={101} stroke="var(--ink-2)" strokeWidth="1.2" strokeDasharray="2 2" />
+      {/* Code row 2 */}
+      <rect x={70} y={116} width={60} height={18} rx="2" fill="var(--bg-sunk)" stroke="var(--line)" strokeWidth="1" />
+      <line x1={74} y1={125} x2={84} y2={125} stroke="var(--ink-3)" strokeWidth="1.2" />
+      <line x1={88} y1={125} x2={126} y2={125} stroke="var(--ink-2)" strokeWidth="1.2" strokeDasharray="2 2" />
     </g>
   )
 }
 
-function CursorTyping() {
-  // Single field with a blinking accent cursor — the typing moment.
+function CodeFields() {
+  // Two stacked input fields — filled with content (dashed lines
+  // representing pasted text) — and an accent confirm pill below.
+  // Represents the paste-and-confirm moment of manual entry.
   return (
     <g>
-      {/* Highlighted active field with cursor */}
-      <rect x={70} y={84} width={60} height={24} rx="4" fill="none" stroke="var(--accent)" strokeWidth="1.8" />
-      <line x1={102} y1={88} x2={102} y2={104} stroke="var(--accent)" strokeWidth="2">
-        <animate attributeName="opacity" values="1;0;1" dur="1.1s" repeatCount="indefinite" />
-      </line>
-      {/* Field below, untouched */}
-      <rect x={70} y={120} width={60} height={20} rx="3" fill="none" stroke="var(--line-strong)" strokeWidth="1.2" />
+      {/* Field 1 — filled */}
+      <rect x={70} y={70} width={60} height={20} rx="3" fill="none" stroke="var(--ink-2)" strokeWidth="1.4" />
+      <line x1={74} y1={80} x2={126} y2={80} stroke="var(--ink)" strokeWidth="1.4" strokeDasharray="2 2" />
+      {/* Field 2 — filled */}
+      <rect x={70} y={100} width={60} height={20} rx="3" fill="none" stroke="var(--ink-2)" strokeWidth="1.4" />
+      <line x1={74} y1={110} x2={114} y2={110} stroke="var(--ink)" strokeWidth="1.4" strokeDasharray="2 2" />
+      {/* Confirm pill */}
+      <rect x={82} y={134} width={36} height={14} rx="7" fill="var(--accent)" />
     </g>
   )
 }
@@ -282,7 +289,12 @@ function CursorTyping() {
 const SCREENS: Record<Method, [React.ReactElement, React.ReactElement, React.ReactElement]> = {
   onetap: [<Envelope />, <TapButton />, <ConnectedCheck />],
   qr: [<LaptopWithQr />, <SettingsList />, <QrPattern />],
-  manual: [<CodeFields />, <CursorTyping />, <ConnectedCheck />],
+  // Manual entry mirrors the actual user flow: find the codes in your
+  // email → navigate to Add eSIM → paste them into the form.
+  // Step 2 is the same Settings navigation as the QR method (only the
+  // sub-option you pick at the next screen differs, which is too small
+  // to differentiate at this illustration scale).
+  manual: [<EmailWithCodes />, <SettingsList />, <CodeFields />],
 }
 
 // Steps that draw their own full-frame illustration (e.g., a laptop)
