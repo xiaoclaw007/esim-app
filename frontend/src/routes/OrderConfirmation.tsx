@@ -336,7 +336,19 @@ export default function OrderConfirmation() {
           </ol>
           <div className="qr-box">
             {qrValue ? (
-              <QrCode value={qrValue} size={172} />
+              <QrTapToInstall
+                value={qrValue}
+                appleInstallUrl={appleInstallUrl}
+                androidInstallUrl={androidInstallUrl}
+                platform={platform}
+                onTapInstall={(p) =>
+                  track('one_tap_install_clicked', {
+                    platform: p,
+                    reference: order.reference,
+                    source: 'qr_tap',
+                  })
+                }
+              />
             ) : (
               <div
                 style={{
@@ -353,7 +365,11 @@ export default function OrderConfirmation() {
               </div>
             )}
             <div className="cap">
-              {qrValue ? 'SCAN TO INSTALL' : humanStatus(order.status).toUpperCase()}
+              {qrValue
+                ? platform === 'ios' || platform === 'android'
+                  ? 'TAP TO INSTALL · OR SCAN'
+                  : 'SCAN TO INSTALL'
+                : humanStatus(order.status).toUpperCase()}
             </div>
           </div>
         </div>
@@ -378,6 +394,47 @@ export default function OrderConfirmation() {
       </div>
     </div>
   )
+}
+
+// QR rendered as a tap-to-install link on mobile devices and a plain
+// image on desktop. On iPhone/Android, tapping the QR fires the
+// platform's universal eSIM install URL — same hand-off as the
+// "Install on iPhone / Android" buttons above. On desktop it stays a
+// plain image so it remains scannable from a phone (the second-screen
+// workflow). Long-press in Safari still surfaces the regular image
+// menu (Save in Photos, Copy, etc.) on all platforms.
+function QrTapToInstall({
+  value,
+  appleInstallUrl,
+  androidInstallUrl,
+  platform,
+  onTapInstall,
+}: {
+  value: string
+  appleInstallUrl: string | null
+  androidInstallUrl: string | null
+  platform: 'ios' | 'android' | 'other'
+  onTapInstall: (platform: 'ios' | 'android') => void
+}) {
+  const installUrl =
+    platform === 'ios'
+      ? appleInstallUrl
+      : platform === 'android'
+        ? androidInstallUrl
+        : null
+  if (installUrl) {
+    return (
+      <a
+        href={installUrl}
+        onClick={() => onTapInstall(platform as 'ios' | 'android')}
+        style={{ display: 'block', lineHeight: 0 }}
+        aria-label="Tap to install eSIM"
+      >
+        <QrCode value={value} size={172} />
+      </a>
+    )
+  }
+  return <QrCode value={value} size={172} />
 }
 
 function OrderDetail({ k, v, mono }: { k: string; v: string; mono?: boolean }) {

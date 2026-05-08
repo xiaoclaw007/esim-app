@@ -160,8 +160,20 @@ export default function DemoOrderConfirmation() {
             ))}
           </ol>
           <div className="qr-box">
-            <QrCode value={lpa} size={172} />
-            <div className="cap">SCAN TO INSTALL</div>
+            {platform === 'ios' || platform === 'android' ? (
+              <a
+                href={platform === 'ios' ? appleInstallUrl : androidInstallUrl}
+                style={{ display: 'block', lineHeight: 0 }}
+                aria-label="Tap to install eSIM"
+              >
+                <QrCode value={lpa} size={172} />
+              </a>
+            ) : (
+              <QrCode value={lpa} size={172} />
+            )}
+            <div className="cap">
+              {platform === 'ios' || platform === 'android' ? 'TAP TO INSTALL · OR SCAN' : 'SCAN TO INSTALL'}
+            </div>
           </div>
         </div>
       </div>
