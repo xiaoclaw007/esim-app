@@ -9,7 +9,7 @@ export function Nav() {
   const items = [
     { to: '/', label: 'Home', end: true },
     { to: '/destinations', label: 'Destinations', end: false },
-    { to: '/#how-it-works', label: 'How it works', end: false },
+    { to: '/how-it-works', label: 'How it works', end: false },
     { to: '/#support', label: 'Support', end: false },
     { to: '/faq', label: 'FAQ', end: false },
   ]

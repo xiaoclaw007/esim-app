@@ -14,6 +14,7 @@ const cols: FooterCol[] = [
   {
     h: 'Support',
     items: [
+      { label: 'How it works', href: '/how-it-works' },
       { label: 'FAQ', href: '/faq' },
       { label: 'Contact us', href: 'mailto:support@nimvoy.com' },
     ],
