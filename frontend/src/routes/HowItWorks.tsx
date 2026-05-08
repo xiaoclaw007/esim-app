@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
-import type { IconName } from '../components/Icon'
+import { StepArt } from '../components/StepArt'
 
 // Three-method install guide. Mirrors what the activation email actually
 // ships: a one-tap install button (Apple/Android universal install URLs,
@@ -86,16 +86,9 @@ const METHODS: InstallMethod[] = [
   },
 ]
 
-const STEP_ICONS: Record<InstallMethod['id'], [IconName, IconName, IconName]> = {
-  onetap: ['phone', 'bolt', 'check'],
-  qr: ['link', 'qr', 'check'],
-  manual: ['phone', 'card', 'check'],
-}
-
 export default function HowItWorks() {
   const [active, setActive] = useState<InstallMethod['id']>('onetap')
   const method = METHODS.find((m) => m.id === active) ?? METHODS[0]
-  const icons = STEP_ICONS[method.id]
 
   return (
     <div className="hiw">
@@ -143,13 +136,11 @@ export default function HowItWorks() {
 
           <div className="hiw-steps">
             {method.steps.map((step, i) => (
-              <article key={i} className="hiw-step">
-                <header className="hiw-step__head">
-                  <span className="hiw-step__num">0{i + 1}</span>
-                  <span className="hiw-step__icon">
-                    <Icon name={icons[i]} size={18} />
-                  </span>
-                </header>
+              <article key={`${method.id}-${i}`} className="hiw-step">
+                <div className="hiw-step__art">
+                  <StepArt method={method.id} step={i as 0 | 1 | 2} />
+                </div>
+                <span className="hiw-step__num">0{i + 1}</span>
                 <h3 className="hiw-step__title">{step.title}</h3>
                 <p className="hiw-step__body">{step.body}</p>
               </article>
