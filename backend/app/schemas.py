@@ -168,3 +168,18 @@ class OrderListResponse(BaseModel):
     total: int
     page: int
     per_page: int
+
+
+class OrderUsageResponse(BaseModel):
+    """Live usage for a delivered eSIM, queried from JoyTel on demand.
+
+    All quantities are in megabytes (1024-based). Fields are nullable
+    because JoyTel may not return every value, especially on freshly
+    activated eSIMs that haven't connected to a network yet.
+    """
+    used_mb: Optional[int] = None
+    total_mb: Optional[int] = None
+    left_mb: Optional[int] = None
+    percent: Optional[float] = None  # 0..100, one decimal
+    expires_at: Optional[str] = None  # ISO-ish; carrier formats vary
+    state: str  # 'unused' | 'active' | 'expired' | 'depleted' | 'unknown'

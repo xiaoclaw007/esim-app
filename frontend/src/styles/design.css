@@ -1823,6 +1823,120 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .data-bar-fill { height: 100%; background: var(--ok); border-radius: 3px; }
 .data-bar-fill.warn { background: var(--pop); }
+
+/* "My eSIMs" card wrapper — the existing .esim-item row sits at the
+   top, with the new usage panel rendered below it inside the same
+   card. The wrapper takes over the chrome so the row + usage read
+   as one unit. */
+.esim-card {
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  transition: border-color .15s ease;
+  overflow: hidden;
+}
+.esim-card:hover { border-color: var(--line-strong); }
+.esim-card .esim-item { background: transparent; border: 0; border-radius: 0; padding: 18px 24px; }
+
+/* Usage panel — sits inside .esim-card under the eSIM row. Subtle
+   divider above, mono labels, accent progress bar. */
+.usage-panel {
+  border-top: 1px solid var(--line);
+  padding: 14px 24px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.usage-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.usage-panel__label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.usage-panel__refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.06em;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+.usage-panel__refresh:hover:not(:disabled) { color: var(--ink); background: var(--bg-sunk); }
+.usage-panel__refresh:disabled { opacity: 0.5; cursor: wait; }
+.usage-panel__stats {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.usage-panel__used {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.usage-panel__sep { color: var(--ink-3); font-weight: 400; margin: 0 2px; }
+.usage-panel__percent {
+  font-size: 13px;
+  color: var(--ink-2);
+  letter-spacing: 0.04em;
+}
+.usage-panel__bar {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-sunk);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.usage-panel__fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width .35s ease;
+}
+.usage-panel__fill--hot { background: var(--pop); }
+.usage-panel__meta {
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+.usage-panel__skeleton .usage-panel__bar {
+  background: linear-gradient(90deg, var(--bg-sunk) 0%, color-mix(in srgb, var(--ink-3) 12%, transparent) 50%, var(--bg-sunk) 100%);
+  background-size: 200% 100%;
+  animation: usage-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes usage-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.usage-panel__error {
+  font-size: 13px;
+  color: var(--ink-2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.usage-panel__error button {
+  background: transparent;
+  border: 0;
+  text-decoration: underline;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 13px;
+}
 .esim-item .usage { font-size: 13px; }
 .esim-item .usage .n { font-family: var(--mono); color: var(--ink-3); font-size: 11.5px; margin-top: 4px; display: block; letter-spacing: 0.04em; }
 

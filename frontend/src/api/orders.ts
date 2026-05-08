@@ -23,3 +23,16 @@ interface OrderListResponse {
 export async function listOrders(page = 1, per_page = 20): Promise<OrderListResponse> {
   return apiFetch<OrderListResponse>(`/api/orders?page=${page}&per_page=${per_page}`)
 }
+
+export interface OrderUsage {
+  used_mb: number | null
+  total_mb: number | null
+  left_mb: number | null
+  percent: number | null
+  expires_at: string | null
+  state: 'unused' | 'active' | 'expired' | 'depleted' | 'unknown'
+}
+
+export async function fetchOrderUsage(reference: string): Promise<OrderUsage> {
+  return apiFetch<OrderUsage>(`/api/orders/${encodeURIComponent(reference)}/usage`)
+}

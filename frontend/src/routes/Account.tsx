@@ -3,7 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { useAuth } from '../auth/AuthContext'
 import { useCatalog } from '../hooks/useCatalog'
-import { listOrders, type OrderDetail } from '../api/orders'
+import { listOrders, fetchOrderUsage, type OrderDetail, type OrderUsage } from '../api/orders'
 import {
   COUNTRIES,
   REGIONAL_PLANS_META,
@@ -163,45 +163,186 @@ function EsimListTab({
       {orders.map((o) => {
         const plan = planById.get(o.plan_id) ?? null
         const dest = plan ? resolveMeta(plan) : null
-        const flag = dest?.flag ?? '🌐'
-        const name = dest?.name ?? o.plan_id
-        const statusClass = uiStatusClass(o.status)
         return (
-          <div key={o.reference} className="esim-item esim-item--compact">
-            <div className="flag">{flag}</div>
-            <div>
-              <div className="name">{name} eSIM</div>
-              <div className="plan">
-                {plan ? `${formatData(plan.data_gb)} · ${plan.validity_days} days` : 'Plan details pending'} · {o.reference}
-              </div>
-            </div>
-            <div className={`status ${statusClass}`}>
-              <span className="dot"></span>
-              {humanStatus(o.status)}
-            </div>
-            <div className="mono muted" style={{ fontSize: 12 }}>
-              {new Date(o.created_at).toLocaleDateString()}
-            </div>
-            <div style={{ display: 'flex', gap: 6 }}>
-              {o.status === 'delivered' ? (
-                <button className="btn subtle sm" onClick={() => onInstall(o.reference)}>
-                  View QR
-                </button>
-              ) : o.status === 'failed' ? (
-                <button className="btn ghost sm" onClick={() => onInstall(o.reference)}>
-                  Details
-                </button>
-              ) : (
-                <button className="btn primary sm" onClick={() => onInstall(o.reference)}>
-                  Track
-                </button>
-              )}
-            </div>
-          </div>
+          <EsimCard
+            key={o.reference}
+            order={o}
+            plan={plan}
+            dest={dest}
+            onInstall={() => onInstall(o.reference)}
+          />
         )
       })}
     </div>
   )
+}
+
+// One card per order. Wraps the existing top row + a usage block below
+// for delivered orders. Usage is fetched on mount (lazy — only when the
+// card is rendered, since the My eSIMs tab is the default tab) plus on
+// manual refresh. We don't poll: JoyTel updates with multi-minute lag
+// anyway and each call hits a paid carrier API.
+function EsimCard({
+  order,
+  plan,
+  dest,
+  onInstall,
+}: {
+  order: OrderDetail
+  plan: Plan | null
+  dest: { code: string; name: string; flag: string } | null
+  onInstall: () => void
+}) {
+  const flag = dest?.flag ?? '🌐'
+  const name = dest?.name ?? order.plan_id
+  const statusClass = uiStatusClass(order.status)
+  const isDelivered = order.status === 'delivered'
+
+  return (
+    <div className="esim-card">
+      <div className="esim-item esim-item--compact">
+        <div className="flag">{flag}</div>
+        <div>
+          <div className="name">{name} eSIM</div>
+          <div className="plan">
+            {plan ? `${formatData(plan.data_gb)} · ${plan.validity_days} days` : 'Plan details pending'} · {order.reference}
+          </div>
+        </div>
+        <div className={`status ${statusClass}`}>
+          <span className="dot"></span>
+          {humanStatus(order.status)}
+        </div>
+        <div className="mono muted" style={{ fontSize: 12 }}>
+          {new Date(order.created_at).toLocaleDateString()}
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {isDelivered ? (
+            <button className="btn subtle sm" onClick={onInstall}>
+              View QR
+            </button>
+          ) : order.status === 'failed' ? (
+            <button className="btn ghost sm" onClick={onInstall}>
+              Details
+            </button>
+          ) : (
+            <button className="btn primary sm" onClick={onInstall}>
+              Track
+            </button>
+          )}
+        </div>
+      </div>
+      {isDelivered && plan && <UsagePanel order={order} planTotalGb={plan.data_gb} />}
+    </div>
+  )
+}
+
+// Usage panel — sits below the eSIM row inside the same card. Renders
+// one of three states: loading, error, or a progress bar with stats.
+// Only mounts for delivered orders (parent gates), so we don't waste
+// JoyTel calls on still-provisioning orders.
+function UsagePanel({ order, planTotalGb }: { order: OrderDetail; planTotalGb: number }) {
+  const [usage, setUsage] = useState<OrderUsage | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [refreshedAt, setRefreshedAt] = useState<Date | null>(null)
+
+  const load = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const u = await fetchOrderUsage(order.reference)
+      setUsage(u)
+      setRefreshedAt(new Date())
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    void load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order.reference])
+
+  // Plan total comes from our catalog (authoritative for what was sold).
+  // Carrier-reported total can drift from this for various reasons; we
+  // prefer the catalog total in the UI but show carrier-reported numbers
+  // for "used" since that's the live data we care about.
+  const planTotalMb = Math.round(planTotalGb * 1024)
+  const usedMb = usage?.used_mb ?? null
+  const percent =
+    usedMb !== null && planTotalMb > 0
+      ? Math.min(Math.round((usedMb / planTotalMb) * 1000) / 10, 100)
+      : null
+  const usedDisplay = formatMb(usedMb)
+  const totalDisplay = formatMb(planTotalMb)
+
+  return (
+    <div className="usage-panel">
+      <div className="usage-panel__head">
+        <span className="usage-panel__label">Data usage</span>
+        <button
+          className="usage-panel__refresh"
+          onClick={() => void load()}
+          disabled={loading}
+          aria-label="Refresh usage"
+          title="Refresh"
+        >
+          <Icon name="arrow-r" size={12} />
+          {loading ? 'Refreshing…' : 'Refresh'}
+        </button>
+      </div>
+
+      {loading && !usage && (
+        <div className="usage-panel__skeleton" aria-hidden="true">
+          <div className="usage-panel__bar"><div className="usage-panel__fill" style={{ width: 0 }} /></div>
+        </div>
+      )}
+
+      {error && !loading && (
+        <div className="usage-panel__error">
+          Couldn't fetch usage right now. <button onClick={() => void load()}>Try again</button>
+        </div>
+      )}
+
+      {!loading && !error && usage && (
+        <>
+          <div className="usage-panel__stats">
+            <span className="usage-panel__used">
+              {usedDisplay} <span className="usage-panel__sep">of</span> {totalDisplay}
+            </span>
+            {percent !== null && (
+              <span className="usage-panel__percent mono">{percent.toFixed(percent < 10 ? 1 : 0)}%</span>
+            )}
+          </div>
+          <div className="usage-panel__bar">
+            <div
+              className={`usage-panel__fill ${percent !== null && percent >= 85 ? 'usage-panel__fill--hot' : ''}`}
+              style={{ width: `${percent ?? 0}%` }}
+            />
+          </div>
+          <div className="usage-panel__meta mono">
+            {usage.state === 'unused' && 'Not yet active — install and connect to start tracking.'}
+            {usage.state === 'active' && refreshedAt && (
+              <>Updated {refreshedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</>
+            )}
+            {usage.state === 'depleted' && 'Plan depleted — buy a new one to keep going.'}
+            {usage.state === 'expired' && 'Plan ended.'}
+            {usage.state === 'unknown' && refreshedAt && (
+              <>Updated {refreshedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function formatMb(mb: number | null): string {
+  if (mb === null) return '—'
+  if (mb >= 1024) return `${(mb / 1024).toFixed(mb >= 10240 ? 1 : 2)} GB`
+  return `${mb} MB`
 }
 
 function OrdersTab({
