@@ -22,6 +22,63 @@ const SY = 30 // screen top
 const SW = 80 // screen width
 const SH = 140 // screen height
 
+// Stylized but dense QR — three finder squares (top-left / top-right /
+// bottom-left) and a randomized but deterministic data grid filling the
+// middle. Looks legibly "QR" without trying to actually encode anything.
+function DenseQr({ cx, cy, size }: { cx: number; cy: number; size: number }) {
+  const cells = 11 // grid resolution
+  const cell = size / cells
+  const x0 = cx - size / 2
+  const y0 = cy - size / 2
+  // Deterministic pseudo-random fill — same seed → same pattern.
+  const fill = (i: number, j: number) => {
+    return ((i * 31 + j * 17 + i * j * 7) % 100) < 48
+  }
+  // Inside the 3 finder areas (3x3 in each corner) we don't draw data
+  // pixels — those are reserved for the finder squares.
+  const isFinderArea = (i: number, j: number) =>
+    (i < 3 && j < 3) || (i < 3 && j > cells - 4) || (i > cells - 4 && j < 3)
+  const data: React.ReactElement[] = []
+  for (let i = 0; i < cells; i++) {
+    for (let j = 0; j < cells; j++) {
+      if (isFinderArea(i, j)) continue
+      if (fill(i, j)) {
+        data.push(
+          <rect
+            key={`${i}-${j}`}
+            x={x0 + j * cell}
+            y={y0 + i * cell}
+            width={cell}
+            height={cell}
+            fill="var(--ink)"
+          />,
+        )
+      }
+    }
+  }
+  // Finder square = outer 3x3 ink square with an inner 1x1 ink dot in
+  // the middle of an inset 1x1 white ring.
+  const finder = (i: number, j: number) => {
+    const fx = x0 + j * cell
+    const fy = y0 + i * cell
+    return (
+      <g key={`f-${i}-${j}`}>
+        <rect x={fx} y={fy} width={cell * 3} height={cell * 3} fill="var(--ink)" />
+        <rect x={fx + cell * 0.5} y={fy + cell * 0.5} width={cell * 2} height={cell * 2} fill="var(--bg-elev)" />
+        <rect x={fx + cell} y={fy + cell} width={cell} height={cell} fill="var(--ink)" />
+      </g>
+    )
+  }
+  return (
+    <g>
+      {data}
+      {finder(0, 0)}
+      {finder(0, cells - 3)}
+      {finder(cells - 3, 0)}
+    </g>
+  )
+}
+
 function PhoneFrame({ children }: { children: React.ReactNode }) {
   return (
     <svg
@@ -118,39 +175,30 @@ function ConnectedCheck() {
 }
 
 function LaptopWithQr() {
-  // A laptop sketched outside the phone screen (left side) showing a
-  // QR code; the phone is "looking at it" via the camera. Composes the
-  // two devices in one illustration.
+  // Big laptop (external screen) showing a dense QR code, replacing
+  // the phone for this step entirely. The step is about putting the
+  // QR onto a second device, so the laptop is the focal element and
+  // the phone is implicit. Drawn full-width at viewBox scale.
   return (
     <g>
-      {/* Override: draw laptop OUTSIDE the screen rect, at viewBox left */}
-      {/* Laptop screen */}
-      <rect x={10} y={70} width={42} height={32} rx="2" fill="var(--bg-elev)" stroke="var(--ink)" strokeWidth="1.4" />
-      {/* QR pattern simplified — 3x3 corner squares + dots */}
-      <rect x={14} y={74} width={6} height={6} fill="var(--ink)" />
-      <rect x={42} y={74} width={6} height={6} fill="var(--ink)" />
-      <rect x={14} y={92} width={6} height={6} fill="var(--ink)" />
-      <rect x={24} y={80} width={2} height={2} fill="var(--ink)" />
-      <rect x={28} y={84} width={2} height={2} fill="var(--ink)" />
-      <rect x={32} y={88} width={2} height={2} fill="var(--ink)" />
-      <rect x={36} y={92} width={2} height={2} fill="var(--ink)" />
+      {/* Hide the inherited phone frame — we draw a laptop instead */}
+      <rect x={0} y={0} width={VB_W} height={VB_H} fill="var(--bg-elev)" />
+      {/* Laptop body */}
+      <rect x={28} y={48} width={144} height={104} rx="6" fill="var(--bg)" stroke="var(--ink)" strokeWidth="1.6" />
+      {/* Inner screen rect */}
+      <rect x={36} y={56} width={128} height={88} rx="2" fill="var(--bg-elev)" stroke="var(--line)" strokeWidth="1" />
+      {/* QR code centered on the laptop screen */}
+      <DenseQr cx={100} cy={100} size={64} />
       {/* Laptop base */}
-      <path d="M6 102 L56 102 L52 108 L10 108 Z" fill="var(--bg-elev)" stroke="var(--ink)" strokeWidth="1.4" strokeLinejoin="round" />
-      {/* Connection arc from laptop to phone */}
       <path
-        d="M52 88 Q 60 70 80 80"
-        fill="none"
-        stroke="var(--accent)"
-        strokeWidth="1.4"
-        strokeDasharray="3 3"
+        d="M16 152 L184 152 L172 162 L28 162 Z"
+        fill="var(--bg)"
+        stroke="var(--ink)"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
       />
-      {/* Inside phone screen: camera viewfinder */}
-      <path d="M70 60 L70 50 L80 50" fill="none" stroke="var(--accent)" strokeWidth="1.6" strokeLinecap="round" />
-      <path d="M120 50 L130 50 L130 60" fill="none" stroke="var(--accent)" strokeWidth="1.6" strokeLinecap="round" />
-      <path d="M70 130 L70 140 L80 140" fill="none" stroke="var(--accent)" strokeWidth="1.6" strokeLinecap="round" />
-      <path d="M120 140 L130 140 L130 130" fill="none" stroke="var(--accent)" strokeWidth="1.6" strokeLinecap="round" />
-      {/* Center dot */}
-      <circle cx={100} cy={95} r={3} fill="var(--accent)" />
+      {/* Hinge bar */}
+      <line x1={92} y1={156} x2={108} y2={156} stroke="var(--ink-2)" strokeWidth="1.2" />
     </g>
   )
 }
@@ -185,27 +233,17 @@ function SettingsList() {
 }
 
 function QrPattern() {
-  // A QR code pattern + scanning corner brackets (camera viewfinder).
+  // Dense QR centered on the screen, framed by accent viewfinder
+  // corner brackets (the camera UI overlay).
   return (
     <g>
       {/* Viewfinder corner brackets */}
-      <path d="M68 56 L68 50 L74 50" fill="none" stroke="var(--accent)" strokeWidth="1.6" strokeLinecap="round" />
-      <path d="M126 50 L132 50 L132 56" fill="none" stroke="var(--accent)" strokeWidth="1.6" strokeLinecap="round" />
-      <path d="M68 124 L68 130 L74 130" fill="none" stroke="var(--accent)" strokeWidth="1.6" strokeLinecap="round" />
-      <path d="M126 130 L132 130 L132 124" fill="none" stroke="var(--accent)" strokeWidth="1.6" strokeLinecap="round" />
-      {/* QR-ish pattern inside */}
-      <rect x={76} y={58} width={10} height={10} fill="var(--ink)" />
-      <rect x={114} y={58} width={10} height={10} fill="var(--ink)" />
-      <rect x={76} y={112} width={10} height={10} fill="var(--ink)" />
-      <rect x={92} y={66} width={3} height={3} fill="var(--ink)" />
-      <rect x={102} y={72} width={3} height={3} fill="var(--ink)" />
-      <rect x={112} y={86} width={3} height={3} fill="var(--ink)" />
-      <rect x={92} y={92} width={3} height={3} fill="var(--ink)" />
-      <rect x={104} y={100} width={3} height={3} fill="var(--ink)" />
-      <rect x={88} y={110} width={3} height={3} fill="var(--ink)" />
-      <rect x={114} y={108} width={3} height={3} fill="var(--ink)" />
-      {/* Scan line */}
-      <line x1={70} y1={92} x2={130} y2={92} stroke="var(--accent)" strokeWidth="1.2" opacity="0.7" />
+      <path d="M66 56 L66 48 L74 48" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M126 48 L134 48 L134 56" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M66 144 L66 152 L74 152" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M126 152 L134 152 L134 144" fill="none" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" />
+      {/* The QR itself */}
+      <DenseQr cx={100} cy={100} size={62} />
     </g>
   )
 }
@@ -247,6 +285,23 @@ const SCREENS: Record<Method, [React.ReactElement, React.ReactElement, React.Rea
   manual: [<CodeFields />, <CursorTyping />, <ConnectedCheck />],
 }
 
+// Steps that draw their own full-frame illustration (e.g., a laptop)
+// instead of the shared phone frame.
+const FRAMELESS = new Set(['qr-0'])
+
 export function StepArt({ method, step }: Props) {
+  const key = `${method}-${step}`
+  if (FRAMELESS.has(key)) {
+    return (
+      <svg
+        viewBox={`0 0 ${VB_W} ${VB_H}`}
+        role="img"
+        aria-hidden="true"
+        style={{ display: 'block', width: '100%', height: '100%' }}
+      >
+        {SCREENS[method][step]}
+      </svg>
+    )
+  }
   return <PhoneFrame>{SCREENS[method][step]}</PhoneFrame>
 }
