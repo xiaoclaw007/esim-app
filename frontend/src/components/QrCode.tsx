@@ -7,23 +7,31 @@ interface QrCodeProps {
   ariaLabel?: string
 }
 
-// Renders an SVG QR for arbitrary payloads (primarily LPA activation strings
-// like LPA:1$smdp.example.com$CODE). SVG keeps it crisp at any zoom and
-// lets the QR color inherit from the surrounding design tokens.
+// Renders the QR as a PNG <img> rather than inline SVG.
+//
+// Why PNG: iOS 17+ runs Live Text / Visual Look Up over actual raster
+// images, which is what triggers the long-press "Add eSIM" Quick Action.
+// Inline SVG markup is treated as DOM, not an image, so the gesture
+// doesn't fire. Switching to PNG gets the same on-device install
+// hand-off the email already gets.
+//
+// Quality: we generate at 4x the displayed size and let CSS scale
+// down, so the QR stays crisp on retina displays. Background stays
+// transparent to match the existing card chrome.
 export function QrCode({ value, size = 192, ariaLabel = 'eSIM activation QR code' }: QrCodeProps) {
-  const [svg, setSvg] = useState<string | null>(null)
+  const [dataUrl, setDataUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
-    QRCode.toString(value, {
-      type: 'svg',
+    QRCode.toDataURL(value, {
       errorCorrectionLevel: 'M',
       margin: 1,
+      width: size * 4,
       color: { dark: '#0B1F3A', light: '#00000000' },
     })
-      .then((s) => {
-        if (!cancelled) setSvg(s)
+      .then((url) => {
+        if (!cancelled) setDataUrl(url)
       })
       .catch((e: Error) => {
         if (!cancelled) setError(e.message)
@@ -31,17 +39,18 @@ export function QrCode({ value, size = 192, ariaLabel = 'eSIM activation QR code
     return () => {
       cancelled = true
     }
-  }, [value])
+  }, [value, size])
 
   if (error) return <div style={{ fontSize: 12, color: 'var(--pop)' }}>QR error: {error}</div>
-  if (!svg) return <div style={{ width: size, height: size }} />
+  if (!dataUrl) return <div style={{ width: size, height: size }} />
 
   return (
-    <div
-      aria-label={ariaLabel}
-      role="img"
-      style={{ width: size, height: size }}
-      dangerouslySetInnerHTML={{ __html: svg }}
+    <img
+      src={dataUrl}
+      alt={ariaLabel}
+      width={size}
+      height={size}
+      style={{ display: 'block', width: size, height: size }}
     />
   )
 }
