@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -212,10 +213,35 @@ async def get_order_usage(
         # instead of nested under "data". Fall back to the whole result.
         data = result if isinstance(result, dict) else {}
 
-    used_mb = _to_int_mb(_pick(data, "usedFlow", "used_flow", "usedSize", "used"))
+    # JoyTel returns totalUsage as cumulative bytes consumed (not MB).
+    # Confirmed shape from a live response:
+    #   { effTime, expTime, totalUsage, dataUsageList: [{usageDate, mcc, usage}] }
+    # All quantities are byte-strings; convert to MB. We still try the
+    # documented-but-unobserved alternate names as a fallback in case
+    # the field name varies across product types.
+    used_bytes_raw = _pick(data, "totalUsage", "total_usage", "usedFlow", "used_flow", "usedSize", "used")
+    used_bytes_int = _to_int_mb(used_bytes_raw)  # naming is legacy; this just parses to int
+    used_mb: Optional[int] = (
+        used_bytes_int // (1024 * 1024) if used_bytes_int is not None else None
+    )
+    if used_mb is None:
+        # Fall back to the alternate field names that ARE already in MB.
+        used_mb = _to_int_mb(_pick(data, "usedMb", "used_mb"))
     total_mb = _to_int_mb(_pick(data, "totalFlow", "total_flow", "totalSize", "total"))
     left_mb = _to_int_mb(_pick(data, "leftFlow", "left_flow", "remainSize", "remain"))
-    expires = _pick(data, "expireTime", "expire_time", "expireAt", "expire_at", "endTime")
+    # JoyTel actually returns expTime as epoch milliseconds (e.g.
+    # "1778187239000"). Convert to ISO so the frontend can parse it
+    # directly. Falls through to whatever string is there if it's
+    # not a numeric epoch.
+    expires_raw = _pick(data, "expTime", "expireTime", "expire_time", "expireAt", "expire_at", "endTime")
+    expires: Optional[str] = None
+    if expires_raw is not None:
+        try:
+            expires = (
+                datetime.fromtimestamp(int(expires_raw) / 1000, tz=timezone.utc).isoformat()
+            )
+        except (TypeError, ValueError):
+            expires = str(expires_raw)
 
     # Cross-fill missing values from the others when possible.
     if total_mb is None and used_mb is not None and left_mb is not None:
@@ -270,7 +296,7 @@ async def get_order_usage(
         total_mb=total_mb,
         left_mb=left_mb,
         percent=percent,
-        expires_at=str(expires) if expires else None,
+        expires_at=expires,
         state=state,
         esim_status=esim_status,
         installed_at=order.installed_at.isoformat() if order.installed_at else None,

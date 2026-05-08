@@ -195,8 +195,40 @@ function EsimCard({
 }) {
   const flag = dest?.flag ?? '🌐'
   const name = dest?.name ?? order.plan_id
-  const statusClass = uiStatusClass(order.status)
   const isDelivered = order.status === 'delivered'
+
+  // Usage state lives on the card so both the top-row status and the
+  // usage panel below render from the same source of truth. Without
+  // this lift, the row could show "Ready to install" while the panel
+  // says "Expired" — contradictory and confusing.
+  const [usage, setUsage] = useState<OrderUsage | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [refreshedAt, setRefreshedAt] = useState<Date | null>(null)
+
+  const loadUsage = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const u = await fetchOrderUsage(order.reference)
+      setUsage(u)
+      setRefreshedAt(new Date())
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!isDelivered) return
+    void loadUsage()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order.reference, isDelivered])
+
+  // Derive the top-row status from the merge of DB status + live JoyTel
+  // signals. JoyTel data wins when present; falls back to DB status.
+  const display = displayStatus(order.status, usage)
 
   return (
     <div className="esim-card">
@@ -208,9 +240,9 @@ function EsimCard({
             {plan ? `${formatData(plan.data_gb)} · ${plan.validity_days} days` : 'Plan details pending'} · {order.reference}
           </div>
         </div>
-        <div className={`status ${statusClass}`}>
+        <div className={`status ${display.cls}`}>
           <span className="dot"></span>
-          {humanStatus(order.status)}
+          {display.label}
         </div>
         <div className="mono muted" style={{ fontSize: 12 }}>
           {new Date(order.created_at).toLocaleDateString()}
@@ -231,40 +263,55 @@ function EsimCard({
           )}
         </div>
       </div>
-      {isDelivered && plan && <UsagePanel order={order} planTotalGb={plan.data_gb} />}
+      {isDelivered && plan && (
+        <UsagePanel
+          planTotalGb={plan.data_gb}
+          usage={usage}
+          loading={loading}
+          error={error}
+          refreshedAt={refreshedAt}
+          onRefresh={() => void loadUsage()}
+        />
+      )}
     </div>
   )
 }
 
+// Pick the right status label + class given the DB status and the
+// live JoyTel data. JoyTel state wins when it tells us something
+// definitive (expired / depleted / active), otherwise we fall back
+// to the DB humanStatus mapping.
+function displayStatus(
+  dbStatus: string,
+  usage: OrderUsage | null,
+): { label: string; cls: 'active' | 'inactive' | 'expired' } {
+  if (usage) {
+    if (usage.state === 'expired') return { label: 'Expired', cls: 'expired' }
+    if (usage.state === 'depleted') return { label: 'Used up', cls: 'expired' }
+    if (usage.state === 'active') return { label: 'Active', cls: 'active' }
+  }
+  return { label: humanStatus(dbStatus), cls: uiStatusClass(dbStatus) }
+}
+
 // Usage panel — sits below the eSIM row inside the same card. Renders
 // one of three states: loading, error, or a progress bar with stats.
-// Only mounts for delivered orders (parent gates), so we don't waste
-// JoyTel calls on still-provisioning orders.
-function UsagePanel({ order, planTotalGb }: { order: OrderDetail; planTotalGb: number }) {
-  const [usage, setUsage] = useState<OrderUsage | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [refreshedAt, setRefreshedAt] = useState<Date | null>(null)
-
-  const load = async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const u = await fetchOrderUsage(order.reference)
-      setUsage(u)
-      setRefreshedAt(new Date())
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    void load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [order.reference])
-
+// State lives on the parent EsimCard so the top-row status badge and
+// this panel render from the same data; we just consume props here.
+function UsagePanel({
+  planTotalGb,
+  usage,
+  loading,
+  error,
+  refreshedAt,
+  onRefresh,
+}: {
+  planTotalGb: number
+  usage: OrderUsage | null
+  loading: boolean
+  error: string | null
+  refreshedAt: Date | null
+  onRefresh: () => void
+}) {
   // Plan total comes from our catalog (authoritative for what was sold).
   // Carrier-reported total can drift from this for various reasons; we
   // prefer the catalog total in the UI but show carrier-reported numbers
@@ -287,7 +334,7 @@ function UsagePanel({ order, planTotalGb }: { order: OrderDetail; planTotalGb: n
         </span>
         <button
           className="usage-panel__refresh"
-          onClick={() => void load()}
+          onClick={onRefresh}
           disabled={loading}
           aria-label="Refresh usage"
           title="Refresh"
@@ -305,7 +352,7 @@ function UsagePanel({ order, planTotalGb }: { order: OrderDetail; planTotalGb: n
 
       {error && !loading && (
         <div className="usage-panel__error">
-          Couldn't fetch usage right now. <button onClick={() => void load()}>Try again</button>
+          Couldn't fetch usage right now. <button onClick={onRefresh}>Try again</button>
         </div>
       )}
 
