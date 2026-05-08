@@ -267,6 +267,21 @@ export default function DestinationDetail() {
             </div>
           )}
 
+          {visible.length > 0 && (
+            <div className="plans-included" aria-label="Features included with every plan">
+              <span className="plans-included__lbl">Every plan includes</span>
+              <span className="plans-included__item">
+                <Icon name="signal" size={14} /> 4G/5G data
+              </span>
+              <span className="plans-included__item">
+                <Icon name="hotspot" size={14} /> Hotspot &amp; tethering
+              </span>
+              <span className="plans-included__item">
+                <Icon name="bolt" size={14} /> Instant activation
+              </span>
+            </div>
+          )}
+
           <div className="plans-grid">
             {visible.map((p) => {
               const selected = effectiveSelected === p.id
@@ -287,11 +302,10 @@ export default function DestinationDetail() {
 
           <div className="detail-info">
             <div className="info-card">
-              <h3>What's included</h3>
-              <InfoRow icon="signal" label="Data (4G/5G)" value="Included" />
-              <InfoRow icon="hotspot" label="Hotspot / tethering" value="Included" />
-              <InfoRow icon="phone" label="Calls & SMS" value="Via WhatsApp / FaceTime" />
-              <InfoRow icon="clock" label="Activation" value="On first connection" last />
+              <h3>Good to know</h3>
+              <InfoRow icon="phone" label="Calls & SMS" value="Use WhatsApp / FaceTime" />
+              <InfoRow icon="clock" label="Activation" value="On first network connection" />
+              <InfoRow icon="bolt" label="Need more data?" value="Buy a new plan" last />
             </div>
             <div className="info-card">
               <h3>Coverage</h3>
@@ -364,11 +378,6 @@ function PlanCard({
           <span className="per"> · ${priceDollars(Math.round(perGb))}/GB</span>
         )}
       </div>
-      <ul>
-        <li>High-speed 4G/5G data</li>
-        <li>Hotspot &amp; tethering</li>
-        <li>Instant activation</li>
-      </ul>
       <button
         className={`btn ${selected ? 'primary' : 'subtle'} block`}
         onClick={(e) => {
