@@ -368,7 +368,6 @@ function PlanCard({
         <li>High-speed 4G/5G data</li>
         <li>Hotspot &amp; tethering</li>
         <li>Instant activation</li>
-        {plan.data_gb >= 10 && !isUnlimited(plan) && <li>Top-up anytime</li>}
       </ul>
       <button
         className={`btn ${selected ? 'primary' : 'subtle'} block`}
