@@ -201,6 +201,18 @@ export interface AnalyticsFunnelStep {
   sessions: number
 }
 
+export interface InstallFunnelStep {
+  label: string
+  key: string
+  orders: number
+}
+
+export interface InstallFunnelResponse {
+  steps: InstallFunnelStep[]
+  has_install_events: boolean
+  days: number
+}
+
 export interface AnalyticsTopDestination {
   code: string
   name: string
@@ -274,6 +286,8 @@ export const adminApi = {
     apiFetch<AnalyticsTimeseriesPoint[]>(`/api/admin/analytics/timeseries?days=${days}`),
   analyticsFunnel: (days = 30) =>
     apiFetch<AnalyticsFunnelStep[]>(`/api/admin/analytics/funnel?days=${days}`),
+  analyticsInstallFunnel: (days = 30) =>
+    apiFetch<InstallFunnelResponse>(`/api/admin/analytics/install-funnel?days=${days}`),
   analyticsTopDestinations: (days = 30, limit = 10) =>
     apiFetch<AnalyticsTopDestination[]>(`/api/admin/analytics/destinations?days=${days}&limit=${limit}`),
   analyticsSources: (days = 30) =>

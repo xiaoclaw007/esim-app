@@ -1,5 +1,6 @@
 """Order endpoints — public status check + authenticated order history."""
 
+import asyncio
 import logging
 from typing import Any, Optional
 
@@ -15,7 +16,7 @@ from app.schemas import (
     OrderStatusResponse,
     OrderUsageResponse,
 )
-from app.services.joytel_rsp import get_esim_usage
+from app.services.joytel_rsp import get_esim_status, get_esim_usage
 
 logger = logging.getLogger(__name__)
 
@@ -181,19 +182,29 @@ async def get_order_usage(
         # if a manual hand-off ever happens we don't want a 500.
         raise HTTPException(status_code=502, detail="Carrier coupon missing")
 
-    try:
-        result = await get_esim_usage(order.sn_pin)
-    except Exception as e:
+    # Parallel fan-out: usage and status are independent JoyTel calls.
+    # Status is best-effort — if it fails we still return usage. The
+    # install state is enriched from our local DB columns (populated
+    # by the install-event webhook) so even a status-call failure
+    # leaves the badge informative when those events are flowing.
+    usage_task = asyncio.create_task(get_esim_usage(order.sn_pin))
+    status_task = asyncio.create_task(get_esim_status(order.sn_pin))
+    results = await asyncio.gather(usage_task, status_task, return_exceptions=True)
+    usage_raw, status_raw = results
+
+    if isinstance(usage_raw, Exception):
         logger.error(
-            f"JoyTel usage query failed for order {reference} (sn_pin={order.sn_pin}): {e}"
+            f"JoyTel usage query failed for order {reference} (sn_pin={order.sn_pin}): {usage_raw}"
         )
         raise HTTPException(status_code=502, detail="Couldn't fetch usage right now")
+    result = usage_raw
 
     # Log the raw response on every call for now — JoyTel's exact field
     # names aren't documented in our code, and we want to be able to
     # debug parsing without re-deploying. Once we've seen a few real
     # responses we can downgrade this to debug-level.
     logger.info(f"JoyTel usage response for {reference}: {result}")
+    logger.info(f"JoyTel status response for {reference}: {status_raw}")
 
     data = result.get("data") if isinstance(result, dict) else None
     if not isinstance(data, dict):
@@ -218,8 +229,25 @@ async def get_order_usage(
     if total_mb and total_mb > 0 and used_mb is not None:
         percent = round((used_mb / total_mb) * 100, 1)
 
+    # Parse the live eSIM status (best-effort). JoyTel's spec maps
+    # status ints: 0=Unknown, 1=Activated, 2=Expired.
+    esim_status: Optional[str] = None
+    if not isinstance(status_raw, Exception) and isinstance(status_raw, dict):
+        sdata = status_raw.get("data")
+        if isinstance(sdata, dict):
+            raw_status = sdata.get("status")
+            try:
+                code = int(raw_status) if raw_status is not None else None
+            except (TypeError, ValueError):
+                code = None
+            esim_status = {0: "unknown", 1: "activated", 2: "expired"}.get(code)
+
     # Heuristic state classification for the UI to render meaningfully
-    # without re-deriving from raw numbers.
+    # without re-deriving from raw numbers. Merge signals from:
+    #   1. Local install timestamps (push-based, from webhook)
+    #   2. JoyTel status query (poll-based, always available)
+    #   3. Carrier-reported state in the usage payload
+    #   4. Used vs total numbers
     state = "unknown"
     if used_mb == 0 or used_mb is None:
         state = "unused"
@@ -227,9 +255,14 @@ async def get_order_usage(
         state = "depleted"
     elif used_mb is not None and used_mb > 0:
         state = "active"
-    # Carrier-reported expiration override.
+    # Install signals upgrade unused → active when present.
+    if state == "unused" and (order.installed_at or order.enabled_at or esim_status == "activated"):
+        state = "active"
+    # Expiration overrides everything else.
     carrier_state = _pick(data, "status", "esimStatus", "state")
     if isinstance(carrier_state, str) and carrier_state.lower() in ("expired", "ended"):
+        state = "expired"
+    if esim_status == "expired":
         state = "expired"
 
     return OrderUsageResponse(
@@ -239,4 +272,7 @@ async def get_order_usage(
         percent=percent,
         expires_at=str(expires) if expires else None,
         state=state,
+        esim_status=esim_status,
+        installed_at=order.installed_at.isoformat() if order.installed_at else None,
+        enabled_at=order.enabled_at.isoformat() if order.enabled_at else None,
     )

@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.middleware.auth import get_admin_user
-from app.models import Coupon, Event, Order, Plan, User
+from app.models import Coupon, EsimInstallEvent, Event, Order, Plan, User
 from app.schemas import UserResponse
 from app.services import coupons as coupons_service
 from app.services.analytics import referrer_source
@@ -909,6 +909,75 @@ def analytics_funnel(
         ("Succeeded", ("payment_succeeded",)),
     ]
     return [FunnelStep(label=label, type=t[0], sessions=int(_sessions_with(t))) for label, t in steps]
+
+
+class InstallFunnelStep(BaseModel):
+    label: str
+    key: str
+    orders: int
+
+
+class InstallFunnelResponse(BaseModel):
+    steps: list[InstallFunnelStep]
+    has_install_events: bool  # False until JoyTel enables the callback
+    days: int
+
+
+@router.get("/analytics/install-funnel", response_model=InstallFunnelResponse)
+def analytics_install_funnel(
+    days: int = Query(default=30, ge=1, le=365),
+    db: Session = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+) -> InstallFunnelResponse:
+    """Post-purchase funnel: paid → downloaded → installed → enabled.
+
+    Each step counts DISTINCT orders that reached it in the window.
+    The "Paid" step counts delivered orders. The remaining steps
+    count distinct order_ids in esim_install_events with the matching
+    notificationPointId and Executed-Success status.
+
+    If JoyTel hasn't enabled the install-event callback yet,
+    has_install_events will be False and only the "Paid" bar will
+    render real data — the frontend uses the flag to show an empty-
+    state hint instead of misleading zeros.
+    """
+    start, _, _ = _window(days)
+
+    paid_orders = (
+        db.query(func.count(Order.id))
+        .filter(Order.created_at >= start, Order.status == "delivered")
+        .scalar()
+        or 0
+    )
+
+    def _orders_with_event(point_id: int) -> int:
+        return (
+            db.query(func.count(func.distinct(EsimInstallEvent.order_id)))
+            .filter(
+                EsimInstallEvent.created_at >= start,
+                EsimInstallEvent.notification_point_id == point_id,
+                EsimInstallEvent.status == "Executed-Success",
+                EsimInstallEvent.order_id.isnot(None),
+            )
+            .scalar()
+            or 0
+        )
+
+    # Have we received any install events at all (any time, any status)?
+    # Used to drive the empty-state messaging when the callback isn't on.
+    any_events = (
+        db.query(func.count(EsimInstallEvent.id)).scalar() or 0
+    ) > 0
+
+    steps = [
+        InstallFunnelStep(label="Paid", key="paid", orders=int(paid_orders)),
+        InstallFunnelStep(label="Downloaded", key="downloaded", orders=int(_orders_with_event(3))),
+        InstallFunnelStep(label="Installed", key="installed", orders=int(_orders_with_event(4))),
+        InstallFunnelStep(label="Enabled", key="enabled", orders=int(_orders_with_event(6))),
+    ]
+    return InstallFunnelResponse(
+        steps=steps, has_install_events=any_events, days=days
+    )
 
 
 class TopDestinationRow(BaseModel):

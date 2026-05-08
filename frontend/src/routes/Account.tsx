@@ -281,7 +281,10 @@ function UsagePanel({ order, planTotalGb }: { order: OrderDetail; planTotalGb: n
   return (
     <div className="usage-panel">
       <div className="usage-panel__head">
-        <span className="usage-panel__label">Data usage</span>
+        <span className="usage-panel__label">
+          Data usage
+          {usage && <InstallBadge usage={usage} />}
+        </span>
         <button
           className="usage-panel__refresh"
           onClick={() => void load()}
@@ -337,6 +340,38 @@ function UsagePanel({ order, planTotalGb }: { order: OrderDetail; planTotalGb: n
       )}
     </div>
   )
+}
+
+// Install-state badge derived from whichever signals are available.
+// Priority order: explicit "expired" → push install events (more
+// authoritative) → live JoyTel status query (always available) →
+// usage-derived inference. Falls back gracefully to "Ready to install"
+// when no signal points either way, so a customer who actually has
+// installed the eSIM never sees a blatantly wrong "Not installed" badge.
+function InstallBadge({ usage }: { usage: OrderUsage }) {
+  let label: string
+  let cls: string
+
+  const hasInstallEvent = !!usage.installed_at || !!usage.enabled_at
+  const liveActivated = usage.esim_status === 'activated'
+  const liveExpired = usage.esim_status === 'expired'
+  const usageFlowing = (usage.used_mb ?? 0) > 0
+
+  if (usage.state === 'expired' || liveExpired) {
+    label = 'Expired'
+    cls = 'usage-badge--expired'
+  } else if (usage.state === 'depleted') {
+    label = 'Used up'
+    cls = 'usage-badge--depleted'
+  } else if (usageFlowing || hasInstallEvent || liveActivated) {
+    label = usage.enabled_at || liveActivated ? 'Active' : 'Installed'
+    cls = 'usage-badge--active'
+  } else {
+    label = 'Ready to install'
+    cls = 'usage-badge--ready'
+  }
+
+  return <span className={`usage-badge ${cls}`}>{label}</span>
 }
 
 function formatMb(mb: number | null): string {

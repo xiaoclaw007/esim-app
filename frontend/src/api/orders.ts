@@ -31,6 +31,11 @@ export interface OrderUsage {
   percent: number | null
   expires_at: string | null
   state: 'unused' | 'active' | 'expired' | 'depleted' | 'unknown'
+  // Install-lifecycle signals, may be null if JoyTel hasn't provided
+  // either the push (install events) or pull (status query) signal yet.
+  esim_status: 'unknown' | 'activated' | 'expired' | null
+  installed_at: string | null
+  enabled_at: string | null
 }
 
 export async function fetchOrderUsage(reference: string): Promise<OrderUsage> {

@@ -183,3 +183,14 @@ class OrderUsageResponse(BaseModel):
     percent: Optional[float] = None  # 0..100, one decimal
     expires_at: Optional[str] = None  # ISO-ish; carrier formats vary
     state: str  # 'unused' | 'active' | 'expired' | 'depleted' | 'unknown'
+
+    # Install lifecycle signals — sourced from two places:
+    # 1. JoyTel's eSIM Status Query (live poll) — works without any
+    #    customer-side configuration.
+    # 2. Our esim_install_events feed (push) — only flows once JoyTel
+    #    enables the install-event callback.
+    # Either one is sufficient to render an accurate badge; the
+    # frontend prefers (2) when present, falls back to (1).
+    esim_status: Optional[str] = None  # 'unknown' | 'activated' | 'expired' | null on fetch failure
+    installed_at: Optional[str] = None  # ISO datetime if we've seen the install event
+    enabled_at: Optional[str] = None    # ISO datetime if we've seen the enable event

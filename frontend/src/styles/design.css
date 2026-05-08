@@ -1860,7 +1860,36 @@ input, select, textarea { font: inherit; color: inherit; }
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
+
+/* Install-state pill that sits next to the "Data usage" label.
+   Renders the merged signal from JoyTel install events + status query;
+   degrades gracefully when neither signal is available. */
+.usage-badge {
+  font-family: var(--font);
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.usage-badge::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.usage-badge--active   { background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok); }
+.usage-badge--ready    { background: var(--bg-sunk); color: var(--ink-3); }
+.usage-badge--expired  { background: color-mix(in srgb, var(--pop) 12%, transparent); color: var(--pop); }
+.usage-badge--depleted { background: color-mix(in srgb, var(--pop) 12%, transparent); color: var(--pop); }
 .usage-panel__refresh {
   display: inline-flex;
   align-items: center;

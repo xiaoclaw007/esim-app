@@ -10,6 +10,7 @@ import {
   type AnalyticsDeviceRow,
   type AnalyticsFunnelStep,
   type AnalyticsSummary,
+  type InstallFunnelResponse,
   type AnalyticsTimeseriesPoint,
   type AnalyticsTopDestination,
   type AnalyticsTrafficSource,
@@ -65,6 +66,7 @@ export default function CrmAnalytics() {
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null)
   const [timeseries, setTimeseries] = useState<AnalyticsTimeseriesPoint[]>([])
   const [funnel, setFunnel] = useState<AnalyticsFunnelStep[]>([])
+  const [installFunnel, setInstallFunnel] = useState<InstallFunnelResponse | null>(null)
   const [topDest, setTopDest] = useState<AnalyticsTopDestination[]>([])
   const [sources, setSources] = useState<AnalyticsTrafficSource[]>([])
   const [devices, setDevices] = useState<AnalyticsDeviceRow[]>([])
@@ -83,19 +85,21 @@ export default function CrmAnalytics() {
       adminApi.analyticsSummary(days),
       adminApi.analyticsTimeseries(days),
       adminApi.analyticsFunnel(days),
+      adminApi.analyticsInstallFunnel(days),
       adminApi.analyticsTopDestinations(days, 8),
       adminApi.analyticsSources(days),
       adminApi.analyticsDevices(days),
       adminApi.analyticsCountries(days, 12),
       adminApi.analyticsCoupons(days),
     ])
-      .then(([k, r, s, ts, fn, td, src, dv, ct, cp]) => {
+      .then(([k, r, s, ts, fn, ifn, td, src, dv, ct, cp]) => {
         if (cancelled) return
         setKpis(k)
         setRevSeries(r)
         setSummary(s)
         setTimeseries(ts)
         setFunnel(fn)
+        setInstallFunnel(ifn)
         setTopDest(td)
         setSources(src)
         setDevices(dv)
@@ -226,6 +230,17 @@ export default function CrmAnalytics() {
           </div>
           <FunnelChart steps={funnel} />
         </div>
+      </div>
+
+      {/* Post-purchase install funnel — separate row because it tells a
+          different story (orders, not sessions) and the empty-state copy
+          is specific to JoyTel callback enablement. */}
+      <div className="crm-card">
+        <div className="crm-card-h">
+          <h3>Install funnel</h3>
+          <span className="dim sm">{days} days · paid → enabled on phone</span>
+        </div>
+        <InstallFunnelChart data={installFunnel} />
       </div>
 
       {/* ===== Revenue trend (existing) ===== */}
@@ -409,6 +424,72 @@ function FunnelChart({ steps }: { steps: AnalyticsFunnelStep[] }) {
             {dropFromPrev !== null && (
               <div style={{ fontSize: 11, color: 'var(--crm-text-3)', padding: '2px 4px 0' }}>
                 {dropFromPrev > 0 ? `−${dropFromPrev}% drop-off from previous step` : 'no drop-off'}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// Post-purchase install funnel. Same visual shape as FunnelChart but
+// with order-count semantics + a JoyTel-callback-aware empty state.
+//
+// Two distinct empty states:
+//   1. has_install_events=false → JoyTel hasn't enabled the callback
+//      yet. Show actionable copy with the URL.
+//   2. has_install_events=true but Paid=0 → no orders in window. Show
+//      generic empty copy.
+function InstallFunnelChart({ data }: { data: InstallFunnelResponse | null }) {
+  if (!data) {
+    return <div className="crm-funnel-empty">Loading…</div>
+  }
+  const paid = data.steps[0]?.orders ?? 0
+
+  if (!data.has_install_events) {
+    return (
+      <div className="crm-funnel-empty">
+        <strong>Install events aren't flowing yet.</strong>
+        Once your JoyTel rep enables the eSIM Installation Event callback to{' '}
+        <code style={{ fontSize: 11 }}>/api/webhooks/joytel/notify/esim/esim-progress</code>,
+        every download / install / enable from a customer's phone will land here.
+        Right now this card only knows about the {paid.toLocaleString()} paid
+        order{paid === 1 ? '' : 's'} in the window.
+      </div>
+    )
+  }
+  if (paid === 0) {
+    return (
+      <div className="crm-funnel-empty">
+        <strong>No paid orders in this window.</strong>
+        Once you start shipping eSIMs, the funnel will fill in.
+      </div>
+    )
+  }
+
+  const max = paid
+  return (
+    <div className="crm-funnel">
+      {data.steps.map((s, i) => {
+        const w = max > 0 ? (s.orders / max) * 100 : 0
+        const prev = i > 0 ? data.steps[i - 1].orders : null
+        const dropFromPrev =
+          prev !== null && prev > 0 ? Math.round((1 - s.orders / prev) * 100) : null
+        return (
+          <div key={s.key}>
+            <div className="crm-funnel-row">
+              <div className="crm-funnel-bar" style={{ width: `${Math.max(w, 2)}%` }} />
+              <div className="crm-funnel-label">
+                <span>{s.label}</span>
+                <span>{s.orders.toLocaleString()}</span>
+              </div>
+            </div>
+            {dropFromPrev !== null && (
+              <div style={{ fontSize: 11, color: 'var(--crm-text-3)', padding: '2px 4px 0' }}>
+                {dropFromPrev > 0
+                  ? `−${dropFromPrev}% drop-off from previous step`
+                  : 'no drop-off'}
               </div>
             )}
           </div>
