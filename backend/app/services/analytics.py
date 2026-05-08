@@ -21,6 +21,15 @@ ALLOWED_EVENT_TYPES = frozenset(
         "payment_succeeded",
         "payment_failed",
         "one_tap_install_clicked",
+        # eSIM lifecycle events written from the JoyTel install-event
+        # webhook handler. Driven by JoyTel's notificationPointId
+        # (download / install / enable / disable / delete).
+        "esim_downloaded",
+        "esim_installed",
+        "esim_enabled",
+        "esim_disabled",
+        "esim_deleted",
+        "esim_install_failed",
     }
 )
 

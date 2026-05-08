@@ -10,8 +10,10 @@ import logging
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy.orm import Session
 
+from datetime import datetime, timezone
+
 from app.database import get_db
-from app.models import Order, Plan
+from app.models import EsimInstallEvent, Event, Order, Plan
 from app.services import coupons as coupons_service
 from app.services.email_service import (
     send_esim_email,
@@ -336,6 +338,12 @@ async def joytel_qrcode_callback(
         order.qr_code_url = qrcode
     else:
         order.qr_code_data = qrcode
+    # Capture CID for downstream install-event lookup. The redeem callback
+    # is the only place this value is delivered to us; install events
+    # arrive keyed by CID (not by reference / sn_pin).
+    cid = data.get("cid")
+    if cid:
+        order.cid = cid
     order.status = "delivered"
     db.commit()
 
@@ -365,15 +373,114 @@ async def joytel_qrcode_callback(
 # --- JoyTel eSIM Installation Event Notification ---
 
 
+# eSIM Installation Event Notification — notificationPointId mapping per
+# the JoyTel API spec section 2.1.7. Maps the integer code to a stable
+# slug we use for analytics events + a short label for the events table.
+_NOTIFICATION_POINTS: dict[int, tuple[str, str]] = {
+    1: ("eligibility_check", "ELIGIBILITY_AND_RETRY_LIMIT_CHECK"),
+    2: ("confirmation_failure", "CONFIRMATION_FAILURE"),
+    3: ("downloaded", "BPP_DOWNLOAD"),
+    4: ("installed", "BPP_INSTALL_NOTIFICATION"),
+    5: ("deleted", "DELETE_NOTIFICATION"),
+    6: ("enabled", "ENABLE_NOTIFICATION"),
+    7: ("disabled", "DISABLE_NOTIFICATION"),
+    101: ("eid_blocked", "EID_BLOCKED"),
+    102: ("tac_blocked", "TAC_BLOCKED"),
+}
+
+
 @router.post("/joytel/notify/esim/esim-progress")
-async def joytel_esim_progress(request: Request):
+async def joytel_esim_progress(request: Request, db: Session = Depends(get_db)):
     """Receive eSIM installation lifecycle events from RSP+.
 
-    Events: eligibility check, BPP download, install, enable, disable, delete, etc.
-    We log for audit; no order state change required for basic order flow.
+    JoyTel pings us when a customer's phone interacts with the eSIM
+    profile: download started, install succeeded, profile enabled,
+    disabled, deleted, etc. Events arrive keyed by CID; we look up
+    the matching Order and update summary timestamps + log the full
+    event row for analytics.
 
     Must return {"code":"000","mesg":"success"} or RSP+ will retry.
     """
     body = await request.json()
     logger.info(f"JoyTel eSIM progress event: {body}")
-    return {"code": "000", "mesg": "success"}
+    success = {"code": "000", "mesg": "success"}
+
+    data = body.get("data") or {}
+    cid = data.get("cid")
+    raw_point_id = data.get("notificationPointId")
+    point_status = (data.get("notificationPointStatus") or {}).get("status")
+
+    try:
+        point_id = int(raw_point_id) if raw_point_id is not None else None
+    except (TypeError, ValueError):
+        logger.warning(f"eSIM progress: bad notificationPointId {raw_point_id!r}")
+        point_id = None
+
+    if point_id is None:
+        # Malformed event — ack to prevent retries, but skip storage so
+        # we don't pollute the table with garbage.
+        return success
+
+    slug, label = _NOTIFICATION_POINTS.get(
+        point_id, (f"point_{point_id}", f"UNKNOWN_{point_id}")
+    )
+
+    # Find the matching order (if any). Events sometimes arrive before
+    # we've stored the CID (rare race when the redeem and install events
+    # interleave); store the orphan event anyway and we can backfill the
+    # link later if needed.
+    order: Order | None = None
+    if cid:
+        order = db.query(Order).filter(Order.cid == cid).first()
+
+    # 1. Persist the raw event for audit + future analysis.
+    db.add(
+        EsimInstallEvent(
+            order_id=order.id if order else None,
+            cid=cid,
+            notification_point_id=point_id,
+            notification_point_name=label,
+            status=point_status,
+            raw_payload=body,
+        )
+    )
+
+    # 2. Update the order's summary timestamps (only on successful
+    #    transitions, and only if not already set so first-event time wins).
+    if order and point_status == "Executed-Success":
+        now = datetime.now(timezone.utc)
+        order.last_install_event_at = now
+        if point_id == 4 and not order.installed_at:
+            order.installed_at = now
+        elif point_id == 6 and not order.enabled_at:
+            order.enabled_at = now
+        elif point_id == 7:
+            order.disabled_at = now  # latest disable wins
+        elif point_id == 5 and not order.deleted_at:
+            order.deleted_at = now
+
+    # 3. Fire an analytics event so the existing /admin/analytics
+    #    pipeline can show the install funnel without a separate query.
+    #    Only the customer-meaningful states (downloaded/installed/
+    #    enabled/disabled/deleted) get an analytics ping; the
+    #    intermediate eligibility/confirmation events stay in the
+    #    install-events table.
+    if slug in ("downloaded", "installed", "enabled", "disabled", "deleted"):
+        analytics_type = (
+            f"esim_{slug}" if point_status == "Executed-Success" else "esim_install_failed"
+        )
+        db.add(
+            Event(
+                type=analytics_type,
+                user_id=order.user_id if order else None,
+                event_metadata={
+                    "cid": cid,
+                    "reference": order.reference if order else None,
+                    "notification_point": label,
+                    "status": point_status,
+                },
+            )
+        )
+
+    db.commit()
+    return success

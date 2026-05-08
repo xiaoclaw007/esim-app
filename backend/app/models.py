@@ -113,6 +113,30 @@ class Order(Base):
     sn_pin: Mapped[Optional[str]] = mapped_column(String(255))
     qr_code_data: Mapped[Optional[str]] = mapped_column(Text)
     qr_code_url: Mapped[Optional[str]] = mapped_column(String(500))
+    # eSIM Profile CID — captured from the redeem callback. Indexed
+    # because eSIM Installation Event Notifications arrive keyed by
+    # CID (not by reference / sn_pin), so we look them up here.
+    cid: Mapped[Optional[str]] = mapped_column(String(40), nullable=True, index=True)
+
+    # Install lifecycle timestamps. Each is the time of the FIRST event of
+    # that type — repeated installs/enables don't overwrite. Together they
+    # let us answer "is the eSIM installed?" / "is it enabled?" without
+    # joining the events table.
+    installed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    enabled_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    disabled_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    deleted_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_install_event_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Stripe refund tracking (set when JoyTel rejects a paid order and we
     # automatically reverse the Stripe charge).
@@ -226,3 +250,36 @@ class Plan(Base):
     # /api/plans endpoint filters is_test == False). Admin catalog
     # still shows them so operators can run test purchases.
     is_test: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+
+class EsimInstallEvent(Base):
+    """Full event log for JoyTel's eSIM Installation Event Notification feed.
+
+    JoyTel pushes one row per lifecycle event (download / install /
+    enable / disable / delete / etc.) keyed by the eSIM Profile CID.
+    We store every event with the raw payload so we can refine our
+    parser later without losing data, and so admin queries can answer
+    questions the schema doesn't anticipate (failure reasons, retry
+    counts, profileType breakdowns).
+
+    The summary fields on Order (installed_at, enabled_at, etc.) are
+    derived from these rows on first ingest.
+    """
+
+    __tablename__ = "esim_install_events"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    # Nullable: events sometimes arrive before we've linked the CID to
+    # an order (rare race). We store them anyway and link later.
+    order_id: Mapped[Optional[str]] = mapped_column(
+        String(36), ForeignKey("orders.id"), nullable=True, index=True
+    )
+    cid: Mapped[Optional[str]] = mapped_column(String(40), nullable=True, index=True)
+    notification_point_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    notification_point_name: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    status: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    raw_payload: Mapped[Optional[dict]] = mapped_column(JsonCol, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False, index=True
+    )
+
