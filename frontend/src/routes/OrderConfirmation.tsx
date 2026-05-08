@@ -271,7 +271,7 @@ export default function OrderConfirmation() {
       {lpa && !finishing && (
         <div className="onetap-card">
           <div className="onetap-eyebrow">
-            <span className="onetap-badge">Recommended</span> Step 1 · Try one-tap install
+            <span className="onetap-badge">Recommended</span> Option 1 · One-tap install
           </div>
           <h3 className="onetap-title">Skip the scan — install in one tap</h3>
           <p className="onetap-sub">
@@ -312,7 +312,7 @@ export default function OrderConfirmation() {
       )}
 
       <div className="install" style={{ textAlign: 'left' }}>
-        <div className="install-eyebrow">Step 2 · Backup method</div>
+        <div className="install-eyebrow">Option 2 · Backup method</div>
         <h3 className="install-title">Scan the QR code or enter the codes by hand</h3>
         <div className="install-head">
           <button className={tab === 'ios' ? 'active' : ''} onClick={() => setTab('ios')}>
