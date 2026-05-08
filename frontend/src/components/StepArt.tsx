@@ -67,94 +67,52 @@ function PhoneFrame({ children }: { children: React.ReactNode }) {
 // Drawing helpers operate within this rect.
 
 function Envelope() {
-  // Email envelope at top of screen with a subtle "open" tab and a
-  // small pill button below — represents "open email, see install".
+  // Centered envelope with an accent pill below — represents "email
+  // arrives with an install button". No simulated text bars.
   return (
     <g>
       {/* Envelope body */}
-      <rect x={68} y={50} width={64} height={36} rx="3" fill="none" stroke="var(--ink)" strokeWidth="1.4" />
-      <path d="M68 56 L100 74 L132 56" fill="none" stroke="var(--ink)" strokeWidth="1.4" />
-      {/* Eyebrow line under envelope */}
-      <line x1={68} y1={98} x2={120} y2={98} stroke="var(--ink-3)" strokeWidth="1.2" />
-      <line x1={68} y1={106} x2={108} y2={106} stroke="var(--ink-3)" strokeWidth="1.2" />
-      {/* Install button */}
-      <rect x={68} y={122} width={64} height={20} rx="10" fill="var(--accent)" />
-      <text
-        x={100}
-        y={135.5}
-        textAnchor="middle"
-        fontFamily="var(--font)"
-        fontSize="9"
-        fill="var(--bg)"
-        fontWeight="500"
-      >
-        Install
-      </text>
+      <rect x={72} y={64} width={56} height={36} rx="3" fill="none" stroke="var(--ink)" strokeWidth="1.6" />
+      <path d="M72 70 L100 88 L128 70" fill="none" stroke="var(--ink)" strokeWidth="1.6" strokeLinejoin="round" />
+      {/* Install pill (no text — shape conveys "button") */}
+      <rect x={72} y={122} width={56} height={20} rx="10" fill="var(--accent)" />
     </g>
   )
 }
 
 function TapButton() {
-  // A chunky pill labelled "Install" with a tap ripple radiating out.
+  // Centered chunky pill with a tap ripple radiating out — the focal
+  // moment of the one-tap flow.
   return (
     <g>
-      {/* Eyebrow text bars */}
-      <line x1={68} y1={50} x2={120} y2={50} stroke="var(--ink-3)" strokeWidth="1.2" />
-      <line x1={68} y1={58} x2={108} y2={58} stroke="var(--ink-3)" strokeWidth="1.2" />
+      {/* Tap ripples (drawn first, behind the button) */}
+      <circle cx={100} cy={100} r={42} fill="none" stroke="var(--accent)" strokeWidth="1" opacity="0.18" />
+      <circle cx={100} cy={100} r={32} fill="none" stroke="var(--accent)" strokeWidth="1" opacity="0.4" />
       {/* The button */}
-      <rect x={68} y={82} width={64} height={26} rx="13" fill="var(--accent)" />
-      <text
-        x={100}
-        y={98.5}
-        textAnchor="middle"
-        fontFamily="var(--font)"
-        fontSize="10"
-        fill="var(--bg)"
-        fontWeight="500"
-      >
-        Install
-      </text>
-      {/* Tap ripples */}
-      <circle cx={100} cy={95} r={28} fill="none" stroke="var(--accent)" strokeWidth="1" opacity="0.4" />
-      <circle cx={100} cy={95} r={36} fill="none" stroke="var(--accent)" strokeWidth="1" opacity="0.18" />
-      {/* Continue/done bars */}
-      <line x1={72} y1={130} x2={128} y2={130} stroke="var(--ink-3)" strokeWidth="1.2" />
-      <line x1={72} y1={138} x2={116} y2={138} stroke="var(--ink-3)" strokeWidth="1.2" />
+      <rect x={68} y={88} width={64} height={26} rx="13" fill="var(--accent)" />
     </g>
   )
 }
 
 function ConnectedCheck() {
-  // Big check + signal bars + "Connected" pill — the success state.
+  // Big check + signal bars — the success state. Signal bars provide
+  // the "you're online" semantic without needing a "Connected" label.
   return (
     <g>
-      {/* Signal bars top-right */}
-      <rect x={120} y={42} width={3} height={4} fill="var(--ink-2)" />
-      <rect x={125} y={40} width={3} height={6} fill="var(--ink-2)" />
-      <rect x={130} y={38} width={3} height={8} fill="var(--ink-2)" />
-      {/* Big circle with check */}
-      <circle cx={100} cy={88} r={18} fill="var(--accent-soft)" stroke="var(--accent)" strokeWidth="1.6" />
+      {/* Signal bars top-right of screen */}
+      <rect x={118} y={42} width={3} height={4} fill="var(--ink-2)" />
+      <rect x={123} y={40} width={3} height={6} fill="var(--ink-2)" />
+      <rect x={128} y={38} width={3} height={8} fill="var(--ink-2)" />
+      {/* Big circle with check — centered focal element */}
+      <circle cx={100} cy={100} r={22} fill="var(--accent-soft)" stroke="var(--accent)" strokeWidth="1.6" />
       <path
-        d="M91 88 L98 95 L110 81"
+        d="M89 100 L97 108 L111 92"
         fill="none"
         stroke="var(--accent)"
-        strokeWidth="2"
+        strokeWidth="2.2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {/* Status pill */}
-      <rect x={74} y={120} width={52} height={16} rx="8" fill="none" stroke="var(--ink-2)" strokeWidth="1.2" />
-      <text
-        x={100}
-        y={131}
-        textAnchor="middle"
-        fontFamily="var(--font)"
-        fontSize="8"
-        fill="var(--ink)"
-        fontWeight="500"
-      >
-        Connected
-      </text>
     </g>
   )
 }
@@ -253,39 +211,32 @@ function QrPattern() {
 }
 
 function CodeFields() {
-  // Two stacked input fields on the screen — represents the SM-DP+
-  // address and activation code shown in the activation email.
+  // Two stacked input fields — represents the SM-DP+ address and
+  // activation code from the activation email. Just shapes, no
+  // simulated text bars.
   return (
     <g>
-      {/* Header */}
-      <line x1={68} y1={48} x2={108} y2={48} stroke="var(--ink)" strokeWidth="1.6" />
-      {/* Field 1 label + input */}
-      <line x1={68} y1={62} x2={92} y2={62} stroke="var(--ink-3)" strokeWidth="1" />
-      <rect x={68} y={68} width={64} height={14} rx="2" fill="none" stroke="var(--line-strong)" strokeWidth="1" />
-      <line x1={72} y1={75} x2={104} y2={75} stroke="var(--mono-fg, var(--ink))" strokeWidth="1.2" strokeDasharray="2 2" />
-      {/* Field 2 label + input */}
-      <line x1={68} y1={94} x2={92} y2={94} stroke="var(--ink-3)" strokeWidth="1" />
-      <rect x={68} y={100} width={64} height={14} rx="2" fill="none" stroke="var(--line-strong)" strokeWidth="1" />
-      <line x1={72} y1={107} x2={104} y2={107} stroke="var(--ink)" strokeWidth="1.2" strokeDasharray="2 2" />
-      {/* Confirm button */}
-      <rect x={84} y={128} width={32} height={14} rx="7" fill="var(--accent)" />
+      {/* Field 1 */}
+      <rect x={70} y={70} width={60} height={20} rx="3" fill="none" stroke="var(--ink-2)" strokeWidth="1.4" />
+      {/* Field 2 */}
+      <rect x={70} y={100} width={60} height={20} rx="3" fill="none" stroke="var(--ink-2)" strokeWidth="1.4" />
+      {/* Confirm pill */}
+      <rect x={82} y={134} width={36} height={14} rx="7" fill="var(--accent)" />
     </g>
   )
 }
 
 function CursorTyping() {
-  // Single field with a blinking text cursor / typing animation hint.
+  // Single field with a blinking accent cursor — the typing moment.
   return (
     <g>
-      <line x1={68} y1={50} x2={120} y2={50} stroke="var(--ink)" strokeWidth="1.6" />
-      <line x1={68} y1={66} x2={92} y2={66} stroke="var(--ink-3)" strokeWidth="1" />
-      {/* Highlighted field with cursor */}
-      <rect x={68} y={72} width={64} height={20} rx="3" fill="none" stroke="var(--accent)" strokeWidth="1.6" />
-      <line x1={74} y1={78} x2={96} y2={78} stroke="var(--ink)" strokeWidth="1.4" strokeDasharray="2 2" />
-      <line x1={98} y1={76} x2={98} y2={88} stroke="var(--accent)" strokeWidth="1.6" />
+      {/* Highlighted active field with cursor */}
+      <rect x={70} y={84} width={60} height={24} rx="4" fill="none" stroke="var(--accent)" strokeWidth="1.8" />
+      <line x1={102} y1={88} x2={102} y2={104} stroke="var(--accent)" strokeWidth="2">
+        <animate attributeName="opacity" values="1;0;1" dur="1.1s" repeatCount="indefinite" />
+      </line>
       {/* Field below, untouched */}
-      <line x1={68} y1={104} x2={92} y2={104} stroke="var(--ink-3)" strokeWidth="1" />
-      <rect x={68} y={110} width={64} height={20} rx="3" fill="none" stroke="var(--line-strong)" strokeWidth="1" />
+      <rect x={70} y={120} width={60} height={20} rx="3" fill="none" stroke="var(--line-strong)" strokeWidth="1.2" />
     </g>
   )
 }

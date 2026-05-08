@@ -713,24 +713,27 @@ input, select, textarea { font: inherit; color: inherit; }
   flex-direction: column;
   overflow: hidden;
 }
-/* Illustration panel — fills the top of the card with a stylized phone
-   showing the screen state for this step. The flat sunken background
-   makes the line art read clearly. */
+/* Illustration panel — sits in the same card surface as the copy
+   (no background swap, no hard divider) so the card reads as one
+   piece. Tighter padding + larger phone makes the illustration the
+   dominant element instead of decoration in a frame. */
 .hiw-step__art {
-  background: var(--bg-sunk);
-  border-bottom: 1px solid var(--line);
-  padding: 24px;
+  padding: 22px 18px 14px;
   display: grid;
   place-items: center;
-  aspect-ratio: 1.4 / 1;
+  aspect-ratio: 1.1 / 1;
 }
-.hiw-step__art svg { max-width: 180px; max-height: 180px; }
+.hiw-step__art svg { max-width: 220px; max-height: 220px; }
+/* Hairline above the step number — inset to match the copy padding so
+   it doesn't visually split the card the way a full-bleed border did. */
 .hiw-step__num {
   font-family: var(--mono);
   font-size: 12px;
   letter-spacing: 0.1em;
   color: var(--ink-3);
-  padding: 22px 28px 0;
+  margin: 0 28px;
+  padding: 18px 0 0;
+  border-top: 1px solid var(--line);
 }
 .hiw-step__title {
   font-size: 17px;
