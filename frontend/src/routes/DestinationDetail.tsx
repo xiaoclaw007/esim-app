@@ -298,38 +298,72 @@ export default function DestinationDetail() {
                 />
               )
             })}
+            {/* Tail card. On the regular tab, when unlimited plans exist,
+                offer a one-click pivot — Unlimited is otherwise hidden behind
+                a tab and easy to miss. Doubles as a graceful filler when the
+                grid would otherwise leave an empty cell. */}
+            {tab === 'regular' && unlimitedPlans.length > 0 && visible.length > 0 && (
+              <button
+                type="button"
+                className="plan plan--pivot"
+                onClick={() => {
+                  setTab('unlimited')
+                  setSelectedId(null)
+                }}
+              >
+                <div className="plan-head">
+                  <div>
+                    <div className="data">∞</div>
+                    <div className="days">Unlimited data</div>
+                  </div>
+                </div>
+                <p className="plan--pivot__copy">
+                  Heavy streaming or a long trip? Skip the GB math.
+                </p>
+                <span className="plan--pivot__cta">
+                  See Unlimited plans <Icon name="arrow" size={14} />
+                </span>
+              </button>
+            )}
           </div>
 
-          <div className="detail-info">
+          {/* Below-the-grid notes. Country pages: single "Good to know" card.
+              Regional packs: same card plus a Coverage card listing the
+              countries in the pack (genuinely informative for a multi-country
+              SKU, vs redundant for a single country whose name is in the
+              hero). */}
+          <div className={`detail-info ${meta.isRegional ? '' : 'detail-info--single'}`}>
             <div className="info-card">
               <h3>Good to know</h3>
               <InfoRow icon="phone" label="Calls & SMS" value="Use WhatsApp / FaceTime" />
               <InfoRow icon="clock" label="Activation" value="On first network connection" />
               <InfoRow icon="bolt" label="Need more data?" value="Buy a new plan" last />
             </div>
-            <div className="info-card">
-              <h3>Coverage</h3>
-              <ul className="coverage-list">
-                {coverage.map((c, i) => (
-                  <li key={i}>
-                    <span className="flag">{c.flag}</span>
-                    <span>{c.name}</span>
-                    <span className="net">{c.net}</span>
-                  </li>
-                ))}
-              </ul>
-              {upsellRegional && (
-                <div className="coverage-upsell">
-                  <p className="muted">{upsellEntry!.pitch}</p>
-                  <Link
-                    to={`/destinations/${upsellRegional.code.toLowerCase()}`}
-                    className="coverage-upsell-cta"
-                  >
-                    Try the {upsellRegional.name} plan <Icon name="arrow" size={12} />
-                  </Link>
-                </div>
-              )}
-            </div>
+            {meta.isRegional && (
+              <div className="info-card">
+                <h3>Coverage</h3>
+                <ul className="coverage-list">
+                  {coverage.map((c, i) => (
+                    <li key={i}>
+                      <span className="flag">{c.flag}</span>
+                      <span>{c.name}</span>
+                      <span className="net">{c.net}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {!meta.isRegional && upsellRegional && (
+              <div className="coverage-upsell coverage-upsell--inline">
+                <p className="muted">{upsellEntry!.pitch}</p>
+                <Link
+                  to={`/destinations/${upsellRegional.code.toLowerCase()}`}
+                  className="coverage-upsell-cta"
+                >
+                  Try the {upsellRegional.name} plan <Icon name="arrow" size={12} />
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -368,7 +402,9 @@ function PlanCard({
       <div className="plan-head">
         <div>
           <div className="data">{formatData(plan.data_gb)}</div>
-          <div className="days">{plan.validity_days} days validity</div>
+          <div className="days">
+            {plan.validity_days} {plan.validity_days === 1 ? 'day' : 'days'} validity
+          </div>
         </div>
         <div className="badge">{countryCode} · 5G</div>
       </div>

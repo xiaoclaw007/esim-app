@@ -693,6 +693,18 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .coverage-upsell-cta:hover { color: var(--pop); border-bottom-color: var(--pop); }
 
+/* Inline variant: when the upsell sits as a sibling of the Good-to-know
+   card (country pages, no Coverage card) instead of inside one. Acts
+   like a faint card itself so it doesn't look stranded. */
+.coverage-upsell--inline {
+  margin: 0;
+  padding: 22px 24px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-md);
+  background: transparent;
+  align-self: start;
+}
+
 /* sections */
 .section {
   padding: 96px 32px;
@@ -1120,7 +1132,11 @@ input, select, textarea { font: inherit; color: inherit; }
 
 .plans-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* auto-fit + minmax: cards pack as 3-up on desktop, 2-up on tablet,
+     1-up on mobile, and never leave a single dangling cell. The 260px
+     floor keeps cards from squeezing below where the price + button
+     stay legible. */
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 16px;
 }
 .plan {
@@ -1152,6 +1168,45 @@ input, select, textarea { font: inherit; color: inherit; }
 
 .plan.selected .btn.primary { background: var(--accent); }
 .plan .popular { position: absolute; top: -10px; right: 20px; }
+
+/* Tail card on the regular-plans grid that pivots to the Unlimited tab.
+   Same outer shape as a real plan card so the grid stays uniform, but
+   visually quieter (dashed border, transparent fill) so it doesn't
+   compete with real buyable plans. Renders as a <button>. */
+.plan.plan--pivot {
+  background: transparent;
+  border: 1px dashed var(--line-strong);
+  text-align: left;
+  font: inherit;
+  color: var(--ink);
+  justify-content: space-between;
+}
+.plan.plan--pivot .data { color: var(--ink-2); }
+.plan.plan--pivot:hover {
+  border-color: var(--ink);
+  background: color-mix(in srgb, var(--bg-elev) 50%, transparent);
+}
+.plan--pivot__copy {
+  margin: 16px 0 18px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+.plan--pivot__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 2px;
+  align-self: flex-start;
+}
+.plan.plan--pivot:hover .plan--pivot__cta {
+  color: var(--pop);
+  border-bottom-color: var(--pop);
+}
 
 /* "Every plan includes" strip — sits between the tabs and the cards.
    Says the universal features once instead of repeating them on each
@@ -1194,6 +1249,10 @@ input, select, textarea { font: inherit; color: inherit; }
   gap: 32px;
   align-items: start;
 }
+/* Single-country pages have no Coverage card (the hero already shows
+   the destination), so the Good-to-know card sits alone. Cap its width
+   so it doesn't stretch awkwardly across the full content column. */
+.detail-info--single { grid-template-columns: minmax(0, 560px); }
 .info-card {
   padding: 28px;
   background: var(--bg-elev);
