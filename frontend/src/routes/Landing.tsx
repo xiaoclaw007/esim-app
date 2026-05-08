@@ -198,11 +198,9 @@ export default function Landing() {
                 Popular destinations
               </div>
               <h2 className="h1">
-                Trending where everyone is going
-                <br />
-                this{' '}
+                Where travelers are heading{' '}
                 <em style={{ fontFamily: 'var(--serif)', fontStyle: 'italic', fontWeight: 400 }}>
-                  season
+                  now
                 </em>
                 .
               </h2>
