@@ -12,12 +12,11 @@ import {
   type Plan,
 } from '../data/catalog'
 
-type Tab = 'esims' | 'orders' | 'payment' | 'support'
+type Tab = 'esims' | 'orders' | 'support'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'esims', label: 'My eSIMs' },
   { id: 'orders', label: 'Orders' },
-  { id: 'payment', label: 'Payment methods' },
   { id: 'support', label: 'Support' },
 ]
 
@@ -114,8 +113,6 @@ export default function Account() {
       {tab === 'orders' && (
         <OrdersTab orders={orders ?? []} planById={planById} loading={loadingOrders} />
       )}
-
-      {tab === 'payment' && <PaymentMethodsTab />}
 
       {tab === 'support' && <SupportTab />}
     </div>
@@ -484,29 +481,6 @@ function OrdersTab({
           </div>
         )
       })}
-    </div>
-  )
-}
-
-function PaymentMethodsTab() {
-  return (
-    <div
-      style={{
-        padding: 40,
-        background: 'var(--bg-elev)',
-        border: '1px solid var(--line)',
-        borderRadius: 14,
-      }}
-    >
-      <h3 style={{ marginBottom: 8 }}>Payments are handled by Stripe</h3>
-      <p className="muted" style={{ marginBottom: 12, fontSize: 14 }}>
-        We don't store your card details — each purchase is a one-time charge
-        processed securely through Stripe. You'll enter payment info at the
-        checkout screen.
-      </p>
-      <p className="muted" style={{ fontSize: 14 }}>
-        Saved methods and automatic renewals are on our roadmap.
-      </p>
     </div>
   )
 }
