@@ -189,6 +189,21 @@ export default function OrderConfirmation() {
   const qrValue = order.qr_code_data || order.qr_code_url || null
   const finishing = order.status !== 'delivered'
 
+  // One-tap install URLs — both Apple and Android offer universal eSIM
+  // install handlers that take an LPA-formatted activation string and
+  // hand off to the OS's built-in installer. Mirrors what we ship in
+  // the activation email. Only available when the carrier returned a
+  // proper LPA string (occasionally JoyTel returns a hosted QR URL
+  // instead, in which case one-tap is unavailable).
+  const lpa = qrValue && qrValue.startsWith('LPA:') ? qrValue : null
+  const appleInstallUrl = lpa
+    ? `https://esimsetup.apple.com/esim_qrcode_provisioning?carddata=${encodeURIComponent(lpa)}`
+    : null
+  const androidInstallUrl = lpa
+    ? `https://esimsetup.android.com/esim_qrcode_provisioning?carddata=${encodeURIComponent(lpa)}`
+    : null
+  const platform = detectPlatform()
+
   const iosSteps = [
     'Open Settings → Cellular → Add eSIM',
     "Choose 'Use QR Code' and scan the code below",
@@ -252,6 +267,41 @@ export default function OrderConfirmation() {
         />
         <OrderDetail k="Status" v={humanStatus(order.status)} mono />
       </div>
+
+      {lpa && !finishing && (
+        <div className="onetap-card">
+          <div className="onetap-eyebrow">One-tap install</div>
+          <h3 className="onetap-title">Skip the scan — install in one tap</h3>
+          <p className="onetap-sub">
+            Tap the button for your phone. We'll hand off to your built-in eSIM installer — no
+            QR scan, no codes to type.
+          </p>
+          <div className="onetap-buttons">
+            <a
+              className={`btn ${platform === 'android' ? 'ghost' : 'primary'} block`}
+              href={appleInstallUrl ?? undefined}
+              onClick={() =>
+                track('one_tap_install_clicked', { platform: 'ios', reference: order.reference })
+              }
+            >
+              <Icon name="apple" size={14} /> Install on iPhone
+            </a>
+            <a
+              className={`btn ${platform === 'ios' ? 'ghost' : 'primary'} block`}
+              href={androidInstallUrl ?? undefined}
+              onClick={() =>
+                track('one_tap_install_clicked', { platform: 'android', reference: order.reference })
+              }
+            >
+              Install on Android
+            </a>
+          </div>
+          <p className="onetap-fineprint">
+            Works on iOS 17.4 or later and Android 10 or later. On older devices, use the QR or
+            manual method below.
+          </p>
+        </div>
+      )}
 
       <div className="install" style={{ textAlign: 'left' }}>
         <div className="install-head">
@@ -351,6 +401,18 @@ function humanStatus(status: string): string {
     default:
       return status
   }
+}
+
+// User-Agent sniff to pick which one-tap button gets primary emphasis.
+// "ios" covers iPhone/iPad/iPod; "android" covers Android phones; any
+// other UA (or SSR / no navigator) falls back to "other" — both
+// buttons get primary emphasis so the user can pick.
+function detectPlatform(): 'ios' | 'android' | 'other' {
+  if (typeof navigator === 'undefined') return 'other'
+  const ua = navigator.userAgent
+  if (/iPhone|iPad|iPod/i.test(ua)) return 'ios'
+  if (/Android/i.test(ua)) return 'android'
+  return 'other'
 }
 
 function resolveMeta(plan: Plan): { code: string; name: string; flag: string } | null {

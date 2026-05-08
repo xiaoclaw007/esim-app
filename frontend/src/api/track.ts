@@ -46,6 +46,7 @@ export type EventType =
   | 'payment_attempted'
   | 'payment_succeeded'
   | 'payment_failed'
+  | 'one_tap_install_clicked'
 
 export interface TrackPayload {
   [key: string]: string | number | boolean | null | undefined

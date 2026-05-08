@@ -20,6 +20,7 @@ ALLOWED_EVENT_TYPES = frozenset(
         "payment_attempted",
         "payment_succeeded",
         "payment_failed",
+        "one_tap_install_clicked",
     }
 )
 

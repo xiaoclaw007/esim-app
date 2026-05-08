@@ -1549,6 +1549,63 @@ input, select, textarea { font: inherit; color: inherit; }
 .confirm h1 { font-size: 44px; font-weight: 500; letter-spacing: -0.025em; margin: 0 0 12px; }
 .confirm .lede { margin: 0 auto 40px; }
 
+/* One-tap install card — sits above the QR/manual install card on
+   the order confirmation page. Recommended path when the customer is
+   already on the phone they'll use (iOS 17.4+ / Android 10+); the QR
+   card below stays as the fallback. Buttons hand off to the OS's
+   built-in eSIM installer via Apple/Android universal install URLs. */
+.onetap-card {
+  margin-top: 32px;
+  text-align: left;
+  padding: 28px 32px;
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+.onetap-eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+.onetap-title {
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  margin: 0 0 8px;
+  color: var(--ink);
+}
+.onetap-sub {
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  margin: 0 0 22px;
+  max-width: 60ch;
+}
+.onetap-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.onetap-buttons .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.onetap-fineprint {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  margin: 0;
+  line-height: 1.5;
+}
+@media (max-width: 540px) {
+  .onetap-buttons { grid-template-columns: 1fr; }
+}
+
 .install {
   margin-top: 48px;
   text-align: left;
@@ -1557,6 +1614,9 @@ input, select, textarea { font: inherit; color: inherit; }
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
 }
+/* Tighter gap when the one-tap card sits directly above the install
+   card — they read as related cards rather than separate sections. */
+.onetap-card + .install { margin-top: 16px; }
 .install-head {
   display: flex;
   gap: 4px;
