@@ -16,6 +16,7 @@ import AuthCallback from './routes/AuthCallback'
 import Faq from './routes/Faq'
 import About from './routes/About'
 import HowItWorks from './routes/HowItWorks'
+import DemoOrderConfirmation from './routes/DemoOrderConfirmation'
 
 // CRM is admin-only and big — code-split into its own chunk so the customer
 // bundle doesn't pay for it.
@@ -57,6 +58,7 @@ export default function App() {
         <Route path="/faq" element={<Faq />} />
         <Route path="/about" element={<About />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
+        <Route path="/demo/confirmation" element={<DemoOrderConfirmation />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
 
