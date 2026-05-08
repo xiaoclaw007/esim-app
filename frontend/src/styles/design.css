@@ -1567,8 +1567,22 @@ input, select, textarea { font: inherit; color: inherit; }
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--ink-3);
   margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+/* "Recommended" prefix pill — accent-coloured chip that anchors the
+   one-tap card as the primary path. */
+.onetap-badge {
+  background: var(--accent-soft);
+  color: var(--accent);
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
 }
 .onetap-title {
   font-size: 22px;
@@ -1617,6 +1631,48 @@ input, select, textarea { font: inherit; color: inherit; }
 /* Tighter gap when the one-tap card sits directly above the install
    card — they read as related cards rather than separate sections. */
 .onetap-card + .install { margin-top: 16px; }
+
+/* "Or if that doesn't work" connector strip between the one-tap card
+   and the backup install card. Centered mono label flanked by hairlines
+   — communicates that the cards are sequential, not parallel. */
+.install-connector {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 18px 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.install-connector::before,
+.install-connector::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+.onetap-card + .install-connector { margin-top: 16px; }
+.install-connector + .install { margin-top: 0; }
+
+/* Eyebrow + heading at the top of the install (backup) card so its
+   role as the fallback path is explicit. */
+.install-eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 8px;
+}
+.install-title {
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin: 0 0 22px;
+  color: var(--ink);
+}
 .install-head {
   display: flex;
   gap: 4px;

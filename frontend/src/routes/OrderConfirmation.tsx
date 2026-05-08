@@ -270,7 +270,9 @@ export default function OrderConfirmation() {
 
       {lpa && !finishing && (
         <div className="onetap-card">
-          <div className="onetap-eyebrow">One-tap install</div>
+          <div className="onetap-eyebrow">
+            <span className="onetap-badge">Recommended</span> Step 1 · Try one-tap install
+          </div>
           <h3 className="onetap-title">Skip the scan — install in one tap</h3>
           <p className="onetap-sub">
             Tap the button for your phone. We'll hand off to your built-in eSIM installer — no
@@ -297,13 +299,21 @@ export default function OrderConfirmation() {
             </a>
           </div>
           <p className="onetap-fineprint">
-            Works on iOS 17.4 or later and Android 10 or later. On older devices, use the QR or
-            manual method below.
+            Works on iOS 17.4+ and Android 10+. If your phone is older or one-tap doesn't open,
+            use the backup method below ↓
           </p>
         </div>
       )}
 
+      {lpa && !finishing && (
+        <div className="install-connector" aria-hidden="true">
+          <span>or if that doesn't work</span>
+        </div>
+      )}
+
       <div className="install" style={{ textAlign: 'left' }}>
+        <div className="install-eyebrow">Step 2 · Backup method</div>
+        <h3 className="install-title">Scan the QR code or enter the codes by hand</h3>
         <div className="install-head">
           <button className={tab === 'ios' ? 'active' : ''} onClick={() => setTab('ios')}>
             iPhone / iPad
