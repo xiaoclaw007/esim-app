@@ -94,24 +94,47 @@ export default function Account() {
               : `${activeOrders.length} active · ${orders.length} total orders`}
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          {credit && credit.balance_cents > 0 && (
-            <button
-              className="credit-pill"
-              onClick={() => setTab('credit')}
-              title="View credit history"
-            >
-              <span className="credit-pill__mark"><LogoMark size={14} /></span>
-              <span className="credit-pill__amount">{formatDollars(credit.balance_cents)}</span>
-              <span className="credit-pill__label">in credit</span>
-              <Icon name="arrow" size={12} />
-            </button>
-          )}
+        <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn primary sm" onClick={() => navigate('/destinations')}>
             + New eSIM
           </button>
         </div>
       </div>
+
+      {/* Promoted credit strip — sits between the welcome and the tab
+          strip, shown only when there's a positive balance. Same dark-
+          navy gradient + italic serif typography as the credit hero
+          card on the Credit tab itself, so the visual language stays
+          consistent across surfaces. Designed to be unmissable: full
+          content-width, sits in the customer's reading path before
+          they get to the eSIM list. */}
+      {credit && credit.balance_cents > 0 && (
+        <button
+          type="button"
+          className="credit-strip"
+          onClick={() => navigate('/destinations')}
+          aria-label="Use your Nimvoy credit on a new plan"
+        >
+          <div className="credit-strip__left">
+            <div className="credit-strip__mark"><LogoMark size={20} /></div>
+            <div>
+              <div className="credit-strip__eyebrow">Your Nimvoy credit</div>
+              <div className="credit-strip__amount">
+                {formatDollars(credit.balance_cents)}
+              </div>
+            </div>
+          </div>
+          <div className="credit-strip__right">
+            <div className="credit-strip__copy">
+              Earn 10% back on every plan. Stacks with coupons, auto-applies at
+              checkout — use it on your next eSIM.
+            </div>
+            <span className="credit-strip__cta">
+              Use it now <Icon name="arrow" size={14} />
+            </span>
+          </div>
+        </button>
+      )}
 
       {needsCredential && (
         <div className="claim-banner">
