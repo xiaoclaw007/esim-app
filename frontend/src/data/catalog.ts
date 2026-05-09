@@ -105,10 +105,10 @@ export const COUNTRIES: CountryMeta[] = [
   { code: 'JP', name: 'Japan',                flag: '🇯🇵', region: 'asia',     networks: 'NTT Docomo, SoftBank',           popular: true, image: _UNSPLASH('photo-1528164344705-47542687000d') },
   { code: 'KR', name: 'South Korea',          flag: '🇰🇷', region: 'asia',     networks: 'SK Telecom, KT',                 popular: true, image: _UNSPLASH('photo-1762267616547-6d6cd4adabc3') },
   { code: 'CN', name: 'China',                flag: '🇨🇳', region: 'asia',     networks: 'China Mobile, Unicom',           popular: true, image: _UNSPLASH('photo-1508804185872-d7badad00f7d') },
-  { code: 'TH', name: 'Thailand',             flag: '🇹🇭', region: 'asia',     networks: 'AIS, TrueMove H' },
-  { code: 'TW', name: 'Taiwan',               flag: '🇹🇼', region: 'asia',     networks: 'Chunghwa Telecom, Far EasTone' },
-  { code: 'TR', name: 'Turkey',               flag: '🇹🇷', region: 'europe',   networks: 'Turkcell, Vodafone' },
-  { code: 'AE', name: 'United Arab Emirates', flag: '🇦🇪', region: 'asia',     networks: 'Etisalat, du' },
+  { code: 'TH', name: 'Thailand',             flag: '🇹🇭', region: 'asia',     networks: 'AIS, TrueMove H',                image: _UNSPLASH('photo-1563492065599-3520f775eeed') },
+  { code: 'TW', name: 'Taiwan',               flag: '🇹🇼', region: 'asia',     networks: 'Chunghwa Telecom, Far EasTone', image: _UNSPLASH('photo-1601534621622-8587a8a0da11') },
+  { code: 'TR', name: 'Turkey',               flag: '🇹🇷', region: 'europe',   networks: 'Turkcell, Vodafone',             image: _UNSPLASH('photo-1604156789095-3348604c0f43') },
+  { code: 'AE', name: 'United Arab Emirates', flag: '🇦🇪', region: 'asia',     networks: 'Etisalat, du',                   image: _UNSPLASH('photo-1512453979798-5ea266f8880c') },
 ]
 
 export const REGIONAL_PLANS_META: RegionalMeta[] = [
