@@ -170,7 +170,7 @@ export default function DestinationDetail() {
               </div>
               <div className="detail-fact">
                 <div className="label">Speed</div>
-                <div className="val">4G/5G, up to 400 Mbps</div>
+                <div className="val">4G/5G</div>
               </div>
               <div className="detail-fact">
                 <div className="label">Validity</div>
