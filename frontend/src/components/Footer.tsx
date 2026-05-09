@@ -46,7 +46,7 @@ export function Footer() {
             <Logo />
           </div>
           <p className="muted" style={{ fontSize: 14, maxWidth: '36ch', margin: 0 }}>
-            Data that travels with you. eSIMs for 132 countries, installed in 60 seconds.
+            Data that travels with you. eSIMs for 60+ countries, installed in 60 seconds.
           </p>
         </div>
         {cols.map((c) => (
