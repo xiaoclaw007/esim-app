@@ -11,7 +11,7 @@ import {
   validateCoupon,
   type CouponValidateResponse,
 } from '../api/checkout'
-import { fetchCreditBalance, formatDollars, type CreditBalance } from '../api/credits'
+import { fetchCreditBalance, type CreditBalance } from '../api/credits'
 import { track } from '../api/track'
 import {
   COUNTRIES,
