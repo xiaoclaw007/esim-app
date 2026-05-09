@@ -92,10 +92,9 @@ h1 { font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif; font-s
       <h1>Postage paid.<br><span style="font-style:normal;color:#C4633A">eSIM brewing.</span></h1>
 
       <p class="letter">
-        Your <em>${{ amount_display }}</em> has cleared, and we're now whispering quietly to our
-        network partners to wake up your {{ country_name }} eSIM. Your activation email lands in
-        your inbox in about a minute. Open it on the phone you'll use and you're 60 seconds from
-        online.
+        We're waking up your {{ country_name }} eSIM with our network partners. Your
+        activation email lands in about a minute — open it on the phone you'll use and
+        you're 60 seconds from online.
       </p>
       <p class="letter" style="margin-top:14px">
         Nothing for you to do right now. We'll take it from here.
@@ -107,21 +106,13 @@ h1 { font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif; font-s
         <h4 class="status-h4">Almost ready</h4>
         <p class="status-sub">Activation email arrives in under 60 seconds with everything you need to install.</p>
       </div>
-
-      <table class="meta-tbl" role="presentation" cellpadding="0" cellspacing="0">
-        <tr>
-          <td><small>Plan</small><b>{{ plan_short }}</b></td>
-          <td><small>Days</small><b>{{ validity_days }}</b></td>
-          <td><small>Paid</small><b>${{ amount_display }}</b></td>
-          <td><small>Order</small><b class="ref">{{ reference }}</b></td>
-        </tr>
-      </table>
     </div>
   </div>
 
   <div class="footer">
-    <a href="https://www.nimvoy.com/order/{{ reference }}">View in browser</a> ·
+    <a href="https://www.nimvoy.com/order/{{ reference }}">Track this order</a> ·
     <a href="mailto:support@nimvoy.com">support@nimvoy.com</a><br><br>
+    Stripe will send a separate receipt with payment details.<br>
     Nimvoy · Global eSIM
   </div>
 </div>
