@@ -108,6 +108,47 @@ REGIONAL_PLANS: list[CatalogEntry] = [
     CatalogEntry("eSIM-APACAM10-07",  "Asia-Pacific 7 Days Unlimited",       "AP", "asia-pacific", "regional", 999, 7,  2500),
     CatalogEntry("eSIM-APACAT5G-15",  "Asia-Pacific 15 Days 5GB",            "AP", "asia-pacific", "regional", 5,   15, 750),
     CatalogEntry("eSIM-APACAT10G-15", "Asia-Pacific 15 Days 10GB",           "AP", "asia-pacific", "regional", 10,  15, 1100),
+    # Australia + New Zealand
+    CatalogEntry("eSIM-ANT3G-03",     "Australia + NZ 3 Days 3GB",           "ANZ", "oceania", "regional", 3,   3,  300),
+    CatalogEntry("eSIM-ANMAX-03",     "Australia + NZ 3 Days Unlimited",     "ANZ", "oceania", "regional", 999, 3,  1050),
+    CatalogEntry("eSIM-ANT5G-07",     "Australia + NZ 7 Days 5GB",           "ANZ", "oceania", "regional", 5,   7,  650),
+    CatalogEntry("eSIM-ANT10G-07",    "Australia + NZ 7 Days 10GB",          "ANZ", "oceania", "regional", 10,  7,  1000),
+    CatalogEntry("eSIM-ANMAX-07",     "Australia + NZ 7 Days Unlimited",     "ANZ", "oceania", "regional", 999, 7,  2300),
+    CatalogEntry("eSIM-ANT5G-15",     "Australia + NZ 15 Days 5GB",          "ANZ", "oceania", "regional", 5,   15, 750),
+    CatalogEntry("eSIM-ANT10G-15",    "Australia + NZ 15 Days 10GB",         "ANZ", "oceania", "regional", 10,  15, 1100),
+    CatalogEntry("eSIM-ANT10G-30",    "Australia + NZ 30 Days 10GB",         "ANZ", "oceania", "regional", 10,  30, 1200),
+    CatalogEntry("eSIM-ANT20G-30",    "Australia + NZ 30 Days 20GB",         "ANZ", "oceania", "regional", 20,  30, 2100),
+    # North America (US + Canada + Mexico)
+    CatalogEntry("eSIM-UCMT5G-07",    "North America 7 Days 5GB",            "NAM", "americas", "regional", 5,   7,  1200),
+    CatalogEntry("eSIM-UCMT10G-07",   "North America 7 Days 10GB",           "NAM", "americas", "regional", 10,  7,  1900),
+    CatalogEntry("eSIM-UCMT5G-15",    "North America 15 Days 5GB",           "NAM", "americas", "regional", 5,   15, 1400),
+    CatalogEntry("eSIM-UCMT10G-15",   "North America 15 Days 10GB",          "NAM", "americas", "regional", 10,  15, 2000),
+    # Southeast Asia (Singapore + Malaysia + Indonesia + Thailand)
+    CatalogEntry("eSIM-XMTYT3GB-03",  "Southeast Asia 3 Days 3GB",           "SEA", "asia", "regional", 3,   3,  300),
+    CatalogEntry("eSIM-XMTY10M-03",   "Southeast Asia 3 Days Unlimited",     "SEA", "asia", "regional", 999, 3,  890),
+    CatalogEntry("eSIM-XMTYT5GB-07",  "Southeast Asia 7 Days 5GB",           "SEA", "asia", "regional", 5,   7,  600),
+    CatalogEntry("eSIM-XMTYT10GB-07", "Southeast Asia 7 Days 10GB",          "SEA", "asia", "regional", 10,  7,  900),
+    CatalogEntry("eSIM-XMTY10M-07",   "Southeast Asia 7 Days Unlimited",     "SEA", "asia", "regional", 999, 7,  1990),
+    CatalogEntry("eSIM-XMTYT5GB-15",  "Southeast Asia 15 Days 5GB",          "SEA", "asia", "regional", 5,   15, 700),
+    CatalogEntry("eSIM-XMTYT10GB-15", "Southeast Asia 15 Days 10GB",         "SEA", "asia", "regional", 10,  15, 1000),
+    CatalogEntry("eSIM-XMTYT10GB-30", "Southeast Asia 30 Days 10GB",         "SEA", "asia", "regional", 10,  30, 1100),
+    CatalogEntry("eSIM-XMTYT20GB-30", "Southeast Asia 30 Days 20GB",         "SEA", "asia", "regional", 20,  30, 1800),
+    # Saipan + Guam
+    CatalogEntry("eSIM-SPNGUMT5G-07", "Saipan + Guam 7 Days 5GB",            "SPG", "oceania", "regional", 5,   7,  1000),
+    CatalogEntry("eSIM-SPNGUMT10G-07","Saipan + Guam 7 Days 10GB",           "SPG", "oceania", "regional", 10,  7,  1600),
+    CatalogEntry("eSIM-SPNGUMT5G-15", "Saipan + Guam 15 Days 5GB",           "SPG", "oceania", "regional", 5,   15, 1100),
+    CatalogEntry("eSIM-SPNGUMT10G-15","Saipan + Guam 15 Days 10GB",          "SPG", "oceania", "regional", 10,  15, 1700),
+    # South America (Brazil + Argentina + Chile + Ecuador + Peru + Uruguay)
+    CatalogEntry("eSIM-SAAT5G-07",    "South America 7 Days 5GB",            "SAM", "americas", "regional", 5,   7,  1900),
+    CatalogEntry("eSIM-SAAT10G-07",   "South America 7 Days 10GB",           "SAM", "americas", "regional", 10,  7,  2800),
+    CatalogEntry("eSIM-SAAT5G-15",    "South America 15 Days 5GB",           "SAM", "americas", "regional", 5,   15, 2100),
+    CatalogEntry("eSIM-SAAT10G-15",   "South America 15 Days 10GB",          "SAM", "americas", "regional", 10,  15, 3100),
+    # Africa (carrier coverage list TBD — placeholder description in
+    # frontend REGIONAL_PLANS_META until the list is confirmed)
+    CatalogEntry("eSIM-AFAT5G-07",    "Africa 7 Days 5GB",                   "AFR", "africa", "regional", 5,   7,  1000),
+    CatalogEntry("eSIM-AFAT10G-07",   "Africa 7 Days 10GB",                  "AFR", "africa", "regional", 10,  7,  1900),
+    CatalogEntry("eSIM-AFAT5G-15",    "Africa 15 Days 5GB",                  "AFR", "africa", "regional", 5,   15, 1100),
+    CatalogEntry("eSIM-AFAT10G-15",   "Africa 15 Days 10GB",                 "AFR", "africa", "regional", 10,  15, 2000),
 ]
 
 ALL_PLANS: list[CatalogEntry] = COUNTRY_PLANS + REGIONAL_PLANS

@@ -328,6 +328,12 @@ _COUNTRY_META = {
     "EU": ("Europe", "🇪🇺"),
     "AP": ("Asia-Pacific", "🌏"),
     "CHM": ("China + HK + Macau", "🇨🇳"),
+    "ANZ": ("Australia + NZ", "🇦🇺"),
+    "NAM": ("USA + Canada + Mexico", "🇺🇸"),
+    "SEA": ("Southeast Asia", "🌏"),
+    "SPG": ("Saipan + Guam", "🇬🇺"),
+    "SAM": ("South America", "🌎"),
+    "AFR": ("Africa", "🌍"),
 }
 
 
