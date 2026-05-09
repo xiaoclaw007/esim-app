@@ -1427,10 +1427,10 @@ input, select, textarea { font: inherit; color: inherit; }
 .compat-modal__panel {
   position: relative;
   width: 100%;
-  max-width: 520px;
+  max-width: 480px;
   max-height: calc(100vh - 48px);
   overflow-y: auto;
-  padding: 32px 32px 28px;
+  padding: 28px 28px 24px;
   background: var(--bg-elev);
   border-radius: var(--radius-md);
   border: 1px solid var(--line);
@@ -1461,24 +1461,25 @@ input, select, textarea { font: inherit; color: inherit; }
 
 .compat-modal__eyebrow {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 10.5px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-3);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 .compat-modal__title {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 500;
   letter-spacing: -0.02em;
-  margin: 0 0 10px;
+  margin: 0 0 6px;
   color: var(--ink);
+  line-height: 1.15;
 }
 .compat-modal__sub {
-  font-size: 14.5px;
-  line-height: 1.55;
+  font-size: 14px;
+  line-height: 1.5;
   color: var(--ink-2);
-  margin: 0 0 22px;
+  margin: 0 0 18px;
 }
 
 .compat-modal__input-wrap {
@@ -1486,16 +1487,19 @@ input, select, textarea { font: inherit; color: inherit; }
   align-items: center;
   gap: 10px;
   padding: 12px 14px;
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--bg);
   border: 1px solid var(--line);
   color: var(--ink-3);
   margin-bottom: 14px;
   transition: border-color .15s ease, box-shadow .15s ease;
 }
+/* Softer focus state: keep the border subtle (not the heavy dark
+   navy that --accent gives), and rely on a low-alpha accent ring
+   for the "I'm focused" cue. Less industrial than the prior look. */
 .compat-modal__input-wrap:focus-within {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+  border-color: var(--ink-2);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 10%, transparent);
 }
 .compat-modal__input {
   flex: 1;
@@ -1630,6 +1634,9 @@ input, select, textarea { font: inherit; color: inherit; }
   color: color-mix(in srgb, var(--ok) 80%, var(--ink));
 }
 
+/* Bottom hint — fallback path for when our checkDevice can't find a
+   match. Solid sunken card now (the dashed border felt generic);
+   left-aligned, single small block. */
 .compat-modal__hint {
   font-size: 13px;
   line-height: 1.55;
@@ -1637,10 +1644,18 @@ input, select, textarea { font: inherit; color: inherit; }
   padding: 12px 14px;
   border-radius: 10px;
   background: var(--bg-sunk);
-  border: 1px dashed var(--line-strong);
 }
 .compat-modal__hint strong { font-weight: 500; color: var(--ink); }
-.compat-modal__hint em { font-style: normal; font-family: var(--mono); font-size: 12px; color: var(--ink); }
+.compat-modal__hint em {
+  font-style: normal;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--bg);
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+}
 
 @media (max-width: 540px) {
   .compat-modal__panel { padding: 26px 22px 22px; }
