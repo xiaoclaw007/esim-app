@@ -17,8 +17,13 @@ export default function Signup() {
     setError(null)
     setSubmitting(true)
     try {
-      await signup(email, password, name || undefined)
-      navigate('/account', { replace: true })
+      const result = await signup(email, password, name || undefined)
+      // First-time signups get pushed to /destinations to keep
+      // purchase momentum. Signups that claim a passwordless account
+      // with existing orders go to /account so the customer sees
+      // their stuff right away.
+      const next = result.has_orders ? '/account' : '/destinations?welcome=1'
+      navigate(next, { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Signup failed')
     } finally {

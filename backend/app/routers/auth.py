@@ -5,6 +5,7 @@ import secrets
 from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 from typing import Optional
+from urllib.parse import quote as _url_quote
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
 from fastapi.responses import RedirectResponse
@@ -12,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
-from app.models import RefreshToken, User
+from app.models import Order, RefreshToken, User
 from app.schemas import AuthResponse, LoginRequest, MagicLinkRequest, SignupRequest, UserResponse
 from app.services import magic_link as magic_link_service
 from app.services.auth_service import (
@@ -105,9 +106,13 @@ def signup(request: SignupRequest, response: Response, db: Session = Depends(get
     _store_refresh_token(db, user.id, token_hash)
     _set_refresh_cookie(response, raw_refresh)
 
+    has_orders = (
+        db.query(Order).filter(Order.user_id == user.id).limit(1).count() > 0
+    )
     return AuthResponse(
         access_token=access_token,
         user=UserResponse.from_user(user),
+        has_orders=has_orders,
     )
 
 
@@ -129,9 +134,13 @@ def login(request: LoginRequest, response: Response, db: Session = Depends(get_d
     _store_refresh_token(db, user.id, token_hash)
     _set_refresh_cookie(response, raw_refresh)
 
+    has_orders = (
+        db.query(Order).filter(Order.user_id == user.id).limit(1).count() > 0
+    )
     return AuthResponse(
         access_token=access_token,
         user=UserResponse.from_user(user),
+        has_orders=has_orders,
     )
 
 
@@ -287,8 +296,19 @@ async def google_callback(
     raw_refresh, token_hash = create_refresh_token()
     _store_refresh_token(db, user.id, token_hash)
 
-    # Redirect to frontend with tokens; clear the one-shot state cookie.
-    redirect_url = f"{settings.frontend_url}/auth/callback?access_token={access_token}"
+    # Pick where the frontend should land them. Customers with orders
+    # → /account (their stuff is there). Customers without orders →
+    # /destinations with a welcome banner (push toward first purchase).
+    has_orders = (
+        db.query(Order).filter(Order.user_id == user.id).limit(1).count() > 0
+    )
+    next_path = "/account" if has_orders else "/destinations?welcome=1"
+
+    # Redirect to frontend with tokens + next-path; clear one-shot state cookie.
+    redirect_url = (
+        f"{settings.frontend_url}/auth/callback"
+        f"?access_token={access_token}&next={_url_quote(next_path, safe='')}"
+    )
     resp = RedirectResponse(url=redirect_url)
     _set_refresh_cookie(resp, raw_refresh)
     resp.delete_cookie(OAUTH_STATE_COOKIE, path="/api/auth")

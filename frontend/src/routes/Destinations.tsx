@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useAuth } from '../auth/AuthContext'
 import { Icon } from '../components/Icon'
 import { useCatalog } from '../hooks/useCatalog'
 import {
@@ -13,9 +14,24 @@ import {
 
 export default function Destinations() {
   const { plans, loading } = useCatalog()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [q, setQ] = useState('')
   const [region, setRegion] = useState<string>('all')
+
+  // Welcome banner: shown once after first signup / Google OAuth (the
+  // post-auth redirect adds ?welcome=1 when the user has zero orders).
+  // Strip the query param on first read so a refresh doesn't re-show.
+  const [params, setParams] = useSearchParams()
+  const [welcome, setWelcome] = useState(false)
+  useEffect(() => {
+    if (params.get('welcome') === '1') {
+      setWelcome(true)
+      params.delete('welcome')
+      setParams(params, { replace: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const filtered = useMemo(() => {
     const lower = q.toLowerCase().trim()
@@ -44,6 +60,25 @@ export default function Destinations() {
 
   return (
     <>
+      {welcome && (
+        <div className="welcome-banner" role="status">
+          <div className="welcome-banner__inner">
+            <span className="welcome-banner__star" aria-hidden="true">✦</span>
+            <span>
+              Welcome{user?.name ? `, ${user.name.split(' ')[0]}` : ', traveler'} —
+              pick your first destination.
+            </span>
+            <button
+              type="button"
+              className="welcome-banner__close"
+              onClick={() => setWelcome(false)}
+              aria-label="Dismiss"
+            >
+              <Icon name="x" size={11} />
+            </button>
+          </div>
+        </div>
+      )}
       <section className="dest-hero">
         <div className="dest-hero-inner">
           <div className="breadcrumb">

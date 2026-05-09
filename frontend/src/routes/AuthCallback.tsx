@@ -31,8 +31,14 @@ export default function AuthCallback() {
     }
 
     setAccessToken(token)
+    // Backend may have included a ?next= path in the redirect (it
+    // does for OAuth flows — picks /destinations?welcome=1 for new
+    // users with no orders, /account for returning users). Default
+    // to /account if absent.
+    const rawNext = params.get('next')
+    const next = rawNext && rawNext.startsWith('/') ? rawNext : '/account'
     refreshUser()
-      .then(() => navigate('/account', { replace: true }))
+      .then(() => navigate(next, { replace: true }))
       .catch((e: Error) => setError(e.message || 'Failed to load your profile'))
   }, [params, navigate, refreshUser])
 

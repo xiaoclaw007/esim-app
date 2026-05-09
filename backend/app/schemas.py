@@ -162,6 +162,10 @@ class UserResponse(BaseModel):
 class AuthResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    # True if the user has any orders attached. Drives where the
+    # frontend lands them post-auth: with orders → /account; without
+    # orders → /destinations?welcome=1 to keep purchase momentum.
+    has_orders: bool = False
     user: UserResponse
 
 

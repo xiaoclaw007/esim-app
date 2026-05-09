@@ -14,11 +14,15 @@ export interface User {
   has_google?: boolean
 }
 
+interface AuthResult {
+  has_orders: boolean
+}
+
 interface AuthState {
   user: User | null
   loading: boolean
-  login: (email: string, password: string) => Promise<void>
-  signup: (email: string, password: string, name?: string) => Promise<void>
+  login: (email: string, password: string) => Promise<AuthResult>
+  signup: (email: string, password: string, name?: string) => Promise<AuthResult>
   logout: () => Promise<void>
   refreshUser: () => Promise<void>
 }
@@ -27,6 +31,7 @@ const AuthContext = createContext<AuthState | null>(null)
 
 interface TokenResponse {
   access_token: string
+  has_orders?: boolean
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -67,22 +72,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [refreshUser])
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string): Promise<AuthResult> => {
     const data = await apiFetch<TokenResponse>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     })
     setAccessToken(data.access_token)
     await refreshUser()
+    return { has_orders: data.has_orders ?? false }
   }, [refreshUser])
 
-  const signup = useCallback(async (email: string, password: string, name?: string) => {
+  const signup = useCallback(async (email: string, password: string, name?: string): Promise<AuthResult> => {
     const data = await apiFetch<TokenResponse>('/api/auth/signup', {
       method: 'POST',
       body: JSON.stringify({ email, password, name }),
     })
     setAccessToken(data.access_token)
     await refreshUser()
+    return { has_orders: data.has_orders ?? false }
   }, [refreshUser])
 
   const logout = useCallback(async () => {

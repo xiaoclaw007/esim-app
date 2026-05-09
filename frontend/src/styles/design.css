@@ -1162,6 +1162,61 @@ input, select, textarea { font: inherit; color: inherit; }
    DESTINATIONS PAGE
    ============================================================ */
 
+/* One-time welcome banner shown when a brand-new account lands on
+   /destinations after Google OAuth or first signup. Visually quieter
+   than the sitewide top promo bar (cream + accent-soft gradient
+   instead of dark navy) — this is a celebratory greeting, not a
+   sales pitch. Dismissible, no localStorage (one trip per session). */
+.welcome-banner {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--accent-soft) 75%, var(--bg)) 0%,
+    var(--bg-elev) 60%,
+    var(--bg-elev) 100%
+  );
+  border-bottom: 1px solid var(--line);
+  padding: 12px 32px;
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--ink);
+  position: relative;
+}
+.welcome-banner__inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.welcome-banner__star {
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--accent);
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.welcome-banner__close {
+  margin-left: auto;
+  background: transparent;
+  border: 0;
+  color: var(--ink-3);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: color .15s ease, background .15s ease;
+}
+.welcome-banner__close:hover {
+  color: var(--ink);
+  background: rgba(11, 31, 58, 0.06);
+}
+@media (max-width: 720px) {
+  .welcome-banner { padding: 11px 22px; font-size: 13px; }
+}
+
 .dest-hero {
   padding: 56px 32px 32px;
   border-bottom: 1px solid var(--line);
