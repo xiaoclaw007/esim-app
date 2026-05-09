@@ -1557,6 +1557,75 @@ input, select, textarea { font: inherit; color: inherit; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
 .form-row.single { grid-template-columns: 1fr; }
 
+/* Credit toggle on the checkout customer-action column. Sits between
+   the coupon input and the payment section. Looks distinct from the
+   read-only summary rows on the right side: it's a button (action),
+   not a list item. Accent color when on; muted when off. Keyboard
+   activatable, role-aware via aria-pressed. */
+.credit-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  margin-top: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--bg-elev);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font);
+  transition: border-color .15s ease, background .15s ease;
+}
+.credit-toggle:hover { border-color: var(--line-strong); }
+.credit-toggle.is-on {
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  background: color-mix(in srgb, var(--accent-soft) 70%, var(--bg-elev));
+}
+.credit-toggle__check {
+  width: 20px; height: 20px;
+  border-radius: 5px;
+  border: 1.5px solid var(--line-strong);
+  background: var(--bg);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--bg);
+  transition: background .15s ease, border-color .15s ease;
+}
+.credit-toggle.is-on .credit-toggle__check {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #FFFFFF;
+}
+.credit-toggle__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+.credit-toggle__title {
+  font-size: 14.5px;
+  color: var(--ink);
+  letter-spacing: -0.005em;
+}
+.credit-toggle__title strong {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--accent);
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+.credit-toggle.is-on .credit-toggle__title strong { color: var(--accent); }
+.credit-toggle__sub {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  font-family: var(--mono);
+  letter-spacing: 0.04em;
+}
+
 /* Payment method tabs */
 .pay-methods {
   display: flex;

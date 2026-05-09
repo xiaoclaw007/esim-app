@@ -235,6 +235,34 @@ export default function Checkout() {
           onRemove={onRemoveCoupon}
         />
 
+        {/* Credit toggle — sits in the customer-action column alongside
+            the coupon input rather than in the read-only order summary,
+            because applying credit IS an action (a checkbox in a list of
+            display rows reads as out of place). The summary on the right
+            still SHOWS the credit applied as a "-$X.XX credit" line. */}
+        {creditAvailable > 0 && postCoupon > 0 && (
+          <button
+            type="button"
+            className={`credit-toggle ${useCredit ? 'is-on' : ''}`}
+            onClick={() => setUseCredit(!useCredit)}
+            aria-pressed={useCredit}
+          >
+            <span className="credit-toggle__check" aria-hidden="true">
+              {useCredit ? <Icon name="check" size={12} /> : null}
+            </span>
+            <span className="credit-toggle__copy">
+              <span className="credit-toggle__title">
+                Apply <strong>{formatDollars(creditAvailable)}</strong> in Nimvoy credit
+              </span>
+              <span className="credit-toggle__sub">
+                {useCredit
+                  ? `Saving ${formatDollars(creditApplied)} on this order.`
+                  : 'Tap to apply.'}
+              </span>
+            </span>
+          </button>
+        )}
+
         <div className="section-title">
           <span className="n">2</span> Payment
         </div>
@@ -324,18 +352,10 @@ export default function Checkout() {
                 <span className="num">−${priceDollars(discount)}</span>
               </div>
             )}
-            {creditAvailable > 0 && postCoupon > 0 && (
-              <div className="summary-row" style={{ color: useCredit ? 'var(--accent)' : 'var(--ink-3)' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', flex: 1 }}>
-                  <input
-                    type="checkbox"
-                    checked={useCredit}
-                    onChange={(e) => setUseCredit(e.target.checked)}
-                    style={{ accentColor: 'var(--accent)' }}
-                  />
-                  <span>Use Nimvoy credit ({formatDollars(creditAvailable)} available)</span>
-                </label>
-                <span className="num">{useCredit ? `−${formatDollars(creditApplied)}` : '$0.00'}</span>
+            {useCredit && creditApplied > 0 && (
+              <div className="summary-row" style={{ color: 'var(--accent)' }}>
+                <span>Nimvoy credit</span>
+                <span className="num">−${priceDollars(creditApplied)}</span>
               </div>
             )}
             <div className="summary-row">
