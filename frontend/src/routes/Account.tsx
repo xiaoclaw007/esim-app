@@ -127,6 +127,16 @@ export default function Account() {
             <div className="credit-strip__copy">
               Earn 10% back on every dollar you spend. Stacks with coupons,
               auto-applies at checkout.
+              {credit.earliest_expiry && (
+                <> Earliest credit expires{' '}
+                  {new Date(credit.earliest_expiry).toLocaleDateString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                  .
+                </>
+              )}
             </div>
             <span className="credit-strip__cta">
               Use it now <Icon name="arrow" size={14} />
