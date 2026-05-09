@@ -1343,47 +1343,66 @@ input, select, textarea { font: inherit; color: inherit; }
 .detail-fact .label { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); }
 .detail-fact .val { font-size: 17px; font-weight: 500; margin-top: 4px; }
 
-/* "Check if your phone supports eSIM" CTA on the destination
-   hero. Distinct from the primary "Buy now" buttons on plan
-   cards — softer accent fill, phone icon on the left. Acts as
-   the last-resort confidence check before purchase, sized to be
-   visible-without-screaming below the destination facts. */
-.compat-cta {
-  display: inline-flex;
+/* "Will your phone work?" reassurance strip — sits between the
+   "Every plan includes" strip and the plans grid. Same dashed-
+   border + sunken-bg treatment as the includes strip above so it
+   reads as part of the same trust scaffolding, but clickable as
+   a single button (the whole row triggers the modal). */
+.compat-strip {
+  display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 22px;
-  padding: 11px 18px 11px 12px;
+  gap: 14px;
+  width: 100%;
+  margin: 12px 0 20px;
+  padding: 14px 18px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--bg-elev) 60%, transparent);
+  text-align: left;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease;
+}
+.compat-strip:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent-soft) 60%, var(--bg-elev));
+}
+.compat-strip__icon {
+  width: 32px; height: 32px;
   border-radius: 999px;
   background: var(--accent-soft);
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
   color: var(--accent);
-  font-family: var(--font);
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: transform .12s ease, box-shadow .15s ease, background .15s ease;
-}
-.compat-cta:hover {
-  transform: translateY(-1px);
-  background: color-mix(in srgb, var(--accent-soft) 70%, var(--bg));
-  box-shadow: 0 4px 14px -4px color-mix(in srgb, var(--accent) 35%, transparent);
-}
-.compat-cta__icon {
-  width: 26px; height: 26px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.5);
   display: grid; place-items: center;
   flex-shrink: 0;
 }
-.compat-cta svg:last-child {
-  transition: transform .15s ease;
-  color: color-mix(in srgb, var(--accent) 70%, transparent);
+.compat-strip__copy {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
-.compat-cta:hover svg:last-child {
-  transform: translateX(2px);
+.compat-strip__copy strong {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.005em;
+}
+.compat-strip__sub {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  letter-spacing: 0.01em;
+}
+.compat-strip__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
   color: var(--accent);
+  white-space: nowrap;
+  transition: transform .15s ease;
 }
+.compat-strip:hover .compat-strip__cta { transform: translateX(2px); }
 
 /* Compatibility modal — fixed-position overlay with backdrop +
    centered panel. Body scroll is locked while open (handled by
@@ -1471,10 +1490,13 @@ input, select, textarea { font: inherit; color: inherit; }
   background: var(--bg);
   border: 1px solid var(--line);
   color: var(--ink-3);
-  margin-bottom: 18px;
-  transition: border-color .15s ease;
+  margin-bottom: 14px;
+  transition: border-color .15s ease, box-shadow .15s ease;
 }
-.compat-modal__input-wrap:focus-within { border-color: var(--ink-2); }
+.compat-modal__input-wrap:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
 .compat-modal__input {
   flex: 1;
   border: 0;
@@ -1485,6 +1507,40 @@ input, select, textarea { font: inherit; color: inherit; }
   color: var(--ink);
 }
 .compat-modal__input::placeholder { color: var(--ink-3); }
+
+/* Quick-tap example chips — rendered when there's no result yet
+   (initial open with no UA-detect, or after the user clears the
+   input). One tap fills the input and runs checkDevice instantly. */
+.compat-modal__chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.compat-modal__chips-lbl {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-right: 4px;
+}
+.compat-modal__chip {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--bg-sunk);
+  border: 1px solid var(--line);
+  font-size: 12.5px;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: border-color .12s ease, color .12s ease, background .12s ease;
+}
+.compat-modal__chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
 .compat-modal__clear {
   border: 0;
   background: rgba(11,31,58,.06);

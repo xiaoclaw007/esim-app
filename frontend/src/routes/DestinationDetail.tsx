@@ -185,19 +185,6 @@ export default function DestinationDetail() {
                 </div>
               </div>
             </div>
-
-            {/* "Will my phone work?" — last-resort confidence check
-                before purchase. Sits below the destination facts so
-                it's visible without scrolling on most viewports. */}
-            <button
-              type="button"
-              className="compat-cta"
-              onClick={() => setCompatOpen(true)}
-            >
-              <span className="compat-cta__icon"><Icon name="phone" size={14} /></span>
-              <span>Check if your phone supports eSIM</span>
-              <Icon name="arrow" size={12} />
-            </button>
           </div>
 
           {/* Hero art card. Shows the destination photo when meta.image is set,
@@ -295,6 +282,27 @@ export default function DestinationDetail() {
                 <Icon name="bolt" size={14} /> Instant activation
               </span>
             </div>
+          )}
+
+          {/* Pre-purchase reassurance: "wait, will my phone work?"
+              moment lands right where customers are about to commit.
+              Same dashed-border treatment as the "Every plan includes"
+              strip above, so it reads as part of the trust scaffolding. */}
+          {visible.length > 0 && (
+            <button
+              type="button"
+              className="compat-strip"
+              onClick={() => setCompatOpen(true)}
+            >
+              <span className="compat-strip__icon"><Icon name="phone" size={14} /></span>
+              <span className="compat-strip__copy">
+                <strong>Will your phone work?</strong>
+                <span className="compat-strip__sub">Check eSIM compatibility in one tap.</span>
+              </span>
+              <span className="compat-strip__cta">
+                Check now <Icon name="arrow" size={12} />
+              </span>
+            </button>
           )}
 
           <div className="plans-grid">

@@ -69,8 +69,7 @@ export function CompatibilityModal({ open, onClose }: Props) {
         <div className="compat-modal__eyebrow">Check compatibility</div>
         <h2 className="compat-modal__title">Will your phone work?</h2>
         <p className="compat-modal__sub">
-          Most phones from 2018 onward support eSIM. Type your model below — we'll tell you
-          in a second.
+          Type your phone model. We'll check it instantly.
         </p>
 
         <div className="compat-modal__input-wrap">
@@ -95,6 +94,26 @@ export function CompatibilityModal({ open, onClose }: Props) {
             </button>
           )}
         </div>
+
+        {/* Quick-tap chips for desktop / no-detect visitors who don't
+            want to type. Each chip is a popular model that maps to a
+            distinct family in checkDevice (covering iPhone / Pixel /
+            Galaxy / iPad). */}
+        {!result && (
+          <div className="compat-modal__chips">
+            <span className="compat-modal__chips-lbl">Try one:</span>
+            {['iPhone 14', 'Pixel 8', 'Galaxy S23', 'iPad'].map((m) => (
+              <button
+                key={m}
+                type="button"
+                className="compat-modal__chip"
+                onClick={() => onChange(m)}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Result card. Three states: empty (initial), unknown (no
             match), compatible / incompatible. */}
