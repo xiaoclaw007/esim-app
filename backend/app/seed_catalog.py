@@ -51,6 +51,41 @@ COUNTRY_PLANS: list[CatalogEntry] = [
     CatalogEntry("eSIM-UST10G-07",    "USA 7 Days 10GB",           "US", "americas", "country", 10,  7,  890),
     CatalogEntry("eSIM-USMAX-07",     "USA 7 Days Unlimited",      "US", "americas", "country", 999, 7,  1900),
     CatalogEntry("eSIM-UST20G-30",    "USA 30 Days 20GB",          "US", "americas", "country", 20,  30, 1990),
+    # United Arab Emirates
+    CatalogEntry("eSIM-UAET3G-03",    "UAE 3 Days 3GB",            "AE", "asia", "country", 3,   3,  600),
+    CatalogEntry("eSIM-UAE10M-03",    "UAE 3 Days Unlimited",      "AE", "asia", "country", 999, 3,  1790),
+    CatalogEntry("eSIM-UAET5G-07",    "UAE 7 Days 5GB",            "AE", "asia", "country", 5,   7,  1000),
+    CatalogEntry("eSIM-UAET10G-07",   "UAE 7 Days 10GB",           "AE", "asia", "country", 10,  7,  1720),
+    CatalogEntry("eSIM-UAET5G-15",    "UAE 15 Days 5GB",           "AE", "asia", "country", 5,   15, 1050),
+    CatalogEntry("eSIM-UAET10G-15",   "UAE 15 Days 10GB",          "AE", "asia", "country", 10,  15, 1800),
+    CatalogEntry("eSIM-UAET10G-30",   "UAE 30 Days 10GB",          "AE", "asia", "country", 10,  30, 1900),
+    CatalogEntry("eSIM-UAET20G-30",   "UAE 30 Days 20GB",          "AE", "asia", "country", 20,  30, 3100),
+    # Taiwan (20GB SKUs intentionally skipped pending JoyTel sheet
+    # confirmation — same name on two SKUs with different prices)
+    CatalogEntry("eSIM-TWRT3G-03",    "Taiwan 3 Days 3GB",         "TW", "asia", "country", 3,   3,  250),
+    CatalogEntry("eSIM-TWR10M-03",    "Taiwan 3 Days Unlimited",   "TW", "asia", "country", 999, 3,  800),
+    CatalogEntry("eSIM-TWRT5G-07",    "Taiwan 7 Days 5GB",         "TW", "asia", "country", 5,   7,  500),
+    CatalogEntry("eSIM-TWRT10G-07",   "Taiwan 7 Days 10GB",        "TW", "asia", "country", 10,  7,  790),
+    CatalogEntry("eSIM-TWR10M-07",    "Taiwan 7 Days Unlimited",   "TW", "asia", "country", 999, 7,  1800),
+    CatalogEntry("eSIM-TWRT5G-15",    "Taiwan 15 Days 5GB",        "TW", "asia", "country", 5,   15, 590),
+    CatalogEntry("eSIM-TWRT10G-15",   "Taiwan 15 Days 10GB",       "TW", "asia", "country", 10,  15, 890),
+    # Turkey
+    CatalogEntry("eSIM-TURT3G-03",    "Turkey 3 Days 3GB",         "TR", "europe", "country", 3,   3,  300),
+    CatalogEntry("eSIM-TURMAX-03",    "Turkey 3 Days Unlimited",   "TR", "europe", "country", 999, 3,  800),
+    CatalogEntry("eSIM-TURT5G-07",    "Turkey 7 Days 5GB",         "TR", "europe", "country", 5,   7,  500),
+    CatalogEntry("eSIM-TURT10G-07",   "Turkey 7 Days 10GB",        "TR", "europe", "country", 10,  7,  800),
+    CatalogEntry("eSIM-TURMAX-07",    "Turkey 7 Days Unlimited",   "TR", "europe", "country", 999, 7,  1800),
+    CatalogEntry("eSIM-TURT5G-15",    "Turkey 15 Days 5GB",        "TR", "europe", "country", 5,   15, 600),
+    CatalogEntry("eSIM-TURT10G-15",   "Turkey 15 Days 10GB",       "TR", "europe", "country", 10,  15, 850),
+    CatalogEntry("eSIM-TURT10G-30",   "Turkey 30 Days 10GB",       "TR", "europe", "country", 10,  30, 900),
+    CatalogEntry("eSIM-TURT20G-30",   "Turkey 30 Days 20GB",       "TR", "europe", "country", 20,  30, 1600),
+    # Thailand (all unlimited daily; 10M = 10GB-named-but-unlimited
+    # per JoyTel naming convention — same as Korea / China 10M SKUs)
+    CatalogEntry("eSIM-TH10M-03",     "Thailand 3 Days Unlimited", "TH", "asia", "country", 999, 3,  600),
+    CatalogEntry("eSIM-TH10M-05",     "Thailand 5 Days Unlimited", "TH", "asia", "country", 999, 5,  1000),
+    CatalogEntry("eSIM-TH10M-06",     "Thailand 6 Days Unlimited", "TH", "asia", "country", 999, 6,  1100),
+    CatalogEntry("eSIM-TH10M-07",     "Thailand 7 Days Unlimited", "TH", "asia", "country", 999, 7,  1200),
+    CatalogEntry("eSIM-TH10M-10",     "Thailand 10 Days Unlimited","TH", "asia", "country", 999, 10, 1500),
 ]
 
 # Regional plans — country code is bespoke (EU/AP/CHM), plan_type="regional".

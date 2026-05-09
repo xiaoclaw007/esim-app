@@ -101,10 +101,14 @@ export const PLANS: Plan[] = [
 const _UNSPLASH = (id: string) => `https://images.unsplash.com/${id}?w=1600&q=80&auto=format&fit=crop`
 
 export const COUNTRIES: CountryMeta[] = [
-  { code: 'US', name: 'United States', flag: '🇺🇸', region: 'americas', networks: 'T-Mobile, AT&T',        popular: true, image: _UNSPLASH('photo-1750074543601-72f7972d5a8b') },
-  { code: 'JP', name: 'Japan',         flag: '🇯🇵', region: 'asia',     networks: 'NTT Docomo, SoftBank', popular: true, image: _UNSPLASH('photo-1528164344705-47542687000d') },
-  { code: 'KR', name: 'South Korea',   flag: '🇰🇷', region: 'asia',     networks: 'SK Telecom, KT',       popular: true, image: _UNSPLASH('photo-1762267616547-6d6cd4adabc3') },
-  { code: 'CN', name: 'China',         flag: '🇨🇳', region: 'asia',     networks: 'China Mobile, Unicom', popular: true, image: _UNSPLASH('photo-1508804185872-d7badad00f7d') },
+  { code: 'US', name: 'United States',        flag: '🇺🇸', region: 'americas', networks: 'T-Mobile, AT&T',                  popular: true, image: _UNSPLASH('photo-1750074543601-72f7972d5a8b') },
+  { code: 'JP', name: 'Japan',                flag: '🇯🇵', region: 'asia',     networks: 'NTT Docomo, SoftBank',           popular: true, image: _UNSPLASH('photo-1528164344705-47542687000d') },
+  { code: 'KR', name: 'South Korea',          flag: '🇰🇷', region: 'asia',     networks: 'SK Telecom, KT',                 popular: true, image: _UNSPLASH('photo-1762267616547-6d6cd4adabc3') },
+  { code: 'CN', name: 'China',                flag: '🇨🇳', region: 'asia',     networks: 'China Mobile, Unicom',           popular: true, image: _UNSPLASH('photo-1508804185872-d7badad00f7d') },
+  { code: 'TH', name: 'Thailand',             flag: '🇹🇭', region: 'asia',     networks: 'AIS, TrueMove H' },
+  { code: 'TW', name: 'Taiwan',               flag: '🇹🇼', region: 'asia',     networks: 'Chunghwa Telecom, Far EasTone' },
+  { code: 'TR', name: 'Turkey',               flag: '🇹🇷', region: 'europe',   networks: 'Turkcell, Vodafone' },
+  { code: 'AE', name: 'United Arab Emirates', flag: '🇦🇪', region: 'asia',     networks: 'Etisalat, du' },
 ]
 
 export const REGIONAL_PLANS_META: RegionalMeta[] = [
