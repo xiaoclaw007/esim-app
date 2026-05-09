@@ -1775,6 +1775,93 @@ input, select, textarea { font: inherit; color: inherit; }
 .account-head h1 { font-size: 36px; font-weight: 500; letter-spacing: -0.025em; margin: 0 0 6px; }
 .account-head .sub { color: var(--ink-3); font-size: 14px; }
 
+/* Nimvoy Credit wallet pill — sits next to the New eSIM button on
+   the account head. Visible whenever the customer has a positive
+   balance; clicking jumps to the Credit tab. */
+.credit-pill {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  color: var(--accent);
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .15s ease;
+  font-family: var(--font);
+}
+.credit-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.credit-pill__amount {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+.credit-pill__label {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--accent) 80%, transparent);
+}
+
+/* Credit tab body. Hero summary with the balance + a feed of ledger
+   rows below. */
+.credit-tab { max-width: 760px; }
+.credit-summary {
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 28px;
+}
+.credit-summary__eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 8px;
+}
+.credit-summary__amount {
+  font-size: 44px;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  margin-bottom: 10px;
+  line-height: 1;
+}
+.credit-summary__sub {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  max-width: 56ch;
+}
+.credit-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.credit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+}
+.credit-row__label { font-size: 14px; font-weight: 500; color: var(--ink); }
+.credit-row__sub { font-size: 11.5px; color: var(--ink-3); margin-top: 2px; letter-spacing: 0.04em; }
+.credit-row__amount { font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.credit-row__amount.pos { color: var(--ok); }
+.credit-row__amount.neg { color: var(--ink-2); }
+
 /* "Secure your account" banner — sits between the welcome header
    and the tabs for users whose only auth is the magic-link they
    just consumed. Disappears the moment they add a password or

@@ -5,6 +5,14 @@ import { useAuth } from '../auth/AuthContext'
 import { useCatalog } from '../hooks/useCatalog'
 import { listOrders, fetchOrderUsage, type OrderDetail, type OrderUsage } from '../api/orders'
 import {
+  fetchCreditBalance,
+  fetchCreditHistory,
+  formatDollars,
+  reasonLabel,
+  type CreditBalance,
+  type CreditHistoryRow,
+} from '../api/credits'
+import {
   COUNTRIES,
   REGIONAL_PLANS_META,
   formatData,
@@ -12,11 +20,12 @@ import {
   type Plan,
 } from '../data/catalog'
 
-type Tab = 'esims' | 'orders' | 'support'
+type Tab = 'esims' | 'orders' | 'credit' | 'support'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'esims', label: 'My eSIMs' },
   { id: 'orders', label: 'Orders' },
+  { id: 'credit', label: 'Credit' },
   { id: 'support', label: 'Support' },
 ]
 
@@ -29,6 +38,11 @@ export default function Account() {
   const [orders, setOrders] = useState<OrderDetail[] | null>(null)
   const [loadingOrders, setLoadingOrders] = useState(false)
   const [ordersError, setOrdersError] = useState<string | null>(null)
+
+  // Credit balance is shown in the head pill + the Credit tab. We fetch
+  // it on every account-page mount so the value reflects whatever just
+  // happened on a checkout (earned / spent / refunded). Cheap query.
+  const [credit, setCredit] = useState<CreditBalance | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -44,6 +58,9 @@ export default function Account() {
       .finally(() => {
         if (!cancelled) setLoadingOrders(false)
       })
+    fetchCreditBalance()
+      .then((b) => !cancelled && setCredit(b))
+      .catch(() => {})  // balance failure is non-blocking; pill just hides
     return () => {
       cancelled = true
     }
@@ -76,7 +93,17 @@ export default function Account() {
               : `${activeOrders.length} active · ${orders.length} total orders`}
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          {credit && credit.balance_cents > 0 && (
+            <button
+              className="credit-pill"
+              onClick={() => setTab('credit')}
+              title="View credit history"
+            >
+              <span className="credit-pill__amount">{formatDollars(credit.balance_cents)}</span>
+              <span className="credit-pill__label">Nimvoy credit</span>
+            </button>
+          )}
           <button className="btn primary sm" onClick={() => navigate('/destinations')}>
             + New eSIM
           </button>
@@ -134,6 +161,8 @@ export default function Account() {
       {tab === 'orders' && (
         <OrdersTab orders={orders ?? []} planById={planById} loading={loadingOrders} />
       )}
+
+      {tab === 'credit' && <CreditTab balance={credit} earnRate={credit?.earn_rate ?? 0.1} />}
 
       {tab === 'support' && <SupportTab />}
     </div>
@@ -502,6 +531,90 @@ function OrdersTab({
           </div>
         )
       })}
+    </div>
+  )
+}
+
+function CreditTab({ balance, earnRate }: { balance: CreditBalance | null; earnRate: number }) {
+  const [history, setHistory] = useState<CreditHistoryRow[] | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    fetchCreditHistory(1, 100)
+      .then((h) => !cancelled && setHistory(h.rows))
+      .catch((e: Error) => !cancelled && setError(e.message))
+      .finally(() => !cancelled && setLoading(false))
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const earnPct = Math.round(earnRate * 100)
+
+  return (
+    <div className="credit-tab">
+      <div className="credit-summary">
+        <div>
+          <div className="credit-summary__eyebrow">Nimvoy credit</div>
+          <div className="credit-summary__amount">
+            {formatDollars(balance?.balance_cents ?? 0)}
+          </div>
+          <div className="credit-summary__sub">
+            Earn {earnPct}% back on every eSIM. Apply at checkout — auto-stacks with coupons.
+            {balance?.earliest_expiry && (
+              <> Earliest credit expires {new Date(balance.earliest_expiry).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}.</>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <h3 style={{ fontSize: 16, fontWeight: 500, margin: '32px 0 12px', letterSpacing: '-0.01em' }}>
+        Activity
+      </h3>
+
+      {loading && !history && <div className="page-stub">Loading…</div>}
+      {error && (
+        <div style={{ padding: 16, background: '#FFECE7', color: 'var(--pop)', borderRadius: 10, fontSize: 14 }}>
+          {error}
+        </div>
+      )}
+      {history && history.length === 0 && (
+        <div
+          style={{
+            padding: 32,
+            background: 'var(--bg-elev)',
+            border: '1px solid var(--line)',
+            borderRadius: 14,
+            color: 'var(--ink-3)',
+            textAlign: 'center',
+          }}
+        >
+          No credit activity yet. Buy your first eSIM and earn {earnPct}% back.
+        </div>
+      )}
+      {history && history.length > 0 && (
+        <div className="credit-rows">
+          {history.map((row) => (
+            <div key={row.id} className="credit-row">
+              <div>
+                <div className="credit-row__label">{reasonLabel(row.reason)}</div>
+                <div className="credit-row__sub mono">
+                  {row.related_order_reference || '—'}
+                  {' · '}
+                  {new Date(row.created_at).toLocaleDateString()}
+                </div>
+              </div>
+              <div className={`credit-row__amount ${row.delta_cents >= 0 ? 'pos' : 'neg'}`}>
+                {row.delta_cents >= 0 ? '+' : ''}
+                {formatDollars(row.delta_cents)}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

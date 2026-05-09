@@ -142,6 +142,12 @@ class Order(Base):
     # automatically reverse the Stripe charge).
     stripe_refund_id: Mapped[Optional[str]] = mapped_column(String(255))
 
+    # Nimvoy Credit applied at checkout (cents). 0 if the customer paid
+    # the full amount via Stripe; up to amount_cents if they covered
+    # part or all with store credit. Refund logic reads this to know
+    # how much credit to reverse.
+    credit_applied_cents: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
     # Coupon redemption: id is the live FK; code is the frozen value at the
     # time of order so historical orders survive coupon deletion. discount_cents
     # is the amount subtracted from the plan price. amount_cents on the Order
@@ -276,6 +282,45 @@ class MagicLink(Base):
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False
+    )
+
+
+class CreditsLedger(Base):
+    """Single source of truth for Nimvoy Credit balances.
+
+    Ledger pattern — one row per money-movement event. Balance is
+    derived by SUM rather than stored on the User row, which keeps
+    audit history intact and supports per-batch expiration cleanly:
+
+        balance(user) = SUM(delta_cents WHERE user_id = X
+                            AND (expires_at IS NULL OR expires_at > NOW()))
+
+    Conventions:
+    - delta_cents is positive for earns / admin grants, negative for
+      spends, refund reversals, expirations.
+    - reason is free-form so we can ship new reasons without a
+      migration; established values: 'order_earned' / 'order_spent'
+      / 'order_refunded' / 'expired' / 'admin_grant'.
+    - expires_at is set only on earn rows (the batch they're paired
+      with). Spend rows are permanent.
+    """
+
+    __tablename__ = "credits_ledger"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id"), nullable=False, index=True
+    )
+    delta_cents: Mapped[int] = mapped_column(Integer, nullable=False)
+    reason: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
+    related_order_id: Mapped[Optional[str]] = mapped_column(
+        String(36), ForeignKey("orders.id"), nullable=True, index=True
+    )
+    expires_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False, index=True
     )
 
 

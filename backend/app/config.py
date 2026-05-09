@@ -44,6 +44,12 @@ class Settings(BaseSettings):
     aws_access_key_id: str = ""
     aws_secret_access_key: str = ""
 
+    # Nimvoy Credit ("store credit" earned on every paid order). Both
+    # are tunable via env so we can adjust without redeploying. Set to
+    # 0.0 to disable earning entirely (existing balances still spendable).
+    credit_earn_rate: float = 0.10  # 10% of paid amount earned as credit
+    credit_expiry_days: int = 365   # earn rows expire 12 months after issue
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 

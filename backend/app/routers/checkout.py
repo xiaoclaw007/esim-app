@@ -20,6 +20,7 @@ from app.schemas import (
     PaymentIntentResponse,
 )
 from app.services import coupons as coupons_service
+from app.services import credits as credits_service
 from app.services.joytel_warehouse import generate_order_tid, place_order
 from app.services.stripe_service import create_checkout_session, create_payment_intent
 from app.services.users import ensure_user_for_email
@@ -191,10 +192,31 @@ def create_order_endpoint(
         coupon_code = ev.coupon.code if ev.coupon else None
         is_free = ev.free
 
-    # ===== Free-coupon (100% off) bypass — Stripe rejects $0 PaymentIntents =====
+    # Nimvoy Credit application. Only logged-in customers have a
+    # spendable balance. Cap requested amount at (a) what's available
+    # and (b) the post-coupon order total — credit can't make a charge
+    # negative. If credit covers the entire post-coupon amount, fall
+    # through to the Stripe-bypass path the same way a 100% coupon does.
+    credit_applied_cents = 0
+    if current_user and request.credit_cents_to_apply > 0:
+        available = credits_service.balance(db, current_user.id)
+        credit_applied_cents = max(
+            0, min(request.credit_cents_to_apply, available, final_cents)
+        )
+        final_cents -= credit_applied_cents
+        if final_cents <= 0:
+            is_free = True
+
+    # ===== Free-coupon / 100%-credit bypass — Stripe rejects $0 PaymentIntents =====
     if is_free:
-        if not coupon_id:
-            raise HTTPException(status_code=400, detail="Free orders require a coupon")
+        # Two ways to reach this: 100% coupon, or a smaller coupon
+        # combined with credit covering the rest, or even just credit
+        # by itself. At least one of the two must be present.
+        if not coupon_id and credit_applied_cents <= 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Free orders require either a coupon or sufficient credit",
+            )
 
         free_user = current_user if current_user else ensure_user_for_email(db, email)
         order = Order(
@@ -202,11 +224,12 @@ def create_order_endpoint(
             plan_id=plan.id,
             amount_cents=0,
             currency=plan.currency,
-            status="payment_received",  # no Stripe involved; payment is implicit via coupon
+            status="payment_received",  # no Stripe involved; payment is implicit via coupon/credit
             user_id=free_user.id,
             coupon_id=coupon_id,
             coupon_code=coupon_code,
             discount_cents=discount_cents,
+            credit_applied_cents=credit_applied_cents,
         )
         db.add(order)
         db.commit()
@@ -214,10 +237,16 @@ def create_order_endpoint(
 
         # Atomic redemption — if the cap was just hit by a parallel redeem,
         # roll back the order (safer than handing out an extra free eSIM).
-        if not coupons_service.redeem(db, coupon_id):
+        if coupon_id and not coupons_service.redeem(db, coupon_id):
             db.delete(order)
             db.commit()
             raise HTTPException(status_code=400, detail="This coupon has reached its usage limit.")
+
+        # Finalize the credit spend now (no Stripe webhook will do it
+        # for us). Earn for free orders is intentionally skipped —
+        # earn_for_order's paid_cents <= 0 guard handles that.
+        credits_service.spend_for_order(db, order)
+        db.commit()
 
         # Submit to JoyTel directly — no Stripe webhook will fire to do it
         # for us. Background task so the HTTP response returns fast; the
@@ -254,6 +283,13 @@ def create_order_endpoint(
 
     # ===== Standard Stripe flow =====
     paid_user = current_user if current_user else ensure_user_for_email(db, email)
+    # Order.amount_cents is what Stripe will actually charge — i.e.,
+    # post-coupon AND post-credit. Existing code (refund-failed email,
+    # admin order detail, order confirmation copy) treats this field
+    # as "the amount on the customer's card statement," which makes
+    # post-credit the right meaning. credit_applied_cents lives
+    # separately so refund-reverse + earn-rate calculations have
+    # unambiguous inputs.
     order = Order(
         email=email,
         plan_id=plan.id,
@@ -264,6 +300,7 @@ def create_order_endpoint(
         coupon_id=coupon_id,
         coupon_code=coupon_code,
         discount_cents=discount_cents,
+        credit_applied_cents=credit_applied_cents,
     )
     db.add(order)
     db.commit()
@@ -292,5 +329,6 @@ def create_order_endpoint(
         amount_cents=final_cents,
         currency=plan.currency,
         discount_cents=discount_cents,
+        credit_applied_cents=credit_applied_cents,
         coupon_code=coupon_code,
     )

@@ -32,6 +32,11 @@ class CheckoutRequest(BaseModel):
     plan_id: str
     email: Optional[EmailStr] = None  # Optional if user is authenticated
     coupon_code: Optional[str] = None
+    # Cents of Nimvoy Credit to apply, capped server-side at the post-
+    # coupon amount and the user's available balance. Ignored for guests
+    # (anonymous users have no balance). Default 0 = pay everything via
+    # Stripe regardless of any balance.
+    credit_cents_to_apply: int = 0
 
 
 class CouponValidateRequest(BaseModel):
@@ -65,6 +70,7 @@ class PaymentIntentResponse(BaseModel):
     amount_cents: int
     currency: str
     discount_cents: int = 0
+    credit_applied_cents: int = 0
     coupon_code: Optional[str] = None
     free: bool = False  # always false for this response — present so the
     # union type the frontend handles is uniform

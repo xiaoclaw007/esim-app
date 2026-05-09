@@ -11,6 +11,7 @@ import {
   validateCoupon,
   type CouponValidateResponse,
 } from '../api/checkout'
+import { fetchCreditBalance, formatDollars, type CreditBalance } from '../api/credits'
 import { track } from '../api/track'
 import {
   COUNTRIES,
@@ -59,7 +60,13 @@ export default function Checkout() {
   const [coupon, setCoupon] = useState<CouponValidateResponse | null>(null)
   const [couponBusy, setCouponBusy] = useState(false)
   const [couponError, setCouponError] = useState<string | null>(null)
-  const isFree = coupon?.valid && coupon.free
+  // "Free at checkout" — Stripe will be bypassed because either a 100%
+  // coupon zeroed the order, or credit covered the full post-coupon
+  // remainder. Computed lazily inside the body so we can include the
+  // credit term once it's known. See `isFree` reference below the
+  // totals block; this constant is the legacy coupon-only signal used
+  // for the "Claim free" button copy on free coupon orders.
+  const isCouponFree = coupon?.valid && coupon.free
 
   async function onApplyCoupon() {
     if (!plan || !couponInput.trim()) return
@@ -92,11 +99,29 @@ export default function Checkout() {
     setCouponError(null)
   }
 
+  // ---- Credit state. Available only to logged-in users; their balance
+  //      drives the "use $X.XX of credit" toggle. Defaults to ON when
+  //      a non-zero balance exists — most customers expect their credit
+  //      to apply automatically. They can toggle off for that order.
+  const [credit, setCredit] = useState<CreditBalance | null>(null)
+  const [useCredit, setUseCredit] = useState(true)
+  useEffect(() => {
+    if (!user) {
+      setCredit(null)
+      return
+    }
+    fetchCreditBalance()
+      .then(setCredit)
+      .catch(() => setCredit(null))
+  }, [user?.id])
+
   // ---- Free-order claim (100%-off coupon, no Stripe involved) ----
   const [claiming, setClaiming] = useState(false)
   const [claimError, setClaimError] = useState<string | null>(null)
   async function onClaimFree() {
-    if (!plan || !coupon?.code) return
+    // Reaches here for both 100%-coupon AND credit-covers-the-rest
+    // cases. coupon may be null when credit alone covers the order.
+    if (!plan) return
     if (!isValidEmail(email)) {
       setClaimError('Enter a valid email above')
       return
@@ -104,7 +129,7 @@ export default function Checkout() {
     setClaiming(true)
     setClaimError(null)
     try {
-      const res = await createOrder(plan.id, email.trim(), coupon.code)
+      const res = await createOrder(plan.id, email.trim(), coupon?.code ?? undefined, creditApplied)
       if (!res.free || !res.order_reference) {
         throw new Error("Couldn't claim free order — please try again")
       }
@@ -143,7 +168,15 @@ export default function Checkout() {
 
   const subtotal = plan.price_cents
   const discount = coupon?.valid ? coupon.discount_cents : 0
-  const total = Math.max(0, subtotal - discount)
+  const postCoupon = Math.max(0, subtotal - discount)
+  // Credit application: capped at the customer's available balance and
+  // at the post-coupon total (credit can't make the charge negative).
+  const creditAvailable = credit?.balance_cents ?? 0
+  const creditApplied = useCredit ? Math.min(creditAvailable, postCoupon) : 0
+  const total = Math.max(0, postCoupon - creditApplied)
+  // "Free at checkout" — Stripe is bypassed for any reason: 100%
+  // coupon, full-credit cover, or the combination of both.
+  const isFree = isCouponFree || (postCoupon > 0 && total === 0)
 
   // Deferred Elements options. Amount is initial-only; PaymentForm calls
   // elements.update({ amount }) when the coupon changes.
@@ -221,7 +254,17 @@ export default function Checkout() {
             }}
           >
             <div style={{ marginBottom: 12, fontSize: 14, color: 'var(--ink)' }}>
-              <strong>Coupon {coupon?.code} covers this order — no payment needed.</strong>
+              <strong>
+                {isCouponFree && creditApplied === 0 && (
+                  <>Coupon {coupon?.code} covers this order — no payment needed.</>
+                )}
+                {!isCouponFree && creditApplied > 0 && discount === 0 && (
+                  <>Your Nimvoy credit covers this order — no payment needed.</>
+                )}
+                {(discount > 0 && creditApplied > 0) && (
+                  <>Coupon + credit cover this order — no payment needed.</>
+                )}
+              </strong>
             </div>
             {claimError && (
               <div style={{ color: 'var(--pop)', fontSize: 13, marginBottom: 10 }}>{claimError}</div>
@@ -244,6 +287,7 @@ export default function Checkout() {
               planId={plan.id}
               email={email.trim()}
               couponCode={coupon?.code || undefined}
+              creditCents={creditApplied}
               totalCents={total}
               currency={plan.currency}
             />
@@ -278,6 +322,20 @@ export default function Checkout() {
               <div className="summary-row" style={{ color: 'var(--ok)' }}>
                 <span>Coupon {coupon?.code}</span>
                 <span className="num">−${priceDollars(discount)}</span>
+              </div>
+            )}
+            {creditAvailable > 0 && postCoupon > 0 && (
+              <div className="summary-row" style={{ color: useCredit ? 'var(--accent)' : 'var(--ink-3)' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', flex: 1 }}>
+                  <input
+                    type="checkbox"
+                    checked={useCredit}
+                    onChange={(e) => setUseCredit(e.target.checked)}
+                    style={{ accentColor: 'var(--accent)' }}
+                  />
+                  <span>Use Nimvoy credit ({formatDollars(creditAvailable)} available)</span>
+                </label>
+                <span className="num">{useCredit ? `−${formatDollars(creditApplied)}` : '$0.00'}</span>
               </div>
             )}
             <div className="summary-row">
@@ -329,12 +387,14 @@ function PaymentForm({
   planId,
   email,
   couponCode,
+  creditCents,
   totalCents,
   currency,
 }: {
   planId: string
   email: string
   couponCode?: string
+  creditCents: number
   totalCents: number
   currency: string
 }) {
@@ -373,7 +433,7 @@ function PaymentForm({
     // 2. Create the Order + PaymentIntent on our backend.
     let orderResp
     try {
-      orderResp = await createOrder(planId, email, couponCode)
+      orderResp = await createOrder(planId, email, couponCode, creditCents)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not start payment')
       setSubmitting(false)

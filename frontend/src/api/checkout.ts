@@ -18,6 +18,7 @@ export interface PaymentIntentResponse {
   amount_cents: number
   currency: string
   discount_cents: number
+  credit_applied_cents: number
   coupon_code: string | null
   free: boolean
 }
@@ -44,10 +45,14 @@ export async function createOrder(
   plan_id: string,
   email: string,
   coupon_code?: string,
+  credit_cents_to_apply: number = 0,
 ): Promise<PaymentIntentResponse> {
+  const body: Record<string, unknown> = { plan_id, email }
+  if (coupon_code) body.coupon_code = coupon_code
+  if (credit_cents_to_apply > 0) body.credit_cents_to_apply = credit_cents_to_apply
   return apiFetch<PaymentIntentResponse>('/api/orders', {
     method: 'POST',
-    body: JSON.stringify(coupon_code ? { plan_id, email, coupon_code } : { plan_id, email }),
+    body: JSON.stringify(body),
   })
 }
 

@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 from app.database import get_db
 from app.models import EsimInstallEvent, Event, Order, Plan, User
 from app.services import coupons as coupons_service
+from app.services import credits as credits_service
 from app.services import magic_link as magic_link_service
 
 
@@ -192,6 +193,13 @@ async def _process_paid_order(
                 f"Order {order.reference}: coupon {order.coupon_code} redeem skipped (cap reached or coupon gone)"
             )
 
+    # Nimvoy Credit: earn 10% of the actual paid amount (post-coupon,
+    # post-credit) and finalize any credit the customer applied at
+    # checkout. Both writes are idempotent so webhook retries are safe.
+    credits_service.earn_for_order(db, order)
+    credits_service.spend_for_order(db, order)
+    db.commit()
+
     logger.info(f"Order {order.reference} paid ({event_type}) — sending confirmation email")
 
     plan = db.query(Plan).filter(Plan.id == order.plan_id).first()
@@ -248,6 +256,9 @@ async def _process_paid_order(
                 )
                 order.stripe_refund_id = refund.id
                 order.status = "refunded"
+                # Reverse any earned credit + return any spent credit.
+                # Idempotent — counter-rows are written; originals stay intact.
+                credits_service.reverse_for_order(db, order)
                 db.commit()
                 logger.info(
                     f"Order {order.reference}: auto-refunded Stripe payment "
