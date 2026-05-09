@@ -1775,39 +1775,93 @@ input, select, textarea { font: inherit; color: inherit; }
 .account-head h1 { font-size: 36px; font-weight: 500; letter-spacing: -0.025em; margin: 0 0 6px; }
 .account-head .sub { color: var(--ink-3); font-size: 14px; }
 
-/* Nimvoy Credit wallet pill — sits next to the New eSIM button on
-   the account head. Visible whenever the customer has a positive
-   balance; clicking jumps to the Credit tab. */
+/* Nimvoy Credit wallet pill — sits next to the New eSIM button on the
+   account head. Same dark-navy gradient as the credit hero card so it
+   reads as a "preview" of where the click leads. Single horizontal
+   row aligned with the New eSIM button: matching height, matching
+   border radius, complementary tone (the New eSIM is solid ink, this
+   is gradient + serif amount).
+
+   Visual cues for "this is money":
+   - Italic Instrument Serif on the amount (matches the hero card)
+   - Cream-on-navy contrast (matches the hero card)
+   - Tiny logomark in a frosted bubble (the "card chip")
+   - Subtle hover lift + glow */
 .credit-pill {
   display: inline-flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 1px;
-  padding: 8px 14px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 6px;
   border-radius: 999px;
-  background: var(--accent-soft);
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-  color: var(--accent);
+  background:
+    radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--accent) 50%, transparent) 0%, transparent 55%),
+    linear-gradient(135deg, #1B3D7A 0%, #0B1F3A 60%, #08152B 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #F1EFE6;
   cursor: pointer;
-  transition: transform .12s ease, box-shadow .15s ease;
+  height: 36px;
   font-family: var(--font);
+  transition: transform .12s ease, box-shadow .15s ease, border-color .15s ease;
+  white-space: nowrap;
 }
 .credit-pill:hover {
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 22%, transparent);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 6px 18px -8px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+.credit-pill__mark {
+  display: grid;
+  place-items: center;
+  width: 24px; height: 24px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #F1EFE6;
+  flex-shrink: 0;
 }
 .credit-pill__amount {
-  font-size: 15px;
-  font-weight: 600;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 17px;
   letter-spacing: -0.01em;
-  line-height: 1.1;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: #F1EFE6;
 }
 .credit-pill__label {
-  font-family: var(--mono);
-  font-size: 9.5px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--accent) 80%, transparent);
+  font-size: 12.5px;
+  font-weight: 400;
+  color: color-mix(in srgb, #F1EFE6 75%, transparent);
+  letter-spacing: 0;
+}
+.credit-pill svg:last-child {
+  color: color-mix(in srgb, #F1EFE6 65%, transparent);
+  margin-left: -2px;
+  transition: transform .15s ease;
+}
+.credit-pill:hover svg:last-child { transform: translateX(2px); color: #F1EFE6; }
+
+/* Credit tab inline amount — shows the balance next to the "Credit"
+   label when balance > 0. Italic accent-coloured serif numerals so
+   the eye lands on it. */
+.account-tabs button.has-credit {
+  position: relative;
+}
+.account-tabs__credit-amount {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  vertical-align: 1px;
 }
 
 /* Credit tab body. The hero is a stylized "membership card" — gradient

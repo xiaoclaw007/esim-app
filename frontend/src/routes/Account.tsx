@@ -101,8 +101,10 @@ export default function Account() {
               onClick={() => setTab('credit')}
               title="View credit history"
             >
+              <span className="credit-pill__mark"><LogoMark size={14} /></span>
               <span className="credit-pill__amount">{formatDollars(credit.balance_cents)}</span>
-              <span className="credit-pill__label">Nimvoy credit</span>
+              <span className="credit-pill__label">in credit</span>
+              <Icon name="arrow" size={12} />
             </button>
           )}
           <button className="btn primary sm" onClick={() => navigate('/destinations')}>
@@ -128,11 +130,28 @@ export default function Account() {
       )}
 
       <div className="account-tabs">
-        {TABS.map((t) => (
-          <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => setTab(t.id)}>
-            {t.label}
-          </button>
-        ))}
+        {TABS.map((t) => {
+          // Credit tab gets a special treatment when there's a positive
+          // balance: an accent-coloured italic-serif amount inline with
+          // the label, plus a soft glow on the underline. Tells the
+          // customer at a glance "there's money here" without forcing
+          // them to click into the tab to find out.
+          const showCreditAmount = t.id === 'credit' && (credit?.balance_cents ?? 0) > 0
+          return (
+            <button
+              key={t.id}
+              className={`${tab === t.id ? 'active' : ''} ${showCreditAmount ? 'has-credit' : ''}`}
+              onClick={() => setTab(t.id)}
+            >
+              {t.label}
+              {showCreditAmount && (
+                <span className="account-tabs__credit-amount">
+                  {formatDollars(credit!.balance_cents)}
+                </span>
+              )}
+            </button>
+          )
+        })}
       </div>
 
       {ordersError && (
