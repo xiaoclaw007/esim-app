@@ -21,12 +21,11 @@ import {
   type Plan,
 } from '../data/catalog'
 
-type Tab = 'esims' | 'orders' | 'credit' | 'support'
+type Tab = 'esims' | 'orders' | 'support'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'esims', label: 'My eSIMs' },
   { id: 'orders', label: 'Orders' },
-  { id: 'credit', label: 'Credit' },
   { id: 'support', label: 'Support' },
 ]
 
@@ -126,8 +125,8 @@ export default function Account() {
           </div>
           <div className="credit-strip__right">
             <div className="credit-strip__copy">
-              Earn 10% back on every plan. Stacks with coupons, auto-applies at
-              checkout — use it on your next eSIM.
+              Earn 10% back on every dollar you spend. Stacks with coupons,
+              auto-applies at checkout.
             </div>
             <span className="credit-strip__cta">
               Use it now <Icon name="arrow" size={14} />
@@ -153,28 +152,11 @@ export default function Account() {
       )}
 
       <div className="account-tabs">
-        {TABS.map((t) => {
-          // Credit tab gets a special treatment when there's a positive
-          // balance: an accent-coloured italic-serif amount inline with
-          // the label, plus a soft glow on the underline. Tells the
-          // customer at a glance "there's money here" without forcing
-          // them to click into the tab to find out.
-          const showCreditAmount = t.id === 'credit' && (credit?.balance_cents ?? 0) > 0
-          return (
-            <button
-              key={t.id}
-              className={`${tab === t.id ? 'active' : ''} ${showCreditAmount ? 'has-credit' : ''}`}
-              onClick={() => setTab(t.id)}
-            >
-              {t.label}
-              {showCreditAmount && (
-                <span className="account-tabs__credit-amount">
-                  {formatDollars(credit!.balance_cents)}
-                </span>
-              )}
-            </button>
-          )
-        })}
+        {TABS.map((t) => (
+          <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => setTab(t.id)}>
+            {t.label}
+          </button>
+        ))}
       </div>
 
       {ordersError && (
@@ -204,8 +186,6 @@ export default function Account() {
       {tab === 'orders' && (
         <OrdersTab orders={orders ?? []} planById={planById} loading={loadingOrders} />
       )}
-
-      {tab === 'credit' && <CreditTab balance={credit} earnRate={credit?.earn_rate ?? 0.1} />}
 
       {tab === 'support' && <SupportTab />}
     </div>
@@ -526,6 +506,31 @@ function OrdersTab({
   planById: Map<string, Plan>
   loading: boolean
 }) {
+  // Pull the credit ledger so each order row can show the credit it
+  // earned (and any credit spent on it). Non-order events (admin
+  // grants, expirations) live in the "Credit activity" section
+  // rendered below the orders list.
+  const [creditRows, setCreditRows] = useState<CreditHistoryRow[] | null>(null)
+  useEffect(() => {
+    fetchCreditHistory(1, 100)
+      .then((h) => setCreditRows(h.rows))
+      .catch(() => setCreditRows([]))
+  }, [])
+
+  // Group ledger rows by order reference so order rows can render
+  // a per-order credit summary inline.
+  const creditByOrder = (creditRows ?? []).reduce<Record<string, CreditHistoryRow[]>>(
+    (acc, row) => {
+      if (!row.related_order_reference) return acc
+      const ref = row.related_order_reference
+      acc[ref] = acc[ref] || []
+      acc[ref].push(row)
+      return acc
+    },
+    {},
+  )
+  const nonOrderEvents = (creditRows ?? []).filter((r) => !r.related_order_reference)
+
   if (loading && orders.length === 0) return <div className="page-stub">Loading orders…</div>
   if (orders.length === 0) {
     return (
@@ -544,153 +549,94 @@ function OrdersTab({
     )
   }
   return (
-    <div className="esim-list">
-      {orders.map((o) => {
-        const plan = planById.get(o.plan_id) ?? null
-        const dest = plan ? resolveMeta(plan) : null
-        const flag = dest?.flag ?? '🌐'
-        const name = dest?.name ?? o.plan_id
-        return (
-          <div key={o.reference} className="esim-item">
-            <div className="flag">{flag}</div>
-            <div>
-              <div className="name">{name} eSIM</div>
-              <div className="plan mono">
-                {o.reference} · {new Date(o.created_at).toLocaleDateString()}
-              </div>
-            </div>
-            <div className="mono muted" style={{ fontSize: 13 }}>
-              {plan ? `${formatData(plan.data_gb)} · ${plan.validity_days}d` : '—'}
-            </div>
-            <div className="mono" style={{ fontSize: 14 }}>
-              ${priceDollars(o.amount_cents)}
-            </div>
-            <div>
-              <span className={`badge ${o.status === 'delivered' ? 'ok' : o.status === 'failed' ? 'pop' : ''}`}>
-                {badgeLabel(o.status)}
-              </span>
-            </div>
-            <div />
-          </div>
-        )
-      })}
-    </div>
-  )
-}
+    <>
+      <div className="esim-list">
+        {orders.map((o) => {
+          const plan = planById.get(o.plan_id) ?? null
+          const dest = plan ? resolveMeta(plan) : null
+          const flag = dest?.flag ?? '🌐'
+          const name = dest?.name ?? o.plan_id
+          // Sum credit deltas associated with this order: positive
+          // sum = net credit accrued (earned - reversed); negative =
+          // net spent. We render whichever side is non-zero.
+          const events = creditByOrder[o.reference] || []
+          const earned = events
+            .filter((e) => e.reason === 'order_earned' || e.reason === 'order_refunded_spend')
+            .reduce((s, e) => s + e.delta_cents, 0)
+          const spent = events
+            .filter((e) => e.reason === 'order_spent')
+            .reduce((s, e) => s + Math.abs(e.delta_cents), 0)
+          const reversed = events
+            .filter((e) => e.reason === 'order_refunded')
+            .reduce((s, e) => s + Math.abs(e.delta_cents), 0)
 
-function CreditTab({ balance, earnRate }: { balance: CreditBalance | null; earnRate: number }) {
-  const navigate = useNavigate()
-  const [history, setHistory] = useState<CreditHistoryRow[] | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    setLoading(true)
-    fetchCreditHistory(1, 100)
-      .then((h) => !cancelled && setHistory(h.rows))
-      .catch((e: Error) => !cancelled && setError(e.message))
-      .finally(() => !cancelled && setLoading(false))
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  const earnPct = Math.round(earnRate * 100)
-  const balanceCents = balance?.balance_cents ?? 0
-
-  // Compute running balance for activity rows. The history is newest-
-  // first; we walk it from oldest to newest to accumulate, then map
-  // back so the rendered order stays newest-first with correct
-  // running totals at each row.
-  const rowsWithRunning = (history ?? []).slice().reverse().reduce<
-    { row: CreditHistoryRow; running: number }[]
-  >((acc, row) => {
-    const prev = acc.length ? acc[acc.length - 1].running : 0
-    return [...acc, { row, running: prev + row.delta_cents }]
-  }, []).reverse()
-
-  return (
-    <div className="credit-tab">
-      {/* Premium "membership card" hero. Gradient background, italic
-          serif balance (the brand's accent type), Nimvoy mark in the
-          corner, expiry chip on the lower right. */}
-      <div className="credit-card" role="region" aria-label="Nimvoy credit balance">
-        <div className="credit-card__top">
-          <div className="credit-card__eyebrow">Balance</div>
-          <div className="credit-card__mark"><LogoMark size={28} /></div>
-        </div>
-        <div className="credit-card__amount">{formatDollars(balanceCents)}</div>
-        <div className="credit-card__bottom">
-          <div className="credit-card__copy">
-            Earn {earnPct}% back on every eSIM. Apply at checkout — stacks with coupons.
-          </div>
-          {balance?.earliest_expiry && balanceCents > 0 && (
-            <div className="credit-card__chip">
-              Expires {new Date(balance.earliest_expiry).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
-            </div>
-          )}
-        </div>
-        {balanceCents > 0 && (
-          <button
-            className="credit-card__cta"
-            onClick={() => navigate('/destinations')}
-          >
-            Use it on your next plan <Icon name="arrow" size={14} />
-          </button>
-        )}
-      </div>
-
-      <h3 style={{ fontSize: 16, fontWeight: 500, margin: '32px 0 12px', letterSpacing: '-0.01em' }}>
-        Activity
-      </h3>
-
-      {loading && !history && <div className="page-stub">Loading…</div>}
-      {error && (
-        <div style={{ padding: 16, background: '#FFECE7', color: 'var(--pop)', borderRadius: 10, fontSize: 14 }}>
-          {error}
-        </div>
-      )}
-      {history && history.length === 0 && (
-        <div
-          style={{
-            padding: 32,
-            background: 'var(--bg-elev)',
-            border: '1px solid var(--line)',
-            borderRadius: 14,
-            color: 'var(--ink-3)',
-            textAlign: 'center',
-          }}
-        >
-          No credit activity yet. Buy your first eSIM and earn {earnPct}% back.
-        </div>
-      )}
-      {history && history.length > 0 && (
-        <div className="credit-rows">
-          {rowsWithRunning.map(({ row, running }) => (
-            <div key={row.id} className="credit-row">
+          return (
+            <div key={o.reference} className="esim-item">
+              <div className="flag">{flag}</div>
               <div>
-                <div className="credit-row__label">{reasonLabel(row.reason)}</div>
-                <div className="credit-row__sub mono">
-                  {row.related_order_reference || '—'}
-                  {' · '}
-                  {new Date(row.created_at).toLocaleDateString()}
+                <div className="name">{name} eSIM</div>
+                <div className="plan mono">
+                  {o.reference} · {new Date(o.created_at).toLocaleDateString()}
                 </div>
               </div>
-              <div style={{ textAlign: 'right' }}>
+              <div className="mono muted" style={{ fontSize: 13 }}>
+                {plan ? `${formatData(plan.data_gb)} · ${plan.validity_days}d` : '—'}
+              </div>
+              <div>
+                <div className="mono" style={{ fontSize: 14 }}>
+                  ${priceDollars(o.amount_cents)}
+                </div>
+                {(earned > 0 || spent > 0 || reversed > 0) && (
+                  <div className="order-credit-note mono">
+                    {earned > 0 && !reversed && <>+{formatDollars(earned)} credit</>}
+                    {spent > 0 && (
+                      <>
+                        {earned > 0 && ' · '}
+                        −{formatDollars(spent)} used
+                      </>
+                    )}
+                    {reversed > 0 && <>−{formatDollars(reversed)} reversed</>}
+                  </div>
+                )}
+              </div>
+              <div>
+                <span className={`badge ${o.status === 'delivered' ? 'ok' : o.status === 'failed' ? 'pop' : ''}`}>
+                  {badgeLabel(o.status)}
+                </span>
+              </div>
+              <div />
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Credit activity for events that don't tie back to a specific
+          order — admin grants, expirations. Hidden when there are
+          none (the per-order credit is already inline above). */}
+      {nonOrderEvents.length > 0 && (
+        <>
+          <h3 style={{ fontSize: 15, fontWeight: 500, margin: '36px 0 12px', letterSpacing: '-0.01em' }}>
+            Other credit activity
+          </h3>
+          <div className="credit-rows">
+            {nonOrderEvents.map((row) => (
+              <div key={row.id} className="credit-row">
+                <div>
+                  <div className="credit-row__label">{reasonLabel(row.reason)}</div>
+                  <div className="credit-row__sub mono">
+                    {new Date(row.created_at).toLocaleDateString()}
+                  </div>
+                </div>
                 <div className={`credit-row__amount ${row.delta_cents >= 0 ? 'pos' : 'neg'}`}>
                   {row.delta_cents >= 0 ? '+' : ''}
                   {formatDollars(row.delta_cents)}
                 </div>
-                <div className="credit-row__running mono">
-                  bal {formatDollars(running)}
-                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
-    </div>
+    </>
   )
 }
 
