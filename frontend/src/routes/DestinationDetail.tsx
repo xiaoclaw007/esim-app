@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { CompatibilityModal } from '../components/CompatibilityModal'
 import { Icon } from '../components/Icon'
 import { useCatalog } from '../hooks/useCatalog'
 import { track } from '../api/track'
@@ -60,6 +61,7 @@ export default function DestinationDetail() {
   const { plans, loading } = useCatalog()
   const [tab, setTab] = useState<'regular' | 'unlimited'>('regular')
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [compatOpen, setCompatOpen] = useState(false)
 
   const meta = resolveMeta(codeParam)
 
@@ -183,6 +185,19 @@ export default function DestinationDetail() {
                 </div>
               </div>
             </div>
+
+            {/* "Will my phone work?" — last-resort confidence check
+                before purchase. Sits below the destination facts so
+                it's visible without scrolling on most viewports. */}
+            <button
+              type="button"
+              className="compat-cta"
+              onClick={() => setCompatOpen(true)}
+            >
+              <span className="compat-cta__icon"><Icon name="phone" size={14} /></span>
+              <span>Check if your phone supports eSIM</span>
+              <Icon name="arrow" size={12} />
+            </button>
           </div>
 
           {/* Hero art card. Shows the destination photo when meta.image is set,
@@ -367,6 +382,8 @@ export default function DestinationDetail() {
           </div>
         </div>
       </section>
+
+      <CompatibilityModal open={compatOpen} onClose={() => setCompatOpen(false)} />
     </>
   )
 }
