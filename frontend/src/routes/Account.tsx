@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Icon } from '../components/Icon'
+import { LogoMark } from '../components/Logo'
 import { useAuth } from '../auth/AuthContext'
 import { useCatalog } from '../hooks/useCatalog'
 import { listOrders, fetchOrderUsage, type OrderDetail, type OrderUsage } from '../api/orders'
@@ -536,6 +537,7 @@ function OrdersTab({
 }
 
 function CreditTab({ balance, earnRate }: { balance: CreditBalance | null; earnRate: number }) {
+  const navigate = useNavigate()
   const [history, setHistory] = useState<CreditHistoryRow[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -553,22 +555,48 @@ function CreditTab({ balance, earnRate }: { balance: CreditBalance | null; earnR
   }, [])
 
   const earnPct = Math.round(earnRate * 100)
+  const balanceCents = balance?.balance_cents ?? 0
+
+  // Compute running balance for activity rows. The history is newest-
+  // first; we walk it from oldest to newest to accumulate, then map
+  // back so the rendered order stays newest-first with correct
+  // running totals at each row.
+  const rowsWithRunning = (history ?? []).slice().reverse().reduce<
+    { row: CreditHistoryRow; running: number }[]
+  >((acc, row) => {
+    const prev = acc.length ? acc[acc.length - 1].running : 0
+    return [...acc, { row, running: prev + row.delta_cents }]
+  }, []).reverse()
 
   return (
     <div className="credit-tab">
-      <div className="credit-summary">
-        <div>
-          <div className="credit-summary__eyebrow">Nimvoy credit</div>
-          <div className="credit-summary__amount">
-            {formatDollars(balance?.balance_cents ?? 0)}
-          </div>
-          <div className="credit-summary__sub">
-            Earn {earnPct}% back on every eSIM. Apply at checkout — auto-stacks with coupons.
-            {balance?.earliest_expiry && (
-              <> Earliest credit expires {new Date(balance.earliest_expiry).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}.</>
-            )}
-          </div>
+      {/* Premium "membership card" hero. Gradient background, italic
+          serif balance (the brand's accent type), Nimvoy mark in the
+          corner, expiry chip on the lower right. */}
+      <div className="credit-card" role="region" aria-label="Nimvoy credit balance">
+        <div className="credit-card__top">
+          <div className="credit-card__eyebrow">Balance</div>
+          <div className="credit-card__mark"><LogoMark size={28} /></div>
         </div>
+        <div className="credit-card__amount">{formatDollars(balanceCents)}</div>
+        <div className="credit-card__bottom">
+          <div className="credit-card__copy">
+            Earn {earnPct}% back on every eSIM. Apply at checkout — stacks with coupons.
+          </div>
+          {balance?.earliest_expiry && balanceCents > 0 && (
+            <div className="credit-card__chip">
+              Expires {new Date(balance.earliest_expiry).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
+            </div>
+          )}
+        </div>
+        {balanceCents > 0 && (
+          <button
+            className="credit-card__cta"
+            onClick={() => navigate('/destinations')}
+          >
+            Use it on your next plan <Icon name="arrow" size={14} />
+          </button>
+        )}
       </div>
 
       <h3 style={{ fontSize: 16, fontWeight: 500, margin: '32px 0 12px', letterSpacing: '-0.01em' }}>
@@ -597,7 +625,7 @@ function CreditTab({ balance, earnRate }: { balance: CreditBalance | null; earnR
       )}
       {history && history.length > 0 && (
         <div className="credit-rows">
-          {history.map((row) => (
+          {rowsWithRunning.map(({ row, running }) => (
             <div key={row.id} className="credit-row">
               <div>
                 <div className="credit-row__label">{reasonLabel(row.reason)}</div>
@@ -607,9 +635,14 @@ function CreditTab({ balance, earnRate }: { balance: CreditBalance | null; earnR
                   {new Date(row.created_at).toLocaleDateString()}
                 </div>
               </div>
-              <div className={`credit-row__amount ${row.delta_cents >= 0 ? 'pos' : 'neg'}`}>
-                {row.delta_cents >= 0 ? '+' : ''}
-                {formatDollars(row.delta_cents)}
+              <div style={{ textAlign: 'right' }}>
+                <div className={`credit-row__amount ${row.delta_cents >= 0 ? 'pos' : 'neg'}`}>
+                  {row.delta_cents >= 0 ? '+' : ''}
+                  {formatDollars(row.delta_cents)}
+                </div>
+                <div className="credit-row__running mono">
+                  bal {formatDollars(running)}
+                </div>
               </div>
             </div>
           ))}

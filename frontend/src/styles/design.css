@@ -1810,37 +1810,128 @@ input, select, textarea { font: inherit; color: inherit; }
   color: color-mix(in srgb, var(--accent) 80%, transparent);
 }
 
-/* Credit tab body. Hero summary with the balance + a feed of ledger
-   rows below. */
-.credit-tab { max-width: 760px; }
-.credit-summary {
-  background: var(--bg-elev);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  padding: 28px;
+/* Credit tab body. The hero is a stylized "membership card" — gradient
+   background, italic serif balance (Instrument Serif, the brand's
+   accent type), Nimvoy mark in the corner. The feel is "this is yours
+   to spend," not "here's a number we're tracking."
+
+   The gradient runs deep navy (var(--ink)) → bright accent so the
+   balance reads as a premium / valuable artifact. White-on-dark
+   amount + accent-soft tone for supporting copy. The shimmer accent
+   line at the top edge is a subtle premium-card flourish. */
+.credit-tab { max-width: 720px; }
+.credit-card {
+  position: relative;
+  border-radius: 18px;
+  padding: 28px 30px 26px;
+  color: #F1EFE6; /* cream — readable on the dark gradient */
+  background:
+    radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--accent) 55%, transparent) 0%, transparent 55%),
+    linear-gradient(135deg, #1B3D7A 0%, #0B1F3A 60%, #08152B 100%);
+  overflow: hidden;
+  isolation: isolate;
+  box-shadow: 0 18px 40px -20px color-mix(in srgb, var(--ink) 50%, transparent);
 }
-.credit-summary__eyebrow {
+/* Subtle shimmer band along the top edge — common on card art. */
+.credit-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, color-mix(in srgb, #F1EFE6 50%, transparent) 35%, color-mix(in srgb, #F1EFE6 60%, transparent) 65%, transparent 100%);
+}
+/* Faint accent diagonal hatch in the lower-right corner — extra texture
+   without being noisy. Pure CSS, no images. */
+.credit-card::after {
+  content: '';
+  position: absolute;
+  right: -40px; bottom: -60px;
+  width: 220px; height: 220px;
+  background: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--accent) 40%, transparent) 0%, transparent 60%);
+  z-index: -1;
+  pointer-events: none;
+}
+.credit-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.credit-card__eyebrow {
   font-family: var(--mono);
   font-size: 11px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--ink-3);
-  margin-bottom: 8px;
+  color: color-mix(in srgb, #F1EFE6 65%, transparent);
 }
-.credit-summary__amount {
-  font-size: 44px;
-  font-weight: 500;
-  letter-spacing: -0.025em;
-  color: var(--ink);
-  margin-bottom: 10px;
+.credit-card__mark {
+  width: 36px; height: 36px;
+  display: grid; place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #F1EFE6;
+}
+.credit-card__amount {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(56px, 9vw, 76px);
   line-height: 1;
+  letter-spacing: -0.02em;
+  color: #F1EFE6;
+  margin-bottom: 22px;
+  font-variant-numeric: tabular-nums;
 }
-.credit-summary__sub {
+.credit-card__bottom {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.credit-card__copy {
   font-size: 14px;
   line-height: 1.55;
-  color: var(--ink-2);
-  max-width: 56ch;
+  color: color-mix(in srgb, #F1EFE6 78%, transparent);
+  max-width: 44ch;
 }
+.credit-card__chip {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: color-mix(in srgb, #F1EFE6 90%, transparent);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.credit-card__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 999px;
+  background: #F1EFE6;
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  border: 0;
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .15s ease;
+}
+.credit-card__cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px -8px rgba(0, 0, 0, 0.35);
+}
+
+/* Activity rows — bank-statement style with a running balance under
+   the amount. Mono numerals for tabular alignment. */
 .credit-rows {
   display: flex;
   flex-direction: column;
@@ -1858,9 +1949,18 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .credit-row__label { font-size: 14px; font-weight: 500; color: var(--ink); }
 .credit-row__sub { font-size: 11.5px; color: var(--ink-3); margin-top: 2px; letter-spacing: 0.04em; }
-.credit-row__amount { font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.credit-row__amount {
+  font-size: 15px; font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
 .credit-row__amount.pos { color: var(--ok); }
 .credit-row__amount.neg { color: var(--ink-2); }
+.credit-row__running {
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
 
 /* "Secure your account" banner — sits between the welcome header
    and the tabs for users whose only auth is the magic-link they
