@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { Nav } from './components/Nav'
 import { Footer } from './components/Footer'
+import { TopBanner } from './components/TopBanner'
 import { usePageView } from './hooks/usePageView'
 import { useScrollToTop } from './hooks/useScrollToTop'
 import Landing from './routes/Landing'
@@ -30,6 +31,7 @@ const CrmAnalytics = lazy(() => import('./admin/pages/Analytics'))
 function Shell() {
   return (
     <>
+      <TopBanner />
       <Nav />
       <main style={{ flex: 1 }}>
         <Outlet />

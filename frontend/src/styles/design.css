@@ -185,6 +185,97 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 
 /* ---------- top nav ---------- */
+/* Site-wide promotional banner that sits above the sticky nav.
+   Promotes the 10%-back credit program. Scrolls away with the rest
+   of the page (the nav becomes sticky below it). Same navy gradient
+   as the credit strip / hero card / landing promo so the brand
+   moment is consistent across surfaces. Dismiss via the X — a
+   localStorage flag persists so it doesn't nag returning visitors.
+   The whole bar is a button — clicking it navigates to /destinations. */
+.top-banner {
+  display: block;
+  width: 100%;
+  padding: 10px 44px;
+  background:
+    radial-gradient(80% 200% at 0% 50%, color-mix(in srgb, var(--accent) 50%, transparent) 0%, transparent 60%),
+    linear-gradient(135deg, #1B3D7A 0%, #0B1F3A 60%, #08152B 100%);
+  color: #F1EFE6;
+  font-family: var(--font);
+  font-size: 13px;
+  border: 0;
+  cursor: pointer;
+  text-align: center;
+  position: relative;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  transition: background .25s ease;
+}
+.top-banner:hover {
+  background:
+    radial-gradient(80% 200% at 0% 50%, color-mix(in srgb, var(--accent) 60%, transparent) 0%, transparent 60%),
+    linear-gradient(135deg, #1F4485 0%, #0E2349 60%, #0A1731 100%);
+}
+.top-banner__inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  letter-spacing: -0.005em;
+}
+.top-banner__star {
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1;
+  color: var(--accent);
+  font-style: italic;
+}
+.top-banner__copy strong {
+  font-weight: 500;
+  color: #F1EFE6;
+}
+.top-banner__cta {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, #F1EFE6 35%, transparent);
+  text-decoration-thickness: 1px;
+}
+.top-banner:hover .top-banner__cta {
+  text-decoration-color: #F1EFE6;
+}
+.top-banner__inner svg {
+  color: color-mix(in srgb, #F1EFE6 70%, transparent);
+  transition: transform .15s ease;
+}
+.top-banner:hover .top-banner__inner svg { transform: translateX(2px); }
+
+.top-banner__close {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: 0;
+  color: color-mix(in srgb, #F1EFE6 50%, transparent);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  transition: color .15s ease, background .15s ease;
+}
+.top-banner__close:hover {
+  color: #F1EFE6;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 720px) {
+  .top-banner { padding: 9px 36px; font-size: 12px; }
+  .top-banner__star { font-size: 14px; }
+  /* On phones, drop the trailing arrow + underline-CTA fragment so
+     the line stays single-row. The "Earn 10% back" lead remains. */
+  .top-banner__inner svg { display: none; }
+  .top-banner__cta { display: none; }
+}
+
 .nav {
   position: sticky;
   top: 0;
