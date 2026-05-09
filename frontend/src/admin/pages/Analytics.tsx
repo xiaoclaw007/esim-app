@@ -362,22 +362,139 @@ export default function CrmAnalytics() {
 
 // ---- Charts -----------------------------------------------------------------
 
+// Self-contained traffic chart with axes + gridlines. Replaces the
+// previous bare-sparkline pair (sparklines are by-design axis-less,
+// fine for KPI snippets but useless when admins want to read actual
+// numbers off the chart).
 function TrafficChart({ series }: { series: AnalyticsTimeseriesPoint[] }) {
-  const visitors = useMemo(() => series.map((p) => p.visitors), [series])
-  const pageViews = useMemo(() => series.map((p) => p.page_views), [series])
   if (series.length === 0) {
     return <div className="crm-empty">No traffic recorded yet.</div>
   }
+
+  const PAD_LEFT = 36   // room for y-axis labels
+  const PAD_BOTTOM = 22 // room for x-axis date labels
+  const PAD_TOP = 8
+  const PAD_RIGHT = 4
+  const W = 520
+  const H = 180
+  const innerW = W - PAD_LEFT - PAD_RIGHT
+  const innerH = H - PAD_TOP - PAD_BOTTOM
+
+  const peak = Math.max(
+    1,
+    ...series.map((p) => Math.max(p.page_views, p.visitors)),
+  )
+  // Round up to a "nice" axis max (e.g., 37 → 40, 142 → 150) so the
+  // top tick doesn't read as 37.42.
+  const niceMax = niceCeil(peak)
+  const tickCount = 4
+  const tickStep = niceMax / tickCount
+  const ticks = Array.from({ length: tickCount + 1 }, (_, i) => i * tickStep)
+
+  const stepX = series.length > 1 ? innerW / (series.length - 1) : 0
+  const projY = (v: number) => PAD_TOP + innerH - (v / niceMax) * innerH
+  const projX = (i: number) => PAD_LEFT + i * stepX
+
+  function pathFor(values: number[]) {
+    const pts = values.map((v, i) => `${i === 0 ? 'M' : 'L'}${projX(i).toFixed(1)} ${projY(v).toFixed(1)}`).join(' ')
+    const area = `${pts} L${(PAD_LEFT + (series.length - 1) * stepX).toFixed(1)} ${(PAD_TOP + innerH).toFixed(1)} L${PAD_LEFT.toFixed(1)} ${(PAD_TOP + innerH).toFixed(1)} Z`
+    return { line: pts, area }
+  }
+  const pv = pathFor(series.map((p) => p.page_views))
+  const vis = pathFor(series.map((p) => p.visitors))
+
+  // X-axis labels: first / middle / last date (skip the rest to avoid
+  // crowding). Format as "May 9".
+  const xLabelIdx = series.length <= 2
+    ? series.map((_, i) => i)
+    : [0, Math.floor((series.length - 1) / 2), series.length - 1]
+
   return (
-    <div style={{ position: 'relative', marginTop: 8 }}>
-      <div style={{ color: 'var(--crm-accent)', position: 'absolute', inset: 0 }}>
-        <Sparkline values={pageViews} width={520} height={160} />
-      </div>
-      <div style={{ color: 'var(--crm-warn)' }}>
-        <Sparkline values={visitors} width={520} height={160} />
-      </div>
+    <div style={{ marginTop: 8 }}>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        width="100%"
+        style={{ display: 'block', maxWidth: W, height: 'auto' }}
+        aria-label="Visitors and page views over time"
+      >
+        {/* Y-axis gridlines + tick labels */}
+        {ticks.map((t) => {
+          const y = projY(t)
+          return (
+            <g key={t}>
+              <line
+                x1={PAD_LEFT}
+                x2={W - PAD_RIGHT}
+                y1={y}
+                y2={y}
+                stroke="var(--crm-line)"
+                strokeWidth="1"
+                strokeDasharray={t === 0 ? '0' : '2 3'}
+                strokeOpacity={t === 0 ? 0.5 : 0.4}
+              />
+              <text
+                x={PAD_LEFT - 6}
+                y={y + 3}
+                textAnchor="end"
+                fontSize="10.5"
+                fontFamily="var(--mono)"
+                fill="var(--crm-text-3)"
+              >
+                {fmtTickInt(t)}
+              </text>
+            </g>
+          )
+        })}
+
+        {/* Page views filled area + line */}
+        <path d={pv.area} fill="var(--crm-accent)" fillOpacity="0.12" />
+        <path d={pv.line} fill="none" stroke="var(--crm-accent)" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+
+        {/* Visitors filled area + line (overlay) */}
+        <path d={vis.area} fill="var(--crm-warn)" fillOpacity="0.12" />
+        <path d={vis.line} fill="none" stroke="var(--crm-warn)" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+
+        {/* X-axis date labels */}
+        {xLabelIdx.map((i) => {
+          const d = new Date(series[i].day)
+          const label = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+          return (
+            <text
+              key={i}
+              x={projX(i)}
+              y={H - 4}
+              textAnchor={i === 0 ? 'start' : i === series.length - 1 ? 'end' : 'middle'}
+              fontSize="10.5"
+              fontFamily="var(--mono)"
+              fill="var(--crm-text-3)"
+            >
+              {label}
+            </text>
+          )
+        })}
+      </svg>
     </div>
   )
+}
+
+// Round up to a tick-friendly max. Picks 1/2/5 × 10^n granularity.
+function niceCeil(n: number): number {
+  if (n <= 1) return 1
+  const exp = Math.floor(Math.log10(n))
+  const base = Math.pow(10, exp)
+  const norm = n / base
+  let nice: number
+  if (norm <= 1) nice = 1
+  else if (norm <= 2) nice = 2
+  else if (norm <= 5) nice = 5
+  else nice = 10
+  return nice * base
+}
+
+// Compact tick labels: "1.2k" / "12k" / "120k" once we get past 999.
+function fmtTickInt(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k`
+  return Math.round(n).toString()
 }
 
 function TrafficLegend() {
