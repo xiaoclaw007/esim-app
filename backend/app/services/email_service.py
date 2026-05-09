@@ -540,3 +540,85 @@ def send_esim_email(
     except Exception as e:
         logger.error(f"Failed to send email to {to_email}: {e}")
         return False
+
+
+# ---- Login link (magic-link) email -----------------------------------------
+# Minimal "click here to log in" transactional email. No postcard chrome —
+# this is utility, not a moment. Used both by the standalone "request a
+# login link" form on /login and by the order-confirmation flow that
+# embeds a link automatically post-purchase.
+
+LOGIN_LINK_TEMPLATE = Template("""
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Your Nimvoy login link</title>
+</head>
+<body style="margin:0; padding:40px 20px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif; background:#F1EFE6; color:#0B1F3A;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="max-width:560px; width:100%; background:#FFFFFF; border-radius:12px; padding:40px 36px;">
+    <tr><td>
+      <p style="margin:0 0 8px; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:#3B536F;">Nimvoy · login link</p>
+      <h1 style="margin:0 0 18px; font-size:26px; font-weight:500; letter-spacing:-0.02em; color:#0B1F3A;">Click below to open your account</h1>
+      <p style="margin:0 0 28px; font-size:15px; line-height:1.55; color:#3B536F;">
+        Tap the button below to access your Nimvoy account — no password needed.
+        {% if context_label %}{{ context_label }}{% endif %}
+      </p>
+      <p style="margin:0 0 24px;">
+        <a href="{{ link_url }}" style="display:inline-block; background:#0B1F3A; color:#F1EFE6; text-decoration:none; padding:14px 26px; border-radius:999px; font-weight:500; font-size:15px;">
+          Open my account &rarr;
+        </a>
+      </p>
+      <p style="margin:0; font-size:13px; line-height:1.55; color:#3B536F;">
+        The link works for the next 7 days and can only be used once. If it's expired or already used, request a fresh one at <a href="{{ frontend_url }}/login" style="color:#0B1F3A;">{{ frontend_host }}/login</a>.
+      </p>
+      <p style="margin:24px 0 0; font-size:12px; color:#7F94AB;">
+        Didn't request this? You can ignore the email — the link won't do anything until someone clicks it.
+      </p>
+    </td></tr>
+  </table>
+</body>
+</html>
+""")
+
+
+def send_login_link_email(
+    to_email: str,
+    link_url: str,
+    context_label: str = "",
+    subject: str = "Your Nimvoy login link",
+) -> bool:
+    """Send a passwordless login link via email.
+
+    context_label is an optional one-line phrase callers can inject —
+    e.g. the order-confirmation path passes "Track your United States
+    eSIM and see live data usage." For the standalone "I forgot,
+    send me a link" flow, leave it blank.
+    """
+    try:
+        host = settings.frontend_url.replace("https://", "").replace("http://", "").rstrip("/")
+        html_body = LOGIN_LINK_TEMPLATE.render(
+            link_url=link_url,
+            context_label=context_label,
+            frontend_url=settings.frontend_url,
+            frontend_host=host,
+        )
+        ses_client = boto3.client(
+            "ses",
+            region_name=settings.aws_region,
+            aws_access_key_id=settings.aws_access_key_id,
+            aws_secret_access_key=settings.aws_secret_access_key,
+        )
+        ses_client.send_email(
+            Source=settings.aws_ses_from_email,
+            Destination={"ToAddresses": [to_email]},
+            Message={
+                "Subject": {"Data": subject},
+                "Body": {"Html": {"Data": html_body}},
+            },
+        )
+        logger.info(f"Login link email sent to {to_email}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send login link to {to_email}: {e}")
+        return False

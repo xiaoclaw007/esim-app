@@ -13,10 +13,46 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 
 from app.database import get_db
-from app.models import EsimInstallEvent, Event, Order, Plan
+from app.models import EsimInstallEvent, Event, Order, Plan, User
 from app.services import coupons as coupons_service
+from app.services import magic_link as magic_link_service
+
+
+def _send_guest_login_link_if_needed(db, order, plan) -> None:
+    """Email a magic-link login to first-time guest customers.
+
+    Triggered exactly once per guest order: when the order's User has
+    no password and no Google link (i.e., we auto-created the account
+    on their behalf at checkout time). Subsequent orders from the same
+    guest still go to the same User so they won't get repeat link
+    emails — the account is already claimable from the first one.
+    """
+    if not order.user_id:
+        return
+    user = db.query(User).filter(User.id == order.user_id).first()
+    if not user or user.password_hash or user.google_id:
+        # Existing customer with credentials — they don't need a link;
+        # they already have a way in.
+        return
+    raw, _ = magic_link_service.create_login_link(db, user)
+    db.commit()
+    link_url = magic_link_service.build_url(raw)
+    country = plan.country if plan else ""
+    country_label = country if country else "your eSIM"
+    context = (
+        f"Track your {country_label} eSIM and see live data usage."
+        if country
+        else "Track your eSIM and see live data usage."
+    )
+    send_login_link_email(
+        to_email=user.email,
+        link_url=link_url,
+        context_label=context,
+        subject="Your Nimvoy account is ready — log in",
+    )
 from app.services.email_service import (
     send_esim_email,
+    send_login_link_email,
     send_order_failed_email,
     send_payment_confirmation_email,
 )
@@ -168,6 +204,13 @@ async def _process_paid_order(
         data_gb=plan.data_gb if plan else None,
         validity_days=plan.validity_days if plan else None,
     )
+
+    # Magic-link "claim your account" email is sent *with* the QR
+    # delivery email (see joytel_qrcode_callback below) — that's the
+    # moment the customer is most engaged and the email sequence
+    # makes most sense ("your eSIM is ready / open your account").
+    # Free-coupon orders skip the Stripe flow entirely; sending from
+    # the QR-delivery side covers both paths uniformly.
 
     logger.info(f"Order {order.reference} — submitting to JoyTel")
 
@@ -366,6 +409,14 @@ async def joytel_qrcode_callback(
         logger.error(f"Email delivery failed for {order.reference}: {e}")
         order.error_message = f"Email failed: {str(e)}"
         db.commit()
+
+    # Email a magic-link "claim your account" follow-up to first-time
+    # guests (auto-created passwordless User). One email per guest;
+    # repeat orders from the same email don't re-trigger because the
+    # user has already been claimed by then (or chose to keep using
+    # magic-link, in which case the previous link still works until
+    # used / expired).
+    _send_guest_login_link_if_needed(db, order, plan)
 
     return success
 

@@ -22,6 +22,7 @@ from app.schemas import (
 from app.services import coupons as coupons_service
 from app.services.joytel_warehouse import generate_order_tid, place_order
 from app.services.stripe_service import create_checkout_session, create_payment_intent
+from app.services.users import ensure_user_for_email
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["checkout"])
@@ -58,14 +59,19 @@ def checkout(
     if not plan:
         raise HTTPException(status_code=404, detail="Plan not found")
 
-    # 2. Create order
+    # 2. Auto-create / find the User for this email and create the order
+    #    linked to it. Phase 2 of the guest-claim flow: there's no such
+    #    thing as an orphan order anymore — every order has a user from
+    #    the moment of purchase. The user may be a passwordless auto-
+    #    created one, claimed later by signup() or magic-link login.
+    user = current_user if current_user else ensure_user_for_email(db, email)
     order = Order(
         email=email,
         plan_id=plan.id,
         amount_cents=plan.price_cents,
         currency=plan.currency,
         status="created",
-        user_id=current_user.id if current_user else None,
+        user_id=user.id,
     )
     db.add(order)
     db.commit()
@@ -190,13 +196,14 @@ def create_order_endpoint(
         if not coupon_id:
             raise HTTPException(status_code=400, detail="Free orders require a coupon")
 
+        free_user = current_user if current_user else ensure_user_for_email(db, email)
         order = Order(
             email=email,
             plan_id=plan.id,
             amount_cents=0,
             currency=plan.currency,
             status="payment_received",  # no Stripe involved; payment is implicit via coupon
-            user_id=current_user.id if current_user else None,
+            user_id=free_user.id,
             coupon_id=coupon_id,
             coupon_code=coupon_code,
             discount_cents=discount_cents,
@@ -246,13 +253,14 @@ def create_order_endpoint(
         )
 
     # ===== Standard Stripe flow =====
+    paid_user = current_user if current_user else ensure_user_for_email(db, email)
     order = Order(
         email=email,
         plan_id=plan.id,
         amount_cents=final_cents,
         currency=plan.currency,
         status="created",  # Pay was clicked, Stripe is processing
-        user_id=current_user.id if current_user else None,
+        user_id=paid_user.id,
         coupon_id=coupon_id,
         coupon_code=coupon_code,
         discount_cents=discount_cents,

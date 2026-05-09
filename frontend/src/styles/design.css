@@ -1775,6 +1775,43 @@ input, select, textarea { font: inherit; color: inherit; }
 .account-head h1 { font-size: 36px; font-weight: 500; letter-spacing: -0.025em; margin: 0 0 6px; }
 .account-head .sub { color: var(--ink-3); font-size: 14px; }
 
+/* "Secure your account" banner — sits between the welcome header
+   and the tabs for users whose only auth is the magic-link they
+   just consumed. Disappears the moment they add a password or
+   connect Google. */
+.claim-banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  margin: 0 0 24px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--accent-soft) 60%, transparent);
+}
+.claim-banner__eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+.claim-banner__body {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  margin: 0;
+  max-width: 60ch;
+}
+.claim-banner__actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .account-tabs {
   display: flex;
   gap: 24px;

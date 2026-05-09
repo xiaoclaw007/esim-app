@@ -130,14 +130,37 @@ class UserResponse(BaseModel):
     referral_code: str
     is_admin: bool = False
     created_at: datetime
+    # Booleans (not the underlying values) so we can show "Add password"
+    # / "Connect Google" CTAs without exposing the hash or Google ID.
+    has_password: bool = False
+    has_google: bool = False
 
     model_config = {"from_attributes": True}
+
+    @classmethod
+    def from_user(cls, user) -> "UserResponse":
+        """Build from a User ORM row, deriving has_password / has_google."""
+        return cls(
+            id=user.id,
+            email=user.email,
+            name=user.name,
+            avatar_url=user.avatar_url,
+            referral_code=user.referral_code,
+            is_admin=user.is_admin,
+            created_at=user.created_at,
+            has_password=bool(user.password_hash),
+            has_google=bool(user.google_id),
+        )
 
 
 class AuthResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
+
+
+class MagicLinkRequest(BaseModel):
+    email: EmailStr
 
 
 class UserUpdateRequest(BaseModel):

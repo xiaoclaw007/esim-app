@@ -13,7 +13,8 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import get_db
 from app.models import RefreshToken, User
-from app.schemas import AuthResponse, LoginRequest, SignupRequest, UserResponse
+from app.schemas import AuthResponse, LoginRequest, MagicLinkRequest, SignupRequest, UserResponse
+from app.services import magic_link as magic_link_service
 from app.services.auth_service import (
     create_access_token,
     create_refresh_token,
@@ -60,24 +61,43 @@ def signup(request: SignupRequest, response: Response, db: Session = Depends(get
     """Register a new user with email and password.
 
     Returns access token in body and sets refresh token as HttpOnly cookie.
+
+    Claim semantics for auto-created accounts: when a customer paid as
+    a guest, we created a passwordless User row at order time (Phase 2
+    flow). If they later try to "sign up" with that same email, we
+    don't 409 — we let them claim the existing account by attaching a
+    password. They're not creating a new identity; they're adding a
+    credential to one we already opened on their behalf. Distinguishing
+    rule: the existing User has neither password_hash nor google_id
+    (i.e., no auth credentials at all). If they DO have a password or
+    a Google link, the account is genuinely already taken and we 409.
     """
-    # Check if email already taken
     existing = db.query(User).filter(User.email == request.email).first()
     if existing:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Email already registered",
+        if existing.password_hash or existing.google_id:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Email already registered",
+            )
+        # Auto-created passwordless account from guest checkout — claim it.
+        existing.password_hash = hash_password(request.password)
+        if request.name and not existing.name:
+            existing.name = request.name
+        if request.referral_code and not existing.referred_by:
+            existing.referred_by = request.referral_code
+        db.commit()
+        db.refresh(existing)
+        user = existing
+    else:
+        user = User(
+            email=request.email,
+            name=request.name,
+            password_hash=hash_password(request.password),
+            referred_by=request.referral_code,
         )
-
-    user = User(
-        email=request.email,
-        name=request.name,
-        password_hash=hash_password(request.password),
-        referred_by=request.referral_code,
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
 
     # Generate tokens
     access_token = create_access_token(user.id)
@@ -87,7 +107,7 @@ def signup(request: SignupRequest, response: Response, db: Session = Depends(get
 
     return AuthResponse(
         access_token=access_token,
-        user=UserResponse.model_validate(user),
+        user=UserResponse.from_user(user),
     )
 
 
@@ -111,7 +131,7 @@ def login(request: LoginRequest, response: Response, db: Session = Depends(get_d
 
     return AuthResponse(
         access_token=access_token,
-        user=UserResponse.model_validate(user),
+        user=UserResponse.from_user(user),
     )
 
 
@@ -242,10 +262,14 @@ async def google_callback(
     if not user:
         user = db.query(User).filter(User.email == email).first()
         if user:
-            # Link existing account to Google
+            # Link existing account to Google. Common path: the user's
+            # account was auto-created during guest checkout and has no
+            # auth credentials yet — Google claim fills them in.
             user.google_id = google_id
             if not user.avatar_url and avatar:
                 user.avatar_url = avatar
+            if not user.name and name:
+                user.name = name
         else:
             # New user via Google
             user = User(
@@ -268,4 +292,62 @@ async def google_callback(
     resp = RedirectResponse(url=redirect_url)
     _set_refresh_cookie(resp, raw_refresh)
     resp.delete_cookie(OAUTH_STATE_COOKIE, path="/api/auth")
+    return resp
+
+
+# --- Magic-link (passwordless) auth ----------------------------------------
+
+
+@router.post("/magic/request", status_code=204)
+def request_magic_link(
+    request: MagicLinkRequest,
+    db: Session = Depends(get_db),
+):
+    """Email a single-use login link to the address.
+
+    Always returns 204 — never reveals whether the email is registered.
+    Avoids account-enumeration attacks. Auto-created accounts (from
+    guest checkout) are valid recipients here, which is the point: it's
+    how a customer who paid as a guest claims their account afterwards.
+    """
+    email = request.email.lower().strip()
+    user = db.query(User).filter(User.email == email, User.is_active == True).first()
+    if user:
+        from app.services.email_service import send_login_link_email
+
+        raw, _row = magic_link_service.create_login_link(db, user)
+        db.commit()
+        link = magic_link_service.build_url(raw)
+        send_login_link_email(to_email=user.email, link_url=link)
+        logger.info(f"Magic-link requested for {email}")
+    else:
+        logger.info(f"Magic-link requested for non-existent {email} (silent no-op)")
+    return Response(status_code=204)
+
+
+@router.get("/magic/{token}")
+def consume_magic_link(token: str, db: Session = Depends(get_db)):
+    """Validate the token, set refresh cookie, redirect to /auth/callback.
+
+    Same redirect pattern as the Google OAuth callback — frontend picks
+    up the access_token query param and stores it. Distinct error
+    redirects so the login page can render an actionable message.
+    """
+    try:
+        user = magic_link_service.consume(db, token)
+    except magic_link_service.AlreadyUsed:
+        return RedirectResponse(url=f"{settings.frontend_url}/login?magic=used")
+    except magic_link_service.ExpiredToken:
+        return RedirectResponse(url=f"{settings.frontend_url}/login?magic=expired")
+    except magic_link_service.InvalidToken:
+        return RedirectResponse(url=f"{settings.frontend_url}/login?magic=invalid")
+
+    access_token = create_access_token(user.id)
+    raw_refresh, token_hash = create_refresh_token()
+    _store_refresh_token(db, user.id, token_hash)
+    db.commit()  # commit consume + token in one shot
+
+    redirect_url = f"{settings.frontend_url}/auth/callback?access_token={access_token}"
+    resp = RedirectResponse(url=redirect_url)
+    _set_refresh_cookie(resp, raw_refresh)
     return resp

@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api/users", tags=["users"])
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_user)):
     """Return the authenticated user's profile."""
-    return UserResponse.model_validate(current_user)
+    return UserResponse.from_user(current_user)
 
 
 @router.patch("/me", response_model=UserResponse)
@@ -29,4 +29,4 @@ def update_me(
         db.commit()
         db.refresh(current_user)
 
-    return UserResponse.model_validate(current_user)
+    return UserResponse.from_user(current_user)

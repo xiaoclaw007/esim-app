@@ -252,6 +252,33 @@ class Plan(Base):
     is_test: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
 
+class MagicLink(Base):
+    """Single-use signed token for passwordless auth via email.
+
+    Powers Phase 2 of the checkout/claim flow — the "Manage your eSIMs"
+    button in the order confirmation email logs the customer in without
+    a password. Same pattern works for future password-reset and
+    email-verification flows; differentiated by `purpose`.
+    """
+
+    __tablename__ = "magic_links"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id"), nullable=False, index=True
+    )
+    # SHA-256 of the raw token. Raw token is only emailed; never stored.
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    purpose: Mapped[str] = mapped_column(String(32), default="login", nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    used_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+
+
 class EsimInstallEvent(Base):
     """Full event log for JoyTel's eSIM Installation Event Notification feed.
 

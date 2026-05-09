@@ -7,6 +7,11 @@ export interface User {
   name?: string | null
   avatar_url?: string | null
   referral_code?: string
+  // Whether the user has set a password / linked Google. Drives the
+  // "Add a password" / "Connect Google" CTAs on the account page so
+  // a customer who only has magic-link auth can upgrade.
+  has_password?: boolean
+  has_google?: boolean
 }
 
 interface AuthState {

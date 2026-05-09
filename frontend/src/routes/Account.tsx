@@ -60,6 +60,11 @@ export default function Account() {
 
   const activeOrders = orders?.filter((o) => o.status === 'delivered') ?? []
 
+  // "Claimed via magic-link only" state — user has no password and no
+  // Google link. Render a one-shot banner inviting them to upgrade.
+  // Once either credential is set, the banner disappears for good.
+  const needsCredential = user.has_password === false && user.has_google === false
+
   return (
     <div className="account">
       <div className="account-head">
@@ -77,6 +82,22 @@ export default function Account() {
           </button>
         </div>
       </div>
+
+      {needsCredential && (
+        <div className="claim-banner">
+          <div>
+            <div className="claim-banner__eyebrow">Secure your account</div>
+            <p className="claim-banner__body">
+              You're signed in with an email link. Add a password or connect Google so you don't
+              need a fresh link every time you log in.
+            </p>
+          </div>
+          <div className="claim-banner__actions">
+            <Link to="/signup" className="btn primary sm">Add a password</Link>
+            <a href="/api/auth/google" className="btn ghost sm">Connect Google</a>
+          </div>
+        </div>
+      )}
 
       <div className="account-tabs">
         {TABS.map((t) => (
