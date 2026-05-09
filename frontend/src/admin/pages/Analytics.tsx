@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CrmIcon } from '../components/CrmIcon'
 import { Sparkline } from '../components/Sparkline'
 import {
@@ -456,7 +456,7 @@ function TrafficChart({ series }: { series: AnalyticsTimeseriesPoint[] }) {
 
         {/* X-axis date labels */}
         {xLabelIdx.map((i) => {
-          const d = new Date(series[i].day)
+          const d = new Date(series[i].date)
           const label = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
           return (
             <text
