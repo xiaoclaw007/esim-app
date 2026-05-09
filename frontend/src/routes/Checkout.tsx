@@ -237,9 +237,8 @@ export default function Checkout() {
 
         {/* Credit toggle — sits in the customer-action column alongside
             the coupon input rather than in the read-only order summary,
-            because applying credit IS an action (a checkbox in a list of
-            display rows reads as out of place). The summary on the right
-            still SHOWS the credit applied as a "-$X.XX credit" line. */}
+            because applying credit IS an action. Single-line, clean
+            checkbox + label + benefit chip on the right. */}
         {creditAvailable > 0 && postCoupon > 0 && (
           <button
             type="button"
@@ -248,17 +247,13 @@ export default function Checkout() {
             aria-pressed={useCredit}
           >
             <span className="credit-toggle__check" aria-hidden="true">
-              {useCredit ? <Icon name="check" size={12} /> : null}
+              {useCredit && <Icon name="check" size={11} />}
             </span>
-            <span className="credit-toggle__copy">
-              <span className="credit-toggle__title">
-                Apply <strong>{formatDollars(creditAvailable)}</strong> in Nimvoy credit
-              </span>
-              <span className="credit-toggle__sub">
-                {useCredit
-                  ? `Saving ${formatDollars(creditApplied)} on this order.`
-                  : 'Tap to apply.'}
-              </span>
+            <span className="credit-toggle__label">
+              Apply Nimvoy credit
+            </span>
+            <span className="credit-toggle__amount">
+              {useCredit ? `−$${priceDollars(creditApplied)}` : `$${priceDollars(creditAvailable)} available`}
             </span>
           </button>
         )}
