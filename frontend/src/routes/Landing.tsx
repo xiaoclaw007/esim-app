@@ -372,6 +372,60 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* CREDIT — brand moment for the 10%-back program. Full-width
+          navy gradient breaks the cream rhythm of other sections; same
+          visual language as the credit strip on /account so customers
+          recognize the program when they sign in. Editorial centered
+          layout: small eyebrow, italic-serif headline (matches the
+          destination accent type), body copy, single CTA. */}
+      <section className="section credit-promo">
+        <div className="credit-promo__glow" aria-hidden="true" />
+        <div className="credit-promo__inner">
+          <div className="credit-promo__eyebrow">Nimvoy credit · earn as you go</div>
+          <h2 className="credit-promo__headline">
+            Earn back what you{' '}
+            <em
+              style={{
+                fontFamily: 'var(--serif)',
+                fontStyle: 'italic',
+                fontWeight: 400,
+              }}
+            >
+              spend.
+            </em>
+          </h2>
+          <p className="credit-promo__copy">
+            Every Nimvoy plan earns you 10% back as store credit. Spend $20, get $2 back —
+            auto-applied at your next checkout, stackable with any coupon. Yours for 12 months.
+          </p>
+          <div className="credit-promo__row">
+            <span className="credit-promo__chip">
+              <span className="credit-promo__chip-amt">$20</span>
+              <span className="credit-promo__chip-arrow">→</span>
+              <span className="credit-promo__chip-earn">+$2</span>
+            </span>
+            <span className="credit-promo__chip">
+              <span className="credit-promo__chip-amt">$50</span>
+              <span className="credit-promo__chip-arrow">→</span>
+              <span className="credit-promo__chip-earn">+$5</span>
+            </span>
+            <span className="credit-promo__chip">
+              <span className="credit-promo__chip-amt">$100</span>
+              <span className="credit-promo__chip-arrow">→</span>
+              <span className="credit-promo__chip-earn">+$10</span>
+            </span>
+          </div>
+          <div className="credit-promo__cta-row">
+            <button
+              className="btn lg block credit-promo__cta"
+              onClick={() => navigate('/destinations')}
+            >
+              Start earning — browse destinations <Icon name="arrow" size={16} />
+            </button>
+          </div>
+        </div>
+      </section>
+
       {/* REVIEWS */}
       <section className="section" style={{ background: 'var(--bg)' }}>
         <div className="section-inner">

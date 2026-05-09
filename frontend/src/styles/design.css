@@ -1775,6 +1775,138 @@ input, select, textarea { font: inherit; color: inherit; }
 .account-head h1 { font-size: 36px; font-weight: 500; letter-spacing: -0.025em; margin: 0 0 6px; }
 .account-head .sub { color: var(--ink-3); font-size: 14px; }
 
+/* Landing-page credit promo — full-width navy section between the
+   "How it works" walkthrough and the reviews social proof. Visual
+   break in the cream rhythm of the rest of the landing; same dark
+   gradient + italic serif headline as the /account credit strip so
+   the brand moment is consistent across surfaces.
+
+   Editorial centered layout: small eyebrow → italic-serif hook →
+   body copy → three example chips ($20→+$2 etc.) → CTA pill. The
+   chips are concrete proof points without being a feature comparison
+   table. Pulls a logged-out visitor across the "is this worth my
+   email?" threshold by quantifying the upside. */
+.credit-promo {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(140% 160% at 0% 0%, color-mix(in srgb, var(--accent) 50%, transparent) 0%, transparent 55%),
+    linear-gradient(135deg, #1B3D7A 0%, #0B1F3A 60%, #08152B 100%);
+  color: #F1EFE6;
+  padding: 96px 32px;
+  border-bottom: 1px solid var(--line);
+}
+/* Top-edge shimmer band — same flourish as the strip / hero card. */
+.credit-promo::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    color-mix(in srgb, #F1EFE6 50%, transparent) 35%,
+    color-mix(in srgb, #F1EFE6 60%, transparent) 65%,
+    transparent 100%);
+}
+/* Glow blob in the lower-right — pure CSS texture, no image. */
+.credit-promo__glow {
+  position: absolute;
+  right: -120px; bottom: -180px;
+  width: 520px; height: 520px;
+  background: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--accent) 35%, transparent) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+.credit-promo__inner {
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+}
+.credit-promo__eyebrow {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, #F1EFE6 70%, transparent);
+  margin-bottom: 18px;
+}
+.credit-promo__headline {
+  font-size: clamp(40px, 6vw, 64px);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  margin: 0 0 22px;
+  color: #F1EFE6;
+}
+.credit-promo__copy {
+  font-size: 16px;
+  line-height: 1.6;
+  color: color-mix(in srgb, #F1EFE6 80%, transparent);
+  max-width: 56ch;
+  margin: 0 auto 30px;
+}
+/* Three "$X → +$Y" chips. Editorial proof points. */
+.credit-promo__row {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 36px;
+}
+.credit-promo__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-family: var(--font);
+  font-size: 14px;
+  letter-spacing: -0.005em;
+  color: color-mix(in srgb, #F1EFE6 90%, transparent);
+}
+.credit-promo__chip-amt { font-weight: 500; }
+.credit-promo__chip-arrow {
+  font-family: var(--mono);
+  color: color-mix(in srgb, #F1EFE6 50%, transparent);
+}
+.credit-promo__chip-earn {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 16px;
+  color: #F1EFE6;
+  font-variant-numeric: tabular-nums;
+}
+.credit-promo__cta-row {
+  display: flex;
+  justify-content: center;
+}
+.credit-promo__cta {
+  background: #F1EFE6 !important;
+  color: var(--ink) !important;
+  border: 0 !important;
+  padding: 16px 28px !important;
+  font-size: 15px !important;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 10px;
+  width: auto !important;
+  border-radius: 999px !important;
+}
+.credit-promo__cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px -10px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+@media (max-width: 720px) {
+  .credit-promo { padding: 64px 22px; }
+  .credit-promo__headline { font-size: clamp(36px, 8vw, 48px); }
+}
+
 /* Promoted credit strip — full-width hero card sitting between the
    account welcome and the tab strip. Shown only when balance > 0.
    Same dark-navy gradient + italic-serif amount as the Credit tab
