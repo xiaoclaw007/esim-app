@@ -29,6 +29,16 @@ export function CrmShell({ admin, children }: { admin: AdminUser; children: Reac
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [failedCount, setFailedCount] = useState<number>(0)
   const [signingOut, setSigningOut] = useState(false)
+  // Mobile drawer state. On desktop (>= 880px) the sidebar is always
+  // visible and this flag is ignored. On mobile it gates the off-
+  // canvas slide-in.
+  const [navOpen, setNavOpen] = useState(false)
+
+  // Close the drawer whenever the route changes (e.g., user tapped a
+  // nav item). Cheap effect; runs on every navigation.
+  useEffect(() => {
+    setNavOpen(false)
+  }, [location.pathname])
 
   async function onSignOut() {
     setSigningOut(true)
@@ -74,7 +84,14 @@ export function CrmShell({ admin, children }: { admin: AdminUser; children: Reac
     ''
 
   return (
-    <div className="crm-app">
+    <div className={`crm-app${navOpen ? ' crm-app--nav-open' : ''}`}>
+      {/* Mobile drawer backdrop — clickable to close. Hidden on
+          desktop via CSS. */}
+      <div
+        className="crm-side-backdrop"
+        onClick={() => setNavOpen(false)}
+        aria-hidden="true"
+      />
       <aside className="crm-side">
         <Link to="/admin/dashboard" className="crm-brand" style={{ textDecoration: 'none', color: 'inherit' }}>
           <div className="crm-brand-mark">N</div>
@@ -119,6 +136,18 @@ export function CrmShell({ admin, children }: { admin: AdminUser; children: Reac
 
       <div className="crm-main">
         <header className="crm-top">
+          {/* Hamburger — only visible on mobile via CSS. Toggles the
+              off-canvas sidebar drawer. */}
+          <button
+            className="crm-burger"
+            onClick={() => setNavOpen((o) => !o)}
+            aria-label={navOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={navOpen}
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <path d="M3 5h12M3 9h12M3 13h12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </button>
           <div className="crm-crumbs">
             <span className="dim">Nimvoy Admin</span>
             <span className="dim">/</span>
