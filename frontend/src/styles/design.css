@@ -2678,6 +2678,41 @@ input, select, textarea { font: inherit; color: inherit; }
   flex-shrink: 0;
 }
 
+/* Webview warning — shown on /login + /signup when we detect the
+   visitor is inside an embedded in-app browser (WeChat, Instagram,
+   etc.) where Google OAuth is blocked. Sits where the Google button
+   would otherwise sit. Pop-coloured border to signal "this is a
+   notice you should read", not so loud that it feels like an error. */
+.webview-warn {
+  padding: 16px 18px;
+  margin-bottom: 22px;
+  border: 1px solid color-mix(in srgb, var(--pop) 35%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--pop) 6%, var(--bg-elev));
+}
+.webview-warn__title {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 8px;
+  letter-spacing: -0.005em;
+}
+.webview-warn__body {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  margin: 0 0 10px;
+}
+.webview-warn__body strong { color: var(--ink); font-weight: 500; }
+.webview-warn__hint {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-3);
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px dashed color-mix(in srgb, var(--pop) 25%, transparent);
+}
+
 .account-tabs {
   display: flex;
   gap: 24px;

@@ -1,8 +1,9 @@
-import { type FormEvent, useEffect, useState } from 'react'
+import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { apiFetch } from '../api/client'
 import { Divider, GoogleButton } from '../components/GoogleButton'
+import { detectWebView } from '../auth/detectWebView'
 
 type Mode = 'password' | 'magic'
 
@@ -28,6 +29,20 @@ export default function Login() {
   const [banner, setBanner] = useState<string | null>(null)
 
   const from = (location.state as { from?: string } | null)?.from || '/account'
+
+  // Embedded-webview detection. Google blocks OAuth from in-app
+  // browsers (WeChat, Instagram, FB, etc. → "disallowed_useragent").
+  // When detected, hide the Google button and surface email +
+  // magic-link as the working options, with a banner explaining
+  // how to escape into a real browser.
+  const webview = useMemo(() => detectWebView(), [])
+
+  // In a webview, default to the magic-link tab — it's the lowest-
+  // friction path that works (no password setup needed for guest-
+  // checkout customers, no Google flow).
+  useEffect(() => {
+    if (webview) setMode('magic')
+  }, [webview])
 
   // Pick up ?magic=expired|used|invalid from the consume endpoint's
   // redirect-on-error path. After reading once, drop the param so a
@@ -95,8 +110,26 @@ export default function Login() {
         </div>
       )}
 
-      <GoogleButton label="Continue with Google" />
-      <Divider />
+      {webview ? (
+        <div className="webview-warn">
+          <div className="webview-warn__title">
+            Google sign-in won't work in {webview.name}'s browser.
+          </div>
+          <p className="webview-warn__body">
+            Google blocks sign-in from in-app browsers as a security measure.
+            You can still log in with <strong>email + password</strong> or get a{' '}
+            <strong>one-tap login link</strong> below — both work right here.
+          </p>
+          <p className="webview-warn__hint">
+            Want to use Google instead? {webview.escapeHint}
+          </p>
+        </div>
+      ) : (
+        <>
+          <GoogleButton label="Continue with Google" />
+          <Divider />
+        </>
+      )}
 
       {/* Password / magic-link toggle. Magic link is the recommended path for
           customers who paid as guests (their account is passwordless). */}
