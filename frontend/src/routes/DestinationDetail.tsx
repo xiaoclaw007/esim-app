@@ -60,7 +60,6 @@ export default function DestinationDetail() {
   const navigate = useNavigate()
   const { plans, loading } = useCatalog()
   const [tab, setTab] = useState<'regular' | 'unlimited'>('regular')
-  const [selectedId, setSelectedId] = useState<string | null>(null)
   const [compatOpen, setCompatOpen] = useState(false)
 
   const meta = resolveMeta(codeParam)
@@ -75,11 +74,6 @@ export default function DestinationDetail() {
   const unlimitedPlans = useMemo(() => allPlans.filter(isUnlimited), [allPlans])
 
   const visible = tab === 'unlimited' ? unlimitedPlans : regularPlans
-  // Default-select the middle plan if we have 3+, else the first one.
-  // (No "Most popular" badge — we don't have real popularity data yet.)
-  const defaultIdx = visible.length >= 3 ? Math.floor(visible.length / 2) : 0
-  const defaultSelectedId = visible[defaultIdx]?.id ?? null
-  const effectiveSelected = selectedId && visible.some((p) => p.id === selectedId) ? selectedId : defaultSelectedId
 
   if (!meta) {
     return (
@@ -239,19 +233,13 @@ export default function DestinationDetail() {
             <div className="plan-tabs">
               <button
                 className={tab === 'regular' ? 'active' : ''}
-                onClick={() => {
-                  setTab('regular')
-                  setSelectedId(null)
-                }}
+                onClick={() => setTab('regular')}
               >
                 <span className="dot"></span> Regular plans
               </button>
               <button
                 className={tab === 'unlimited' ? 'active' : ''}
-                onClick={() => {
-                  setTab('unlimited')
-                  setSelectedId(null)
-                }}
+                onClick={() => setTab('unlimited')}
                 disabled={unlimitedPlans.length === 0}
               >
                 <span className="dot"></span> Unlimited
@@ -305,50 +293,49 @@ export default function DestinationDetail() {
             </button>
           )}
 
-          <div className="plans-grid">
-            {visible.map((p) => {
-              const selected = effectiveSelected === p.id
-              const perGb = !isUnlimited(p) && p.data_gb > 0 ? p.price_cents / p.data_gb : null
+          {/* Duration-first grouping. Customers think trip length
+              first ("I'm in Tokyo for 7 days"), data second. Group
+              plans by validity_days, sort ascending; within each
+              group, sort by data ascending. Each row is a single
+              clickable button — direct-to-checkout, no two-step
+              select-then-buy. */}
+          {(() => {
+            const byDays = visible.reduce<Record<number, Plan[]>>((acc, p) => {
+              acc[p.validity_days] = acc[p.validity_days] || []
+              acc[p.validity_days].push(p)
+              return acc
+            }, {})
+            const dayKeys = Object.keys(byDays)
+              .map(Number)
+              .sort((a, b) => a - b)
+            return dayKeys.map((days) => {
+              const rows = byDays[days].slice().sort((a, b) => a.data_gb - b.data_gb)
               return (
-                <PlanCard
-                  key={p.id}
-                  plan={p}
-                  countryCode={meta.code}
-                  selected={selected}
-                  perGb={perGb}
-                  onSelect={() => setSelectedId(p.id)}
-                  onBuy={() => goCheckout(p.id)}
-                />
-              )
-            })}
-            {/* Tail card. On the regular tab, when unlimited plans exist,
-                offer a one-click pivot — Unlimited is otherwise hidden behind
-                a tab and easy to miss. Doubles as a graceful filler when the
-                grid would otherwise leave an empty cell. */}
-            {tab === 'regular' && unlimitedPlans.length > 0 && visible.length > 0 && (
-              <button
-                type="button"
-                className="plan plan--pivot"
-                onClick={() => {
-                  setTab('unlimited')
-                  setSelectedId(null)
-                }}
-              >
-                <div className="plan-head">
-                  <div>
-                    <div className="data">∞</div>
-                    <div className="days">Unlimited data</div>
+                <section key={days} className="plans-day">
+                  <h3 className="plans-day__h">
+                    {days} day{days === 1 ? '' : 's'}
+                  </h3>
+                  <div className="plans-day__rows">
+                    {rows.map((p) => {
+                      const perGb =
+                        !isUnlimited(p) && p.data_gb > 0
+                          ? p.price_cents / p.data_gb
+                          : null
+                      return (
+                        <PlanRow
+                          key={p.id}
+                          plan={p}
+                          countryCode={meta.code}
+                          perGb={perGb}
+                          onBuy={() => goCheckout(p.id)}
+                        />
+                      )
+                    })}
                   </div>
-                </div>
-                <p className="plan--pivot__copy">
-                  Heavy streaming or a long trip? Skip the GB math.
-                </p>
-                <span className="plan--pivot__cta">
-                  See Unlimited plans <Icon name="arrow" size={14} />
-                </span>
-              </button>
-            )}
-          </div>
+                </section>
+              )
+            })
+          })()}
 
           {/* Below-the-grid notes. Country pages: single "Good to know" card.
               Regional packs: same card plus a Coverage card listing the
@@ -396,59 +383,40 @@ export default function DestinationDetail() {
   )
 }
 
-function PlanCard({
+// Horizontal plan row used inside a duration-grouped section.
+// Direct-to-checkout: the whole row is one button. No two-step
+// "select then buy" — keeps the customer's path linear.
+function PlanRow({
   plan,
   countryCode,
-  selected,
   perGb,
-  onSelect,
   onBuy,
 }: {
   plan: Plan
   countryCode: string
-  selected: boolean
   perGb: number | null
-  onSelect: () => void
   onBuy: () => void
 }) {
+  const unlimited = isUnlimited(plan)
   return (
-    <div
-      className={`plan ${selected ? 'selected' : ''}`}
-      onClick={onSelect}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          onSelect()
-        }
-      }}
-    >
-      <div className="plan-head">
-        <div>
-          <div className="data">{formatData(plan.data_gb)}</div>
-          <div className="days">
-            {plan.validity_days} {plan.validity_days === 1 ? 'day' : 'days'} validity
-          </div>
-        </div>
-        <div className="badge">{countryCode} · 5G</div>
-      </div>
-      <div className="price">
-        <b>${priceDollars(plan.price_cents)}</b> USD
-        {perGb !== null && (
-          <span className="per"> · ${priceDollars(Math.round(perGb))}/GB</span>
+    <button type="button" className="plan-row" onClick={onBuy}>
+      <span className="plan-row__data">
+        {unlimited ? (
+          <>Unlimited <span className="plan-row__sub">data</span></>
+        ) : (
+          <>{plan.data_gb} <span className="plan-row__sub">GB</span></>
         )}
-      </div>
-      <button
-        className={`btn ${selected ? 'primary' : 'subtle'} block`}
-        onClick={(e) => {
-          e.stopPropagation()
-          onBuy()
-        }}
-      >
-        Buy now · ${priceDollars(plan.price_cents)}
-      </button>
-    </div>
+      </span>
+      {perGb !== null && (
+        <span className="plan-row__pergb mono">${priceDollars(Math.round(perGb))}/GB</span>
+      )}
+      <span className="plan-row__badge mono">{countryCode} · 5G</span>
+      <span className="plan-row__price">
+        <b>${priceDollars(plan.price_cents)}</b>
+        <span className="plan-row__currency">USD</span>
+      </span>
+      <Icon name="arrow" size={14} />
+    </button>
   )
 }
 

@@ -1766,84 +1766,114 @@ input, select, textarea { font: inherit; color: inherit; }
 .plan-tabs button.active { background: var(--bg-elev); color: var(--ink); box-shadow: var(--shadow-sm); }
 .plan-tabs .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
-.plans-grid {
-  display: grid;
-  /* auto-fit + minmax: cards pack as 3-up on desktop, 2-up on tablet,
-     1-up on mobile, and never leave a single dangling cell. The 260px
-     floor keeps cards from squeezing below where the price + button
-     stay legible; the 360px cap prevents a single card (e.g., the
-     Unlimited tab when there's only one Unlimited plan) from
-     stretching across the full row into a billboard. */
-  grid-template-columns: repeat(auto-fit, minmax(260px, 360px));
-  gap: 16px;
+/* Duration-grouped plan listing. Customers think trip length first
+   ("I'm in Tokyo for 7 days"), data second. Each section is one
+   duration (3 days, 7 days, etc.); each row inside is a single
+   buyable plan rendered as a horizontal button with data, $/GB,
+   price, and a trailing arrow. Click → direct to checkout. */
+.plans-day {
+  margin-top: 24px;
 }
-.plan {
-  padding: 26px;
+.plans-day:first-of-type { margin-top: 4px; }
+.plans-day__h {
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin: 0 0 12px;
+  color: var(--ink);
+}
+.plans-day__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.plan-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 1.2fr) auto auto auto 14px;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  padding: 16px 22px;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--bg-elev);
-  display: flex;
-  flex-direction: column;
-  cursor: pointer;
-  transition: all .15s ease;
-  position: relative;
-}
-.plan:hover { border-color: var(--line-strong); transform: translateY(-2px); box-shadow: var(--shadow-md); }
-.plan.selected { border-color: var(--ink); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 12%, transparent); }
-[data-palette="mono"] .plan.selected { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
-.plan .plan-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: start;
-  margin-bottom: 20px;
-}
-.plan .data { font-size: 36px; font-weight: 500; letter-spacing: -0.03em; line-height: 1; }
-.plan .data small { font-size: 18px; color: var(--ink-3); font-weight: 400; margin-left: 2px; }
-.plan .days { color: var(--ink-3); font-size: 13.5px; margin-top: 4px; font-family: var(--mono); }
-.plan .price { font-family: var(--mono); font-size: 14px; color: var(--ink-3); margin: 16px 0 18px; padding: 12px 0; border-top: 1px dashed var(--line); border-bottom: 1px dashed var(--line); }
-.plan .price b { font-family: var(--font); font-size: 26px; font-weight: 500; color: var(--ink); letter-spacing: -0.02em; margin-right: 4px; }
-.plan .per { font-size: 12px; color: var(--ink-3); margin-left: 6px; }
-
-.plan.selected .btn.primary { background: var(--accent); }
-.plan .popular { position: absolute; top: -10px; right: 20px; }
-
-/* Tail card on the regular-plans grid that pivots to the Unlimited tab.
-   Same outer shape as a real plan card so the grid stays uniform, but
-   visually quieter (dashed border, transparent fill) so it doesn't
-   compete with real buyable plans. Renders as a <button>. */
-.plan.plan--pivot {
-  background: transparent;
-  border: 1px dashed var(--line-strong);
+  font-family: var(--font);
   text-align: left;
-  font: inherit;
-  color: var(--ink);
-  justify-content: space-between;
+  cursor: pointer;
+  transition: border-color .15s ease, transform .12s ease, box-shadow .15s ease;
 }
-.plan.plan--pivot .data { color: var(--ink-2); }
-.plan.plan--pivot:hover {
+.plan-row:hover {
   border-color: var(--ink);
-  background: color-mix(in srgb, var(--bg-elev) 50%, transparent);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
-.plan--pivot__copy {
-  margin: 16px 0 18px;
-  font-size: 13.5px;
-  line-height: 1.5;
+.plan-row__data {
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1;
+}
+.plan-row__data .plan-row__sub {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink-3);
+  margin-left: 4px;
+  letter-spacing: 0;
+}
+.plan-row__pergb {
+  font-size: 11.5px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+}
+.plan-row__badge {
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--bg-sunk);
   color: var(--ink-3);
 }
-.plan--pivot__cta {
+.plan-row__price {
   display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
+  align-items: baseline;
+  gap: 5px;
+  margin-left: 4px;
+}
+.plan-row__price b {
+  font-size: 20px;
   font-weight: 500;
   color: var(--ink);
-  border-bottom: 1px solid var(--ink);
-  padding-bottom: 2px;
-  align-self: flex-start;
+  letter-spacing: -0.02em;
 }
-.plan.plan--pivot:hover .plan--pivot__cta {
-  color: var(--pop);
-  border-bottom-color: var(--pop);
+.plan-row__currency {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--ink-3);
+  letter-spacing: 0.06em;
+}
+.plan-row svg:last-child {
+  color: var(--ink-3);
+  transition: transform .15s ease, color .15s ease;
+}
+.plan-row:hover svg:last-child {
+  color: var(--ink);
+  transform: translateX(3px);
+}
+
+/* Mobile: drop the $/GB column to keep rows readable. The badge
+   stays — country/5G is useful at-a-glance. Tablet keeps everything. */
+@media (max-width: 640px) {
+  .plan-row {
+    grid-template-columns: 1fr auto auto 14px;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+  .plan-row__pergb { display: none; }
+  .plan-row__data { font-size: 19px; }
+  .plan-row__price b { font-size: 18px; }
 }
 
 /* "Every plan includes" strip — sits between the tabs and the cards.
