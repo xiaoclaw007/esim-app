@@ -317,16 +317,11 @@ export default function DestinationDetail() {
                   </h3>
                   <div className="plans-day__rows">
                     {rows.map((p) => {
-                      const perGb =
-                        !isUnlimited(p) && p.data_gb > 0
-                          ? p.price_cents / p.data_gb
-                          : null
                       return (
                         <PlanRow
                           key={p.id}
                           plan={p}
                           countryCode={meta.code}
-                          perGb={perGb}
                           onBuy={() => goCheckout(p.id)}
                         />
                       )
@@ -392,12 +387,10 @@ export default function DestinationDetail() {
 // ever surface multi-region plans on a single destination page.
 function PlanRow({
   plan,
-  perGb,
   onBuy,
 }: {
   plan: Plan
   countryCode: string
-  perGb: number | null
   onBuy: () => void
 }) {
   const unlimited = isUnlimited(plan)
@@ -407,9 +400,6 @@ function PlanRow({
         {unlimited ? 'Unlimited' : `${plan.data_gb} GB`}
       </span>
       <span className="plan-row__price-block">
-        {perGb !== null && (
-          <span className="plan-row__pergb">${priceDollars(Math.round(perGb))}/GB</span>
-        )}
         <span className="plan-row__price">
           <b>${priceDollars(plan.price_cents)}</b>
           <span className="plan-row__currency">USD</span>
