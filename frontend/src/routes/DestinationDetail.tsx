@@ -386,9 +386,12 @@ export default function DestinationDetail() {
 // Horizontal plan row used inside a duration-grouped section.
 // Direct-to-checkout: the whole row is one button. No two-step
 // "select then buy" — keeps the customer's path linear.
+// countryCode is accepted but unused — the country/5G badge was
+// redundant on a destination page (every plan IS for that country).
+// Left as a param so callers don't break and we can re-add if we
+// ever surface multi-region plans on a single destination page.
 function PlanRow({
   plan,
-  countryCode,
   perGb,
   onBuy,
 }: {
@@ -401,21 +404,18 @@ function PlanRow({
   return (
     <button type="button" className="plan-row" onClick={onBuy}>
       <span className="plan-row__data">
-        {unlimited ? (
-          <>Unlimited <span className="plan-row__sub">data</span></>
-        ) : (
-          <>{plan.data_gb} <span className="plan-row__sub">GB</span></>
+        {unlimited ? 'Unlimited' : `${plan.data_gb} GB`}
+      </span>
+      <span className="plan-row__price-block">
+        {perGb !== null && (
+          <span className="plan-row__pergb">${priceDollars(Math.round(perGb))}/GB</span>
         )}
+        <span className="plan-row__price">
+          <b>${priceDollars(plan.price_cents)}</b>
+          <span className="plan-row__currency">USD</span>
+        </span>
+        <Icon name="arrow" size={14} />
       </span>
-      {perGb !== null && (
-        <span className="plan-row__pergb mono">${priceDollars(Math.round(perGb))}/GB</span>
-      )}
-      <span className="plan-row__badge mono">{countryCode} · 5G</span>
-      <span className="plan-row__price">
-        <b>${priceDollars(plan.price_cents)}</b>
-        <span className="plan-row__currency">USD</span>
-      </span>
-      <Icon name="arrow" size={14} />
     </button>
   )
 }
