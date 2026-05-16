@@ -162,18 +162,18 @@ async def get_order_usage(
     """Live data-usage query for a delivered eSIM. Calls JoyTel's
     /esim/usage/query and normalizes the response.
 
-    Auth: required, ownership-checked. Only returns usage to the user
-    who placed the order — eSIMs are not transferable.
+    Auth: required. Customers can only query their own orders;
+    admins can query any order (powers the /admin/orders/<ref>
+    drawer's usage panel).
 
     Performance: not cached. JoyTel responses take ~1-2s. Frontend
-    should fetch on Account-page mount + provide a manual refresh
-    button rather than polling.
+    should fetch on mount + provide a manual refresh button rather
+    than polling.
     """
-    order = (
-        db.query(Order)
-        .filter(Order.reference == reference, Order.user_id == current_user.id)
-        .first()
-    )
+    order_q = db.query(Order).filter(Order.reference == reference)
+    if not current_user.is_admin:
+        order_q = order_q.filter(Order.user_id == current_user.id)
+    order = order_q.first()
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     if order.status != "delivered":

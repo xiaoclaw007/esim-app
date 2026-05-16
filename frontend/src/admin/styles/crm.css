@@ -496,6 +496,105 @@
 .crm-empty { padding: 48px 16px; text-align: center; color: var(--crm-text-3); font-size: 13px; }
 .crm-empty strong { display: block; color: var(--crm-text); font-size: 14px; margin-bottom: 4px; font-weight: 600; }
 
+/* Live-usage panel inside the order drawer's eSIM section. Mirrors
+   the customer-facing /account usage panel but uses CRM tokens
+   (tighter padding, mono numerals). */
+.crm-usage {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--crm-border);
+}
+.crm-usage__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.crm-usage__lbl {
+  font-family: var(--crm-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--crm-text-3);
+}
+.crm-usage__pill {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--crm-bg);
+  color: var(--crm-text-2);
+  border: 1px solid var(--crm-border);
+}
+.crm-usage__pill.active {
+  background: color-mix(in srgb, var(--crm-ok) 14%, transparent);
+  color: var(--crm-ok);
+  border-color: color-mix(in srgb, var(--crm-ok) 30%, transparent);
+}
+.crm-usage__pill.expired {
+  background: color-mix(in srgb, var(--crm-danger) 12%, transparent);
+  color: var(--crm-danger);
+  border-color: color-mix(in srgb, var(--crm-danger) 30%, transparent);
+}
+.crm-usage__refresh {
+  margin-left: auto;
+  background: transparent;
+  border: 0;
+  font-family: var(--crm-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: var(--crm-text-3);
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.crm-usage__refresh:hover:not(:disabled) {
+  color: var(--crm-text);
+  background: rgba(11,31,58,.05);
+}
+.crm-usage__refresh:disabled { opacity: 0.5; cursor: wait; }
+.crm-usage__stats {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.crm-usage__used {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--crm-text);
+  letter-spacing: -0.01em;
+}
+.crm-usage__pct {
+  font-size: 12px;
+  color: var(--crm-text-2);
+  letter-spacing: 0.04em;
+}
+.crm-usage__bar {
+  width: 100%;
+  height: 5px;
+  background: var(--crm-bg);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid var(--crm-border);
+}
+.crm-usage__fill {
+  height: 100%;
+  background: var(--crm-accent);
+  border-radius: 3px;
+  transition: width .35s ease;
+}
+.crm-usage__fill.hot { background: var(--crm-danger); }
+.crm-usage__meta {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 11.5px;
+  color: var(--crm-text-2);
+}
+.crm-usage__meta .dim { color: var(--crm-text-3); margin-right: 4px; }
+
 /* Hamburger toggle in the top bar — visible only on mobile. */
 .crm-burger {
   display: none;  /* shown via media query below */
