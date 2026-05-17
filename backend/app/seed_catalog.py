@@ -134,7 +134,8 @@ COUNTRY_PLANS: list[CatalogEntry] = [
     CatalogEntry("eSIM-AFAT10G-07",   "Algeria 7 Days 10GB",       "DZ", "africa", "country", 10,  7,  2000, listing_id="eSIM-AFAT10G-07.DZ"),
     CatalogEntry("eSIM-AFAT5G-15",    "Algeria 15 Days 5GB",       "DZ", "africa", "country", 5,   15, 1300, listing_id="eSIM-AFAT5G-15.DZ"),
     CatalogEntry("eSIM-AFAT10G-15",   "Algeria 15 Days 10GB",      "DZ", "africa", "country", 10,  15, 2200, listing_id="eSIM-AFAT10G-15.DZ"),
-    CatalogEntry("eSIM-AFAT5G-30",    "Algeria 30 Days 5GB",       "DZ", "africa", "country", 5,   30, 1300),
+    # +$1 over the formula to keep the gradient (15d/5GB is also $13).
+    CatalogEntry("eSIM-AFAT5G-30",    "Algeria 30 Days 5GB",       "DZ", "africa", "country", 5,   30, 1400),
     CatalogEntry("eSIM-AFAT10G-30",   "Algeria 30 Days 10GB",      "DZ", "africa", "country", 10,  30, 2300),
     CatalogEntry("eSIM-AFAT20G-30",   "Algeria 30 Days 20GB",      "DZ", "africa", "country", 20,  30, 4300),
     # France (FR, europe) — also on JoyTel's "multi-region F" pack
@@ -161,7 +162,8 @@ COUNTRY_PLANS: list[CatalogEntry] = [
     CatalogEntry("eSIM-SM10M-07",     "Singapore 7 Days Unlimited","SG", "asia", "country", 999, 7,  1800),
     CatalogEntry("eSIM-SMT5G-15",     "Singapore 15 Days 5GB",     "SG", "asia", "country", 5,   15, 500),
     CatalogEntry("eSIM-SMT10G-15",    "Singapore 15 Days 10GB",    "SG", "asia", "country", 10,  15, 800),
-    CatalogEntry("eSIM-SMT5G-30",     "Singapore 30 Days 5GB",     "SG", "asia", "country", 5,   30, 500),
+    # +$1 over the formula to keep the gradient (15d/5GB is also $5).
+    CatalogEntry("eSIM-SMT5G-30",     "Singapore 30 Days 5GB",     "SG", "asia", "country", 5,   30, 600),
     CatalogEntry("eSIM-SMT10G-30",    "Singapore 30 Days 10GB",    "SG", "asia", "country", 10,  30, 900),
     CatalogEntry("eSIM-SMT20G-30",    "Singapore 30 Days 20GB",    "SG", "asia", "country", 20,  30, 1600),
     # Greece (GR, europe) — also on JoyTel's multi-region F pack
@@ -183,7 +185,8 @@ COUNTRY_PLANS: list[CatalogEntry] = [
     CatalogEntry("eSIM-HT10GB-07",    "Andorra 7 Days 10GB",       "AD", "europe", "country", 10,  7,  2000),
     CatalogEntry("eSIM-HT5GB-15",     "Andorra 15 Days 5GB",       "AD", "europe", "country", 5,   15, 1300),
     CatalogEntry("eSIM-HT10GB-15",    "Andorra 15 Days 10GB",      "AD", "europe", "country", 10,  15, 2200),
-    CatalogEntry("eSIM-HT5GB-30",     "Andorra 30 Days 5GB",       "AD", "europe", "country", 5,   30, 1300),
+    # +$1 over the formula to keep the gradient (15d/5GB is also $13).
+    CatalogEntry("eSIM-HT5GB-30",     "Andorra 30 Days 5GB",       "AD", "europe", "country", 5,   30, 1400),
     CatalogEntry("eSIM-HT10GB-30",    "Andorra 30 Days 10GB",      "AD", "europe", "country", 10,  30, 2300),
     CatalogEntry("eSIM-HT20GB-30",    "Andorra 30 Days 20GB",      "AD", "europe", "country", 20,  30, 4300),
 ]
