@@ -109,11 +109,9 @@ export const COUNTRIES: CountryMeta[] = [
   { code: 'TW', name: 'Taiwan',               flag: '🇹🇼', region: 'asia',     networks: 'Chunghwa Telecom, Far EasTone', popular: true, image: _UNSPLASH('photo-1601534621622-8587a8a0da11') },
   { code: 'TR', name: 'Turkey',               flag: '🇹🇷', region: 'europe',   networks: 'Turkcell, Vodafone',             popular: true, image: _UNSPLASH('photo-1604156789095-3348604c0f43') },
   { code: 'AE', name: 'United Arab Emirates', flag: '🇦🇪', region: 'asia',     networks: 'Etisalat, du',                   popular: true, image: _UNSPLASH('photo-1512453979798-5ea266f8880c') },
-  // Newly launched 2026-05-17. No hero image yet — page falls back to
-  // the CSS gradient art card; add Unsplash IDs once we pick photos.
-  { code: 'AL', name: 'Albania',              flag: '🇦🇱', region: 'europe',   networks: 'Vodafone Albania, One Telecom' },
-  { code: 'DZ', name: 'Algeria',              flag: '🇩🇿', region: 'africa',   networks: 'Mobilis, Djezzy' },
-  { code: 'AD', name: 'Andorra',              flag: '🇦🇩', region: 'europe',   networks: 'Andorra Telecom' },
+  { code: 'AL', name: 'Albania',              flag: '🇦🇱', region: 'europe',   networks: 'Vodafone Albania, One Telecom', image: _UNSPLASH('photo-1705405999485-188af37e0462') },
+  { code: 'DZ', name: 'Algeria',              flag: '🇩🇿', region: 'africa',   networks: 'Mobilis, Djezzy',                image: _UNSPLASH('photo-1670015239006-610536cc0593') },
+  { code: 'AD', name: 'Andorra',              flag: '🇦🇩', region: 'europe',   networks: 'Andorra Telecom',                image: _UNSPLASH('photo-1614678096587-0ad50faf1603') },
 ]
 
 export const REGIONAL_PLANS_META: RegionalMeta[] = [
