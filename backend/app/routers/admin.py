@@ -328,6 +328,7 @@ _COUNTRY_META = {
     "AL": ("Albania", "🇦🇱"),
     "DZ": ("Algeria", "🇩🇿"),
     "AD": ("Andorra", "🇦🇩"),
+    "FR": ("France", "🇫🇷"),
     "EU": ("Europe", "🇪🇺"),
     "AP": ("Asia-Pacific", "🌏"),
     "CHM": ("China + HK + Macau", "🇨🇳"),

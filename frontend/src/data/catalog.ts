@@ -112,6 +112,7 @@ export const COUNTRIES: CountryMeta[] = [
   { code: 'AL', name: 'Albania',              flag: '🇦🇱', region: 'europe',   networks: 'Vodafone Albania, One Telecom', image: _UNSPLASH('photo-1705405999485-188af37e0462') },
   { code: 'DZ', name: 'Algeria',              flag: '🇩🇿', region: 'africa',   networks: 'Mobilis, Djezzy',                image: _UNSPLASH('photo-1670015239006-610536cc0593') },
   { code: 'AD', name: 'Andorra',              flag: '🇦🇩', region: 'europe',   networks: 'Andorra Telecom',                image: _UNSPLASH('photo-1614678096587-0ad50faf1603') },
+  { code: 'FR', name: 'France',               flag: '🇫🇷', region: 'europe',   networks: 'Orange, SFR',                    image: _UNSPLASH('photo-1502602898657-3e91760cbb34') },
 ]
 
 export const REGIONAL_PLANS_META: RegionalMeta[] = [
