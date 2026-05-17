@@ -113,6 +113,39 @@ COUNTRY_PLANS: list[CatalogEntry] = [
     CatalogEntry("eSIM-TH10M-06",     "Thailand 6 Days Unlimited", "TH", "asia", "country", 999, 6,  1100),
     CatalogEntry("eSIM-TH10M-07",     "Thailand 7 Days Unlimited", "TH", "asia", "country", 999, 7,  1200),
     CatalogEntry("eSIM-TH10M-10",     "Thailand 10 Days Unlimited","TH", "asia", "country", 999, 10, 1500),
+    # Albania (AL, europe) — JoyTel "multi-region F" pack. Prices derived
+    # from RMB cost × 2 ÷ 7.0 (USD), rounded to nearest dollar.
+    CatalogEntry("eSIM-FT3GB-03",     "Albania 3 Days 3GB",        "AL", "europe", "country", 3,   3,  300),
+    CatalogEntry("eSIM-F10M-03",      "Albania 3 Days Unlimited",  "AL", "europe", "country", 999, 3,  1200),
+    CatalogEntry("eSIM-FT5GB-07",     "Albania 7 Days 5GB",        "AL", "europe", "country", 5,   7,  500),
+    CatalogEntry("eSIM-FT10GB-07",    "Albania 7 Days 10GB",       "AL", "europe", "country", 10,  7,  900),
+    CatalogEntry("eSIM-F10M-07",      "Albania 7 Days Unlimited",  "AL", "europe", "country", 999, 7,  2700),
+    CatalogEntry("eSIM-FT5GB-15",     "Albania 15 Days 5GB",       "AL", "europe", "country", 5,   15, 600),
+    CatalogEntry("eSIM-FT10GB-15",    "Albania 15 Days 10GB",      "AL", "europe", "country", 10,  15, 1000),
+    CatalogEntry("eSIM-FT5GB-30",     "Albania 30 Days 5GB",       "AL", "europe", "country", 5,   30, 700),
+    CatalogEntry("eSIM-FT10GB-30",    "Albania 30 Days 10GB",      "AL", "europe", "country", 10,  30, 1100),
+    CatalogEntry("eSIM-FT20GB-30",    "Albania 30 Days 20GB",      "AL", "europe", "country", 20,  30, 2000),
+    # Algeria (DZ, africa) — JoyTel "Africa A" pack. 4 of the 8 SKUs are
+    # shared with the existing Africa regional bundle (same underlying
+    # JoyTel product); those use suffixed listing_ids so both surfaces
+    # can list the same product at independent prices.
+    CatalogEntry("eSIM-AFAT3G-03",    "Algeria 3 Days 3GB",        "DZ", "africa", "country", 3,   3,  600),
+    CatalogEntry("eSIM-AFAT5G-07",    "Algeria 7 Days 5GB",        "DZ", "africa", "country", 5,   7,  1100, listing_id="eSIM-AFAT5G-07.DZ"),
+    CatalogEntry("eSIM-AFAT10G-07",   "Algeria 7 Days 10GB",       "DZ", "africa", "country", 10,  7,  2000, listing_id="eSIM-AFAT10G-07.DZ"),
+    CatalogEntry("eSIM-AFAT5G-15",    "Algeria 15 Days 5GB",       "DZ", "africa", "country", 5,   15, 1300, listing_id="eSIM-AFAT5G-15.DZ"),
+    CatalogEntry("eSIM-AFAT10G-15",   "Algeria 15 Days 10GB",      "DZ", "africa", "country", 10,  15, 2200, listing_id="eSIM-AFAT10G-15.DZ"),
+    CatalogEntry("eSIM-AFAT5G-30",    "Algeria 30 Days 5GB",       "DZ", "africa", "country", 5,   30, 1300),
+    CatalogEntry("eSIM-AFAT10G-30",   "Algeria 30 Days 10GB",      "DZ", "africa", "country", 10,  30, 2300),
+    CatalogEntry("eSIM-AFAT20G-30",   "Algeria 30 Days 20GB",      "DZ", "africa", "country", 20,  30, 4300),
+    # Andorra (AD, europe) — JoyTel "multi-region H" pack.
+    CatalogEntry("eSIM-HT3GB-03",     "Andorra 3 Days 3GB",        "AD", "europe", "country", 3,   3,  600),
+    CatalogEntry("eSIM-HT5GB-07",     "Andorra 7 Days 5GB",        "AD", "europe", "country", 5,   7,  1100),
+    CatalogEntry("eSIM-HT10GB-07",    "Andorra 7 Days 10GB",       "AD", "europe", "country", 10,  7,  2000),
+    CatalogEntry("eSIM-HT5GB-15",     "Andorra 15 Days 5GB",       "AD", "europe", "country", 5,   15, 1300),
+    CatalogEntry("eSIM-HT10GB-15",    "Andorra 15 Days 10GB",      "AD", "europe", "country", 10,  15, 2200),
+    CatalogEntry("eSIM-HT5GB-30",     "Andorra 30 Days 5GB",       "AD", "europe", "country", 5,   30, 1300),
+    CatalogEntry("eSIM-HT10GB-30",    "Andorra 30 Days 10GB",      "AD", "europe", "country", 10,  30, 2300),
+    CatalogEntry("eSIM-HT20GB-30",    "Andorra 30 Days 20GB",      "AD", "europe", "country", 20,  30, 4300),
 ]
 
 # Regional plans — country code is bespoke (EU/AP/CHM), plan_type="regional".
