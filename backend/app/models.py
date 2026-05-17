@@ -238,6 +238,10 @@ class Plan(Base):
     __tablename__ = "plans"
 
     id: Mapped[str] = mapped_column(String(50), primary_key=True)
+    # JoyTel product code. Intentionally NOT unique — a single JoyTel
+    # product can have multiple Plan listings (e.g. Algeria-country page
+    # and Africa-regional bundle both ordering the same SKU at different
+    # display prices). See seed_catalog.py for the listing convention.
     joytel_sku: Mapped[str] = mapped_column(String(100), nullable=False)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     # ISO-2 for country plans ("US", "JP"); bespoke codes for regional ("EU",

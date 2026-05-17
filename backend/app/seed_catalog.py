@@ -1,8 +1,24 @@
 """Seed/upsert the production JoyTel plan catalog.
 
-Idempotent: upserts each plan by joytel_sku, leaving orders intact. Preserves
-the existing `us-1gb-1d` row (same SKU, just price corrected) and the
-`esim-test-plan` sandbox row (untouched).
+Idempotent: upserts each plan by Plan.id (which may differ from joytel_sku
+when a single JoyTel product is sold under multiple surfaces — see below).
+Leaves the `esim-test-plan` sandbox row untouched.
+
+## Listings vs JoyTel products
+
+A `Plan` row represents a *listing* — how we sell something on our site:
+its display name, country, region, and price. The `joytel_sku` column is
+the underlying JoyTel product code we actually order when a customer pays.
+
+Multiple listings can point to the same JoyTel SKU. Example: Algeria
+appears as its own country page (`country="DZ"`) AND its SKU is part of
+the Africa regional bundle (`country="AFR"`). Both listings carry the
+same `joytel_sku`, but distinct `Plan.id`s, names, and prices.
+
+Convention: when a SKU has multiple listings, use a suffixed listing_id
+like `f"{sku}.{country}"` (e.g. `"eSIM-AFAT5G-07.DZ"`). The first/default
+listing keeps the bare SKU as its id for backward compatibility with
+existing Order rows.
 
 Usage:
     python -m app.seed_catalog
@@ -11,6 +27,7 @@ Usage:
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Optional
 
 from app.database import Base, SessionLocal, engine
 from app.models import Plan
@@ -18,7 +35,7 @@ from app.models import Plan
 
 @dataclass(frozen=True)
 class CatalogEntry:
-    sku: str
+    sku: str  # JoyTel product code — what we send when ordering
     name: str
     country: str  # ISO-2 for country plans, bespoke code for regional
     region: str  # geographic grouping used for the Destinations page
@@ -26,6 +43,14 @@ class CatalogEntry:
     data_gb: int  # 999 == unlimited
     validity_days: int
     price_cents: int
+    listing_id: Optional[str] = None  # defaults to `sku`; set when one SKU has multiple listings
+
+
+def _id_for(entry: CatalogEntry) -> str:
+    """Resolve the Plan.id for a catalog entry. Defaults to the JoyTel
+    SKU for single-listing products; explicit `listing_id` is required
+    whenever the same SKU appears in more than one listing."""
+    return entry.listing_id or entry.sku
 
 
 # Individual-country plans — data taken from the JoyTel SKU sheet
@@ -158,11 +183,28 @@ def upsert_catalog() -> None:
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
+        # Sanity: catch dup listing_ids in the source list itself.
+        seen_ids: dict[str, CatalogEntry] = {}
+        for e in ALL_PLANS:
+            eid = _id_for(e)
+            if eid in seen_ids:
+                raise ValueError(
+                    f"Duplicate listing id {eid!r} in ALL_PLANS — set a unique "
+                    f"`listing_id` on one of the entries (both reference SKU "
+                    f"{e.sku!r} and {seen_ids[eid].sku!r})."
+                )
+            seen_ids[eid] = e
+
         inserted = 0
         updated = 0
         for entry in ALL_PLANS:
-            existing = db.query(Plan).filter(Plan.joytel_sku == entry.sku).first()
+            eid = _id_for(entry)
+            existing = db.query(Plan).filter(Plan.id == eid).first()
             if existing:
+                # Update everything except the id. joytel_sku is mutable
+                # here so a listing can be repointed at a different SKU
+                # if needed (rare).
+                existing.joytel_sku = entry.sku
                 existing.name = entry.name
                 existing.country = entry.country
                 existing.region = entry.region
@@ -176,7 +218,7 @@ def upsert_catalog() -> None:
             else:
                 db.add(
                     Plan(
-                        id=entry.sku,  # SKU doubles as the plan id for new rows
+                        id=eid,
                         joytel_sku=entry.sku,
                         name=entry.name,
                         country=entry.country,
