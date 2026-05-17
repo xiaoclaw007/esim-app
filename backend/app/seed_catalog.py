@@ -151,6 +151,19 @@ COUNTRY_PLANS: list[CatalogEntry] = [
     CatalogEntry("eSIM-FT5GB-30",     "France 30 Days 5GB",        "FR", "europe", "country", 5,   30, 700,  listing_id="eSIM-FT5GB-30.FR"),
     CatalogEntry("eSIM-FT10GB-30",    "France 30 Days 10GB",       "FR", "europe", "country", 10,  30, 1100, listing_id="eSIM-FT10GB-30.FR"),
     CatalogEntry("eSIM-FT20GB-30",    "France 30 Days 20GB",       "FR", "europe", "country", 20,  30, 2000, listing_id="eSIM-FT20GB-30.FR"),
+    # Singapore (SG, asia) — JoyTel "SM" pack (Singapore+Malaysia bundle,
+    # listed here as Singapore-only). If we ever add a Malaysia country
+    # page using the same SKUs, those listings would use .MY-suffixed ids.
+    CatalogEntry("eSIM-SMT3G-03",     "Singapore 3 Days 3GB",      "SG", "asia", "country", 3,   3,  200),
+    CatalogEntry("eSIM-SM10M-03",     "Singapore 3 Days Unlimited","SG", "asia", "country", 999, 3,  800),
+    CatalogEntry("eSIM-SMT5G-07",     "Singapore 7 Days 5GB",      "SG", "asia", "country", 5,   7,  400),
+    CatalogEntry("eSIM-SMT10G-07",    "Singapore 7 Days 10GB",     "SG", "asia", "country", 10,  7,  700),
+    CatalogEntry("eSIM-SM10M-07",     "Singapore 7 Days Unlimited","SG", "asia", "country", 999, 7,  1800),
+    CatalogEntry("eSIM-SMT5G-15",     "Singapore 15 Days 5GB",     "SG", "asia", "country", 5,   15, 500),
+    CatalogEntry("eSIM-SMT10G-15",    "Singapore 15 Days 10GB",    "SG", "asia", "country", 10,  15, 800),
+    CatalogEntry("eSIM-SMT5G-30",     "Singapore 30 Days 5GB",     "SG", "asia", "country", 5,   30, 500),
+    CatalogEntry("eSIM-SMT10G-30",    "Singapore 30 Days 10GB",    "SG", "asia", "country", 10,  30, 900),
+    CatalogEntry("eSIM-SMT20G-30",    "Singapore 30 Days 20GB",    "SG", "asia", "country", 20,  30, 1600),
     # Greece (GR, europe) — also on JoyTel's multi-region F pack
     # (same SKUs + same RMB costs as Albania + France). All 10 listings
     # are shared-SKU; identical prices to Albania/France.

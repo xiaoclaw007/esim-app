@@ -114,6 +114,7 @@ export const COUNTRIES: CountryMeta[] = [
   { code: 'AD', name: 'Andorra',              flag: '🇦🇩', region: 'europe',   networks: 'Andorra Telecom',                image: _UNSPLASH('photo-1614678096587-0ad50faf1603') },
   { code: 'FR', name: 'France',               flag: '🇫🇷', region: 'europe',   networks: 'Orange, SFR',                    popular: true, image: _UNSPLASH('photo-1502602898657-3e91760cbb34') },
   { code: 'GR', name: 'Greece',               flag: '🇬🇷', region: 'europe',   networks: 'Cosmote, Vodafone Greece',       popular: true, image: _UNSPLASH('photo-1580502304784-8985b7eb7260') },
+  { code: 'SG', name: 'Singapore',            flag: '🇸🇬', region: 'asia',     networks: 'Singtel, StarHub, M1',           popular: true, image: _UNSPLASH('photo-1525625293386-3f8f99389edd') },
 ]
 
 export const REGIONAL_PLANS_META: RegionalMeta[] = [

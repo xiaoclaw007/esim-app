@@ -330,6 +330,7 @@ _COUNTRY_META = {
     "AD": ("Andorra", "🇦🇩"),
     "FR": ("France", "🇫🇷"),
     "GR": ("Greece", "🇬🇷"),
+    "SG": ("Singapore", "🇸🇬"),
     "EU": ("Europe", "🇪🇺"),
     "AP": ("Asia-Pacific", "🌏"),
     "CHM": ("China + HK + Macau", "🇨🇳"),
