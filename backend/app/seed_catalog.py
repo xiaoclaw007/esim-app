@@ -71,7 +71,9 @@ COUNTRY_PLANS: list[CatalogEntry] = [
     CatalogEntry("eSIM-KRT10G-07",    "Korea 7 Days 10GB",         "KR", "asia", "country", 10,  7,  700),
     CatalogEntry("eSIM-KRMAX-07",     "Korea 7 Days Unlimited",    "KR", "asia", "country", 999, 7,  1600),
     # USA
-    CatalogEntry("eSIM-US1G-01",      "USA 1 Day 1GB",             "US", "americas", "country", 1,   1,  100),
+    # Legacy listing_id from the original M1 seed (app/seed.py) — pinned
+    # so the upsert finds the existing row instead of inserting a duplicate.
+    CatalogEntry("eSIM-US1G-01",      "USA 1 Day 1GB",             "US", "americas", "country", 1,   1,  100, listing_id="us-1gb-1d"),
     CatalogEntry("eSIM-UST5G-07",     "USA 7 Days 5GB",            "US", "americas", "country", 5,   7,  600),
     CatalogEntry("eSIM-UST10G-07",    "USA 7 Days 10GB",           "US", "americas", "country", 10,  7,  890),
     CatalogEntry("eSIM-USMAX-07",     "USA 7 Days Unlimited",      "US", "americas", "country", 999, 7,  1900),
