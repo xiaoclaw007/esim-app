@@ -151,6 +151,19 @@ COUNTRY_PLANS: list[CatalogEntry] = [
     CatalogEntry("eSIM-FT5GB-30",     "France 30 Days 5GB",        "FR", "europe", "country", 5,   30, 700,  listing_id="eSIM-FT5GB-30.FR"),
     CatalogEntry("eSIM-FT10GB-30",    "France 30 Days 10GB",       "FR", "europe", "country", 10,  30, 1100, listing_id="eSIM-FT10GB-30.FR"),
     CatalogEntry("eSIM-FT20GB-30",    "France 30 Days 20GB",       "FR", "europe", "country", 20,  30, 2000, listing_id="eSIM-FT20GB-30.FR"),
+    # Greece (GR, europe) — also on JoyTel's multi-region F pack
+    # (same SKUs + same RMB costs as Albania + France). All 10 listings
+    # are shared-SKU; identical prices to Albania/France.
+    CatalogEntry("eSIM-FT3GB-03",     "Greece 3 Days 3GB",         "GR", "europe", "country", 3,   3,  300,  listing_id="eSIM-FT3GB-03.GR"),
+    CatalogEntry("eSIM-F10M-03",      "Greece 3 Days Unlimited",   "GR", "europe", "country", 999, 3,  1200, listing_id="eSIM-F10M-03.GR"),
+    CatalogEntry("eSIM-FT5GB-07",     "Greece 7 Days 5GB",         "GR", "europe", "country", 5,   7,  500,  listing_id="eSIM-FT5GB-07.GR"),
+    CatalogEntry("eSIM-FT10GB-07",    "Greece 7 Days 10GB",        "GR", "europe", "country", 10,  7,  900,  listing_id="eSIM-FT10GB-07.GR"),
+    CatalogEntry("eSIM-F10M-07",      "Greece 7 Days Unlimited",   "GR", "europe", "country", 999, 7,  2700, listing_id="eSIM-F10M-07.GR"),
+    CatalogEntry("eSIM-FT5GB-15",     "Greece 15 Days 5GB",        "GR", "europe", "country", 5,   15, 600,  listing_id="eSIM-FT5GB-15.GR"),
+    CatalogEntry("eSIM-FT10GB-15",    "Greece 15 Days 10GB",       "GR", "europe", "country", 10,  15, 1000, listing_id="eSIM-FT10GB-15.GR"),
+    CatalogEntry("eSIM-FT5GB-30",     "Greece 30 Days 5GB",        "GR", "europe", "country", 5,   30, 700,  listing_id="eSIM-FT5GB-30.GR"),
+    CatalogEntry("eSIM-FT10GB-30",    "Greece 30 Days 10GB",       "GR", "europe", "country", 10,  30, 1100, listing_id="eSIM-FT10GB-30.GR"),
+    CatalogEntry("eSIM-FT20GB-30",    "Greece 30 Days 20GB",       "GR", "europe", "country", 20,  30, 2000, listing_id="eSIM-FT20GB-30.GR"),
     # Andorra (AD, europe) — JoyTel "multi-region H" pack.
     CatalogEntry("eSIM-HT3GB-03",     "Andorra 3 Days 3GB",        "AD", "europe", "country", 3,   3,  600),
     CatalogEntry("eSIM-HT5GB-07",     "Andorra 7 Days 5GB",        "AD", "europe", "country", 5,   7,  1100),
